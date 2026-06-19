@@ -153,7 +153,20 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/auth/verify-request");
+      // Auto login after registration
+      const loginRes = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (loginRes?.error) {
+        setError("Аккаунт создан, но войти не удалось. Попробуйте войти вручную.");
+        setMode("LOGIN");
+      } else {
+        router.push("/profile");
+        router.refresh();
+      }
     } catch (err) {
       setError("Произошла ошибка сети");
     } finally {
