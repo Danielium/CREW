@@ -536,8 +536,6 @@ export default function RunTab() {
   return (
     <div
       className="flex flex-col h-[100dvh] bg-background text-foreground relative z-50 overflow-hidden"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
     >
       {/* GPS Error Banner */}
       {gpsError && (
