@@ -42,6 +42,20 @@ export default function FeedTab() {
   const [commentsData, setCommentsData] = useState<Record<string, CommentType[]>>({});
   const [newCommentContent, setNewCommentContent] = useState<Record<string, string>>({});
   const [isPostingComment, setIsPostingComment] = useState(false);
+  
+  // Current User State (for Avatar)
+  const [currentUser, setCurrentUser] = useState<{ id: string; name: string | null; image: string | null } | null>(null);
+
+  useEffect(() => {
+    if (session?.user) {
+      fetch(`/api/users?userId=${(session.user as any).id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.user) setCurrentUser(data.user);
+        })
+        .catch(console.error);
+    }
+  }, [session]);
 
   useEffect(() => {
     fetchFeed();
@@ -259,8 +273,8 @@ export default function FeedTab() {
       {/* Composer (Tweet Box) */}
       <div className="px-4 py-4 border-b border-border bg-card/30">
         <div className="flex gap-3">
-          {session?.user?.image ? (
-            <img src={session.user.image} className="w-10 h-10 rounded-full object-cover border border-border shrink-0" />
+          {currentUser?.image ? (
+            <img src={currentUser.image} className="w-10 h-10 rounded-full object-cover border border-border shrink-0" />
           ) : (
             <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 border border-border">
               <User size={20} className="text-foreground" />
