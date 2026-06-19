@@ -70,16 +70,11 @@ export default function ProfileTab() {
       let finalAvatarUrl = editAvatar;
 
       if (croppedFile) {
-        const formData = new FormData();
-        formData.append("file", croppedFile);
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formData
+        finalAvatarUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(croppedFile);
         });
-        const uploadData = await uploadRes.json();
-        if (uploadData.url) {
-          finalAvatarUrl = uploadData.url;
-        }
       }
 
       const res = await fetch("/api/users/profile", {

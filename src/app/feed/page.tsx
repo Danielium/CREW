@@ -82,11 +82,11 @@ export default function FeedTab() {
       let uploadedMediaUrl = null;
       if (attachedImageFile) {
         setIsUploadingImage(true);
-        const formData = new FormData();
-        formData.append("file", attachedImageFile);
-        const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
-        const uploadData = await uploadRes.json();
-        if (uploadData.url) uploadedMediaUrl = uploadData.url;
+        uploadedMediaUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(attachedImageFile);
+        });
         setIsUploadingImage(false);
       }
 
