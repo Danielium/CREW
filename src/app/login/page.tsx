@@ -212,7 +212,7 @@ export default function LoginPage() {
         )}
       </div>
 
-      <div className="flex-1 flex flex-col z-10">
+      <div className="flex-1 flex flex-col z-10 min-h-0">
         {/* ======================================================== */}
         {/* LOGIN SCREEN */}
         {/* ======================================================== */}
