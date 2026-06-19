@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // @ts-expect-error - Next.js types might not include allowedDevOrigins
+  // @ts-ignore - Next.js types might not include allowedDevOrigins
   allowedDevOrigins: [
     "*.pinggy-free.link",
     "*.run.pinggy-free.link",
