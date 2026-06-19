@@ -32,7 +32,11 @@ export default function RootLayout({
         <AuthProvider>
           <div 
             className="w-full max-w-[480px] bg-background relative shadow-2xl overflow-hidden flex flex-col mx-auto"
-            style={{ height: "var(--tg-viewport-stable-height, 100dvh)" }}
+            style={{ 
+              height: "var(--tg-viewport-stable-height, 100dvh)",
+              paddingTop: "var(--tg-safe-area-inset-top, 0px)",
+              paddingBottom: "var(--tg-safe-area-inset-bottom, 0px)"
+            }}
           >
             <MainScrollContainer>
               {children}
