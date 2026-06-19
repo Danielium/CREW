@@ -32,7 +32,7 @@ export function ImageCropperModal({ imageSrc, onCropComplete, onClose }: ImageCr
 
   return (
     <div className="fixed inset-0 z-[200] flex flex-col bg-background">
-      <div className="flex justify-between items-center p-4 z-10 border-b border-border bg-card">
+      <div className="flex justify-between items-center p-4 pt-12 z-10 border-b border-border bg-card">
         <button onClick={onClose} className="p-2 text-muted hover:text-foreground">
           <X size={24} />
         </button>
