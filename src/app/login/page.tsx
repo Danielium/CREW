@@ -331,7 +331,7 @@ export default function LoginPage() {
             <form onSubmit={handleRegister} className="flex flex-col flex-1 min-h-0">
               {error && <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-xl text-sm font-medium mb-4">{error}</div>}
 
-              <div className="flex-1 overflow-y-auto min-h-0 pb-32">
+              <div className="flex-1 overflow-y-auto min-h-0">
                 <div className="flex flex-col gap-3">
                   {GOALS.map(g => (
                     <div 
@@ -376,6 +376,9 @@ export default function LoginPage() {
                 <button type="submit" disabled={isLoading || (goals.length === 0 && !customGoal.trim())} className="w-full bg-primary text-black font-black uppercase tracking-wider py-4 rounded-[20px] flex justify-center items-center hover:bg-[#b3e600] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0 mt-8">
                   {isLoading ? <Loader2 className="animate-spin" size={24} /> : "Завершить и Войти"}
                 </button>
+                
+                {/* Safari scroll padding hack: Safari ignores padding-bottom on scroll containers, so we use a dummy div */}
+                <div className="h-32 shrink-0 w-full" aria-hidden="true" />
               </div>
             </form>
           </div>
