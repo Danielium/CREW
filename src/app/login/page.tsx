@@ -183,7 +183,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] text-foreground p-6 bg-background relative z-50 overflow-hidden">
+    <div className="absolute inset-0 flex flex-col text-foreground p-6 bg-background z-50 overflow-hidden">
       
       {/* Background Decor */}
       <div className="absolute top-[-10%] right-[-10%] w-[300px] h-[300px] bg-primary/20 rounded-full blur-[100px] pointer-events-none"></div>
