@@ -553,62 +553,7 @@ export default function RunTab() {
       )}
 
 
-      {/* 3-Page Slider Container */}
-      <div
-        className="flex h-full w-[300%] transition-transform duration-300 ease-out z-10"
-        style={{ transform: `translateX(${activeScreen === "settings" ? "0" : activeScreen === "main" ? "-33.333333%" : "-66.666667%"})` }}
-      >
-        {/* ======================= */}
-        {/* 1. SETTINGS SCREEN      */}
-        {/* ======================= */}
-        <div className="w-1/3 h-full flex flex-col pt-12 px-6 overflow-y-auto pb-8 shrink-0">
-          {isRunning && (
-            <>
-              <h2 className="text-3xl font-black mb-8">Управление</h2>
-
-              <div className="space-y-0">
-                <div className="flex items-center justify-between py-5 cursor-pointer" onClick={() => setAutoPause(!autoPause)}>
-                  <span className="font-semibold text-lg">Автопауза</span>
-                  <div className={`w-12 h-6 rounded-full relative transition-colors ${autoPause ? "bg-primary/30" : "bg-border"}`}>
-                    <div className={`w-5 h-5 rounded-full absolute left-0.5 top-0.5 shadow-sm transition-transform duration-200 ${autoPause ? "translate-x-6 bg-primary" : "translate-x-0 bg-background"}`}></div>
-                  </div>
-                </div>
-
-                <div className="w-full h-[1px] bg-border"></div>
-
-                <div className="flex items-center justify-between py-5 cursor-pointer" onClick={() => setAudioComments(!audioComments)}>
-                  <span className="font-semibold text-lg">Аудиокомментарии</span>
-                  <div className={`w-12 h-6 rounded-full relative transition-colors ${audioComments ? "bg-primary/30" : "bg-border"}`}>
-                    <div className={`w-5 h-5 rounded-full absolute left-0.5 top-0.5 shadow-sm transition-transform duration-200 ${audioComments ? "translate-x-6 bg-primary" : "translate-x-0 bg-background"}`}></div>
-                  </div>
-                </div>
-
-                <div className="w-full h-[1px] bg-border"></div>
-
-                <div className="flex items-center justify-between py-5 cursor-pointer" onClick={() => setScreenLock(!screenLock)}>
-                  <span className="font-semibold text-lg">Блокировка экрана «Бег»</span>
-                  <div className={`w-12 h-6 rounded-full relative transition-colors ${screenLock ? "bg-primary/30" : "bg-border"}`}>
-                    <div className={`w-5 h-5 rounded-full absolute left-0.5 top-0.5 shadow-sm transition-transform duration-200 ${screenLock ? "translate-x-6 bg-primary" : "translate-x-0 bg-background"}`}></div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-auto pt-8 flex justify-center pb-8">
-                <button
-                  onClick={() => setActiveScreen("main")}
-                  className="bg-primary text-black px-6 py-2.5 rounded-full font-bold text-lg flex items-center gap-2 active:scale-95 transition-transform"
-                >
-                  {formatTime(timeMs)} <ArrowRight size={20} />
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* ======================= */}
-        {/* 2. MAIN RUN SCREEN      */}
-        {/* ======================= */}
-        <div className="w-1/3 h-full flex flex-col relative shrink-0">
+      <div className="w-full h-full flex flex-col relative z-10">
           <div className="pt-8 px-6 z-10 flex justify-center">
             {activeEvent && !isRunning && (
               <div className="bg-primary text-black pl-4 pr-1 py-1 rounded-full text-xs font-bold uppercase tracking-widest shadow-[0_0_15px_rgba(204,255,0,0.4)] animate-in fade-in slide-in-from-top-4 flex items-center gap-2">
@@ -747,48 +692,7 @@ export default function RunTab() {
           </div>
         </div>
 
-        {/* ======================= */}
-        {/* 3. SPLITS SCREEN        */}
-        {/* ======================= */}
-        <div className="w-1/3 h-full flex flex-col pt-12 px-6 overflow-y-auto pb-8 shrink-0">
-          {isRunning && (
-            <>
-              <h2 className="text-3xl font-black mb-8">Отрезки</h2>
 
-              <div className="flex justify-between items-center mb-4 text-muted-foreground font-medium">
-                <span className="w-12">Км</span>
-                <span className="flex-1">Темп</span>
-              </div>
-
-              <div className="space-y-3 mb-6">
-                {liveSplits.length > 0 ? (
-                  liveSplits.map((splitPace, i) => (
-                    <div key={i} className="flex justify-between items-center">
-                      <span className="text-2xl font-semibold w-12">{i + 1}</span>
-                      <div className="bg-card rounded-xl px-4 py-3 flex-1 mr-4">
-                        <span className="text-2xl font-semibold">{formatPace(splitPace)}</span>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center text-muted text-sm py-8">
-                    Сплиты появятся после первого километра
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-auto pt-8 flex justify-center pb-8">
-                <button
-                  onClick={() => setActiveScreen("main")}
-                  className="bg-primary text-black px-6 py-2.5 rounded-full font-bold text-lg flex items-center gap-2 active:scale-95 transition-transform"
-                >
-                  <ArrowLeft size={20} /> {formatTime(timeMs)}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
       {/* Map Overlay Modal */}
       {showMapModal && (
         <div className="fixed inset-0 z-[80] flex justify-center bg-background pointer-events-auto">
