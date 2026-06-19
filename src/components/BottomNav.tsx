@@ -1,0 +1,85 @@
+"use client";
+import { useState, useEffect } from "react";
+import { Layers, Activity, Users, BarChart, User } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+export default function BottomNav() {
+  const pathname = usePathname();
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    let lastScrollY = 0;
+    let accumulatedScrollUp = 0;
+
+    const handleScroll = (e: Event) => {
+      // Disable scroll hiding logic if forced hidden by run mode
+      const target = e.target as HTMLElement;
+      const currentScrollY = target.scrollTop;
+      const deltaY = currentScrollY - lastScrollY;
+      
+      if (deltaY > 0) {
+        if (currentScrollY > 50) setIsVisible(false);
+        accumulatedScrollUp = 0;
+      } else if (deltaY < 0) {
+        accumulatedScrollUp += Math.abs(deltaY);
+        if (accumulatedScrollUp > 60 || currentScrollY < 20) setIsVisible(true);
+      }
+      
+      lastScrollY = currentScrollY;
+    };
+
+    const container = document.getElementById("main-scroll-container");
+    if (container) {
+      container.addEventListener("scroll", handleScroll, { passive: true });
+    }
+    
+    // Global events to force hide/show (used by the Run tracker)
+    const forceHide = () => setIsVisible(false);
+    const forceShow = () => setIsVisible(true);
+    
+    window.addEventListener("hideNav", forceHide);
+    window.addEventListener("showNav", forceShow);
+    
+    return () => {
+      if (container) {
+        container.removeEventListener("scroll", handleScroll);
+      }
+      window.removeEventListener("hideNav", forceHide);
+      window.removeEventListener("showNav", forceShow);
+    };
+  }, []);
+
+  const navItems = [
+    { name: "Лента", path: "/feed", icon: Layers },
+    { name: "Бег", path: "/run", icon: Activity },
+    { name: "Клуб", path: "/", icon: Users },
+    { name: "Прогресс", path: "/progress", icon: BarChart },
+    { name: "Профиль", path: "/profile", icon: User },
+  ];
+
+  if (pathname === '/run' || pathname === '/login' || pathname.startsWith('/events/')) {
+    return null;
+  }
+
+  return (
+    <div className={`absolute bottom-6 left-4 right-4 z-50 transition-transform duration-300 ease-in-out ${isVisible ? "translate-y-0" : "translate-y-32"}`}>
+      <div className="bg-card/70 backdrop-blur-3xl rounded-[32px] px-2 py-2 flex justify-between items-center shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] border border-border">
+        {navItems.map((item) => {
+          const isActive = pathname === item.path;
+          const Icon = item.icon;
+          return (
+            <Link key={item.name} href={item.path} className="flex flex-col items-center justify-center flex-1">
+              <div className={`p-2 rounded-full transition-colors ${isActive ? 'bg-primary text-black' : 'text-muted hover:text-foreground'}`}>
+                <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+              </div>
+              <span className={`text-[10px] mt-1 font-medium ${isActive ? 'text-foreground' : 'text-muted'}`}>
+                {item.name}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
