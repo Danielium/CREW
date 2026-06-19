@@ -355,7 +355,7 @@ export default function LoginPage() {
                   ))}
                 </div>
 
-                <div className="mt-4">
+                <div className="mt-4 mb-8">
                   <input 
                     type="text" 
                     value={customGoal}
@@ -372,11 +372,11 @@ export default function LoginPage() {
                     className="w-full bg-card border border-border rounded-[20px] py-4 px-4 text-foreground placeholder:text-muted/50 focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm font-semibold" 
                   />
                 </div>
-              </div>
 
-              <button type="submit" disabled={isLoading || (goals.length === 0 && !customGoal.trim())} className="w-full bg-primary text-black font-black uppercase tracking-wider py-4 rounded-[20px] flex justify-center items-center mt-auto mb-8 hover:bg-[#b3e600] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0">
-                {isLoading ? <Loader2 className="animate-spin" size={24} /> : "Завершить и Войти"}
-              </button>
+                <button type="submit" disabled={isLoading || (goals.length === 0 && !customGoal.trim())} className="w-full bg-primary text-black font-black uppercase tracking-wider py-4 rounded-[20px] flex justify-center items-center hover:bg-[#b3e600] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0 mt-8">
+                  {isLoading ? <Loader2 className="animate-spin" size={24} /> : "Завершить и Войти"}
+                </button>
+              </div>
             </form>
           </div>
         )}
