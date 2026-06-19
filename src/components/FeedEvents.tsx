@@ -128,10 +128,16 @@ export default function FeedEvents({ userData }: { userData: any }) {
               <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
                 {canManage && (
                   <>
-                    <Link href={`/events/${ev.id}/edit`} className="p-2 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white hover:text-primary transition-colors shadow-lg">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); router.push(`/events/${ev.id}/edit`); }} 
+                      className="p-2 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white hover:text-primary transition-colors shadow-lg"
+                    >
                       <Edit2 size={16} />
-                    </Link>
-                    <button onClick={() => handleDelete(ev.id)} className="p-2 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white hover:text-red-500 transition-colors shadow-lg">
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDelete(ev.id); }} 
+                      className="p-2 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white hover:text-red-500 transition-colors shadow-lg"
+                    >
                       <Trash2 size={16} />
                     </button>
                   </>
