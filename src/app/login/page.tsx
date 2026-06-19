@@ -190,9 +190,13 @@ export default function LoginPage() {
       
       {/* Header */}
       <div className="flex items-center mb-8 mt-10 z-10">
-        <button onClick={handleBack} className="w-10 h-10 flex items-center justify-center rounded-full bg-card border border-border text-muted hover:text-foreground transition-colors active:scale-95">
-          <ArrowLeft size={20} />
-        </button>
+        {mode !== "LOGIN" ? (
+          <button onClick={handleBack} className="w-10 h-10 flex items-center justify-center rounded-full bg-card border border-border text-muted hover:text-foreground transition-colors active:scale-95">
+            <ArrowLeft size={20} />
+          </button>
+        ) : (
+          <div className="w-10 h-10" />
+        )}
         
         {mode !== "LOGIN" && (
           <div className="flex-1 flex justify-center items-center gap-2 pr-10">
