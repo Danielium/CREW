@@ -30,7 +30,10 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased bg-background text-foreground flex justify-center min-h-screen`}>
         <TelegramInit />
         <AuthProvider>
-          <div className="w-full max-w-[480px] bg-background h-[100dvh] relative shadow-2xl overflow-hidden flex flex-col mx-auto">
+          <div 
+            className="w-full max-w-[480px] bg-background relative shadow-2xl overflow-hidden flex flex-col mx-auto"
+            style={{ height: "var(--tg-viewport-stable-height, 100dvh)" }}
+          >
             <MainScrollContainer>
               {children}
             </MainScrollContainer>
