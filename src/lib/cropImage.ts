@@ -37,8 +37,14 @@ export async function getCroppedImg(
     return null
   }
 
-  croppedCanvas.width = pixelCrop.width
-  croppedCanvas.height = pixelCrop.height
+  // Ограничиваем размер выходного аватара до 512x512 для производительности
+  const MAX_SIZE = 512;
+  const scale = Math.min(1, MAX_SIZE / Math.max(pixelCrop.width, pixelCrop.height));
+  const outputWidth = pixelCrop.width * scale;
+  const outputHeight = pixelCrop.height * scale;
+
+  croppedCanvas.width = outputWidth;
+  croppedCanvas.height = outputHeight;
 
   croppedCtx.drawImage(
     canvas,
@@ -48,18 +54,18 @@ export async function getCroppedImg(
     pixelCrop.height,
     0,
     0,
-    pixelCrop.width,
-    pixelCrop.height
-  )
+    outputWidth,
+    outputHeight
+  );
 
   return new Promise((resolve) => {
     croppedCanvas.toBlob((blob) => {
       if (!blob) {
-        resolve(null)
-        return
+        resolve(null);
+        return;
       }
-      const file = new File([blob], "avatar.jpg", { type: "image/jpeg" })
-      resolve(file)
-    }, 'image/jpeg')
-  })
+      const file = new File([blob], "avatar.jpg", { type: "image/jpeg" });
+      resolve(file);
+    }, 'image/jpeg', 0.8);
+  });
 }

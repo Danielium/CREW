@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '@/lib/cropImage';
-import { X, Check } from 'lucide-react';
+import { Loader2, X, Check } from 'lucide-react';
 
 interface ImageCropperModalProps {
   imageSrc: string;
@@ -13,32 +13,40 @@ export function ImageCropperModal({ imageSrc, onCropComplete, onClose }: ImageCr
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const onCropCompleteInternal = useCallback((croppedArea: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
   const handleSave = async () => {
-    if (!croppedAreaPixels) return;
+    if (!croppedAreaPixels || isProcessing) return;
+    setIsProcessing(true);
+    // Небольшая задержка, чтобы UI успел отрисовать спиннер перед тяжелой блокирующей задачей canvas
+    await new Promise(resolve => setTimeout(resolve, 50));
     try {
       const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels, 0);
       if (croppedImage) {
         onCropComplete(croppedImage, URL.createObjectURL(croppedImage));
+      } else {
+        setIsProcessing(false);
       }
     } catch (e) {
       console.error(e);
+      setIsProcessing(false);
     }
   };
 
   return (
     <div className="fixed inset-0 z-[200] flex flex-col bg-background">
       <div className="flex justify-between items-center p-4 pt-16 z-10 border-b border-border bg-card">
-        <button onClick={onClose} className="p-2 text-muted hover:text-foreground">
+        <button onClick={onClose} disabled={isProcessing} className="p-2 text-muted hover:text-foreground disabled:opacity-50">
           <X size={24} />
         </button>
         <h3 className="font-black uppercase">Обрезать фото</h3>
-        <button onClick={handleSave} className="p-2 text-primary font-bold hover:text-white transition-colors flex items-center gap-1">
-          <Check size={20} /> Готово
+        <button onClick={handleSave} disabled={isProcessing} className="p-2 text-primary font-bold hover:text-white transition-colors flex items-center gap-1 disabled:opacity-50">
+          {isProcessing ? <Loader2 size={20} className="animate-spin" /> : <Check size={20} />}
+          Готово
         </button>
       </div>
 
