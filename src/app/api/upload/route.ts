@@ -6,10 +6,8 @@ import { authOptions } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // Временно разрешаем загрузку без авторизации для экрана регистрации
+    // (Аватар загружается ДО того, как пользователь зарегистрирован)
 
     const data = await req.formData();
     const file: File | null = data.get('file') as unknown as File;

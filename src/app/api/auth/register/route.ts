@@ -36,7 +36,7 @@ export async function POST(request: Request) {
         email,
         name,
         password: hashedPassword,
-        image: avatarStyle || `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+        image: avatarStyle || null,
         goal: goal || null,
       },
     });
