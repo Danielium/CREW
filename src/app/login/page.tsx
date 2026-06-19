@@ -122,16 +122,12 @@ export default function LoginPage() {
     try {
       let uploadedImageUrl = null;
       if (imageFile) {
-        const formData = new FormData();
-        formData.append("file", imageFile);
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formData
+        // Конвертируем файл напрямую в Base64 (так как Vercel Serverless не поддерживает сохранение файлов)
+        uploadedImageUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(imageFile);
         });
-        const uploadData = await uploadRes.json();
-        if (uploadData.url) {
-          uploadedImageUrl = uploadData.url;
-        }
       }
 
       const finalGoals = [...goals];
