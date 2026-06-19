@@ -324,7 +324,7 @@ export default function LoginPage() {
               <p className="text-muted">Шаг 4 из 4. Зачем вы бегаете?</p>
             </div>
 
-            <form onSubmit={handleRegister} className="flex flex-col flex-1">
+            <form onSubmit={handleRegister} className="flex flex-col flex-1 min-h-0">
               {error && <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-xl text-sm font-medium mb-4">{error}</div>}
 
               <div className="flex flex-col gap-3 overflow-y-auto mb-4">

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import { AuthProvider } from "@/components/AuthProvider";
+import { TelegramInit } from "@/components/TelegramInit";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -22,7 +23,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" suppressHydrationWarning>
+      <head>
+        <script src="https://telegram.org/js/telegram-web-app.js" async></script>
+      </head>
       <body className={`${inter.variable} font-sans antialiased bg-background text-foreground flex justify-center min-h-screen`}>
+        <TelegramInit />
         <AuthProvider>
           <div className="w-full max-w-[480px] bg-background h-[100dvh] relative shadow-2xl overflow-hidden flex flex-col mx-auto">
             <div id="main-scroll-container" className="flex-1 overflow-y-auto no-scrollbar relative z-10 pb-24">
