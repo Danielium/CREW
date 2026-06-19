@@ -34,7 +34,7 @@ export default function RootLayout({
             className="w-full max-w-[480px] bg-background relative shadow-2xl overflow-hidden flex flex-col mx-auto"
             style={{ 
               height: "var(--tg-viewport-stable-height, 100dvh)",
-              paddingTop: "var(--tg-content-safe-area-inset-top, var(--tg-safe-area-inset-top, 0px))",
+              paddingTop: "calc(var(--tg-content-safe-area-inset-top, var(--tg-safe-area-inset-top, 0px)) + 12px)",
               paddingBottom: "var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px))"
             }}
           >
