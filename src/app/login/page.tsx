@@ -189,7 +189,7 @@ export default function LoginPage() {
       <div className="absolute top-[-10%] right-[-10%] w-[300px] h-[300px] bg-primary/20 rounded-full blur-[100px] pointer-events-none"></div>
       
       {/* Header */}
-      <div className="flex items-center mb-8 mt-4 z-10">
+      <div className="flex items-center mb-8 mt-10 z-10">
         <button onClick={handleBack} className="w-10 h-10 flex items-center justify-center rounded-full bg-card border border-border text-muted hover:text-foreground transition-colors active:scale-95">
           <ArrowLeft size={20} />
         </button>
