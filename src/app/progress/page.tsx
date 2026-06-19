@@ -93,10 +93,10 @@ export default function ProgressTab() {
   const avgPace = runsWithPace > 0 ? avgPaceSum / runsWithPace : 0;
 
   return (
-    <div className="flex flex-col min-h-[100dvh] text-foreground pt-12 pb-24 relative z-10">
-      {/* Header */}
-      <div className="px-4 pb-4 flex justify-between items-center">
-        <h1 className="text-3xl font-black tracking-tight uppercase">Прогресс</h1>
+    <div className="flex flex-col min-h-[100dvh] text-foreground pb-24 relative z-10">
+      {/* Header Sticky */}
+      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-4 flex justify-between items-center">
+        <h1 className="text-2xl font-black tracking-tight uppercase">Прогресс</h1>
       </div>
 
       <div className="flex flex-col gap-6 px-4">
