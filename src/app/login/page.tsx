@@ -331,7 +331,7 @@ export default function LoginPage() {
             <form onSubmit={handleRegister} className="flex flex-col flex-1 min-h-0">
               {error && <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-xl text-sm font-medium mb-4">{error}</div>}
 
-              <div className="flex-1 overflow-y-auto min-h-0 mb-4 pb-4">
+              <div className="flex-1 overflow-y-auto min-h-0 pb-32">
                 <div className="flex flex-col gap-3">
                   {GOALS.map(g => (
                     <div 
