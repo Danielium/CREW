@@ -535,7 +535,7 @@ export default function RunTab() {
 
   return (
     <div
-      className="flex flex-col h-[100dvh] bg-background text-foreground relative z-50 overflow-hidden"
+      className="flex flex-col absolute inset-0 bg-background text-foreground z-50 overflow-hidden"
     >
       {/* GPS Error Banner */}
       {gpsError && (
