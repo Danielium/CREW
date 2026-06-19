@@ -39,7 +39,7 @@ export const authOptions: NextAuthOptions = {
             id: user.id,
             email: user.email,
             name: user.name,
-            image: user.image,
+            // image: user.image, // Removed: Storing large Base64 strings in JWT causes 494 Header Too Large errors
           };
         } catch (error) {
           console.error("Auth error:", error);
