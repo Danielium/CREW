@@ -12,7 +12,7 @@ type Post = {
   content: string | null;
   mediaUrl: string | null;
   createdAt: string;
-  user: { name: string | null; image: string | null };
+  user: { id: string; name: string | null; image: string | null };
   run: { distance: number; avgPace: number; durationSec: number } | null;
   _count: { likes: number; comments?: number };
   isLiked?: boolean; // We'll manage this locally for now
@@ -22,7 +22,7 @@ type CommentType = {
   id: string;
   content: string;
   createdAt: string;
-  user: { name: string | null; image: string | null };
+  user: { id: string; name: string | null; image: string | null };
 };
 
 export default function FeedTab() {

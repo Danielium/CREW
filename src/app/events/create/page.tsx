@@ -22,7 +22,7 @@ export default function CreateEventPage() {
     time: "",
     distance: "",
     image: "",
-    routeData: null as any[] | null
+    routeData: null as string | null
   });
   const [paceFrom, setPaceFrom] = useState("");
   const [paceTo, setPaceTo] = useState("");

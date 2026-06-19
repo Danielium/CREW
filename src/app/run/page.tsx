@@ -287,7 +287,7 @@ export default function RunTab() {
     let lat = 55.7558;
     let lng = 37.6173;
     const now = Date.now();
-    lastPositionRef.current = { lat, lng };
+    lastPositionRef.current = { lat, lng, time: now };
     routeRef.current.push({ lat, lng, time: now });
     setCurrentPosState({ lat, lng });
 
@@ -320,7 +320,7 @@ export default function RunTab() {
         splitStartDistRef.current = distanceRef.current;
       }
 
-      lastPositionRef.current = { lat, lng };
+      lastPositionRef.current = { lat, lng, time: currentNow };
       routeRef.current.push({ lat, lng, time: currentNow });
       setCurrentPosState({ lat, lng });
     }, 1000);
