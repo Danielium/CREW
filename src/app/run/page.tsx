@@ -3,7 +3,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { MapPin, ArrowLeft, Square, Play, Pause, Share2, ArrowRight, Loader2, QrCode, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
+import { Capacitor, registerPlugin } from '@capacitor/core';
+import type { BackgroundGeolocationPlugin } from '@capacitor-community/background-geolocation';
 
+let BackgroundGeolocation: BackgroundGeolocationPlugin | null = null;
+if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
+  BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>('BackgroundGeolocation');
+}
 const LiveRunMap = dynamic(() => import("@/components/LiveRunMap"), { ssr: false });
 const RunRouteMap = dynamic(() => import("@/components/RunRouteMap"), { ssr: false });
 
@@ -55,7 +61,7 @@ export default function RunTab() {
   // GPS tracking refs (use refs to avoid stale closures in watchPosition callback)
   const routeRef = useRef<{ lat: number; lng: number; time: number }[]>([]);
   const distanceRef = useRef(0);
-  const watchIdRef = useRef<number | null>(null);
+  const watchIdRef = useRef<number | string | null>(null);
   const lastPositionRef = useRef<{ lat: number; lng: number, time: number } | null>(null);
   const isStoppingRef = useRef(false);
   const isRunningRef = useRef(false);
@@ -125,105 +131,118 @@ export default function RunTab() {
     };
   }, [isRunning, isPaused]);
 
-  // GPS watchPosition
-  const startGpsTracking = useCallback(() => {
-    if (!navigator.geolocation) {
-      setGpsError("GPS не поддерживается вашим браузером");
-      return;
+  // Process Location helper for both native and web GPS APIs
+  const processLocation = useCallback((latitude: number, longitude: number, speed: number | null) => {
+    const now = Date.now();
+    setCurrentPosState({ lat: latitude, lng: longitude });
+
+    if (isRunningRef.current) {
+      const last = lastPositionRef.current;
+      if (last) {
+        const d = haversineDistance(last.lat, last.lng, latitude, longitude);
+        if (d < 2) return;
+        if (d > 150) return;
+
+        distanceRef.current += d / 1000;
+        setDistance(distanceRef.current);
+
+        const currentKm = Math.floor(distanceRef.current);
+        if (currentKm > lastKmRef.current) {
+          const splitTime = (now - splitStartTimeRef.current) / 1000;
+          const splitDist = distanceRef.current - splitStartDistRef.current;
+          const paceMinPerKm = splitDist > 0 ? splitTime / 60 / splitDist : 0;
+          splitsRef.current.push(paceMinPerKm);
+          setLiveSplits([...splitsRef.current]);
+
+          lastKmRef.current = currentKm;
+          splitStartTimeRef.current = now;
+          splitStartDistRef.current = distanceRef.current;
+        }
+
+        let currentSpeed = speed;
+        if (currentSpeed === null) {
+          const dist = haversineDistance(last.lat, last.lng, latitude, longitude);
+          const timeDiff = (now - last.time) / 1000;
+          currentSpeed = timeDiff > 0 ? dist / timeDiff : 0;
+        }
+
+        paceBufferRef.current.push(currentSpeed);
+        if (paceBufferRef.current.length > 5) {
+          paceBufferRef.current.shift();
+        }
+
+        const avgSpeed = paceBufferRef.current.reduce((a, b) => a + b, 0) / paceBufferRef.current.length;
+        if (avgSpeed > 0.5) {
+          setCurrentPace(16.666667 / avgSpeed);
+        } else {
+          setCurrentPace(0);
+        }
+      } else {
+        splitStartTimeRef.current = now;
+        splitStartDistRef.current = 0;
+        paceBufferRef.current = [];
+      }
+      routeRef.current.push({ lat: latitude, lng: longitude, time: now });
     }
 
+    lastPositionRef.current = { lat: latitude, lng: longitude, time: now };
+  }, []);
+
+  const startGpsTracking = useCallback(async () => {
     setGpsError(null);
 
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      (position) => {
-        const { latitude, longitude, speed } = position.coords;
-        const now = Date.now();
-
-        // Always update the current position state so the user sees their marker and map centers
-        setCurrentPosState({ lat: latitude, lng: longitude });
-
-        if (isRunningRef.current) {
-          const last = lastPositionRef.current;
-          if (last) {
-            const d = haversineDistance(last.lat, last.lng, latitude, longitude);
-            // Ignore tiny movements (< 2m) to reduce GPS noise
-            if (d < 2) return;
-            // Ignore unrealistic jumps (> 150m in one tick — probably GPS glitch)
-            if (d > 150) return;
-
-            distanceRef.current += d / 1000; // convert meters to km
-            setDistance(distanceRef.current);
-
-            // Check for new km split
-            const currentKm = Math.floor(distanceRef.current);
-            if (currentKm > lastKmRef.current) {
-              const splitTime = (now - splitStartTimeRef.current) / 1000; // seconds for this km
-              const splitDist = distanceRef.current - splitStartDistRef.current;
-              const paceMinPerKm = splitDist > 0 ? splitTime / 60 / splitDist : 0;
-              splitsRef.current.push(paceMinPerKm);
-              setLiveSplits([...splitsRef.current]);
-
-              lastKmRef.current = currentKm;
-              splitStartTimeRef.current = now;
-              splitStartDistRef.current = distanceRef.current;
+    if (BackgroundGeolocation) {
+      const watcherId = await BackgroundGeolocation.addWatcher(
+        {
+          backgroundMessage: "Трекинг активен.",
+          backgroundTitle: "CREW работает в фоне",
+          requestPermissions: true,
+          stale: false,
+          distanceFilter: 2
+        },
+        (location, error) => {
+          if (error) {
+            console.error("BG GPS Error:", error);
+            if (error.code === 'NOT_AUTHORIZED') {
+              setGpsError("Доступ к GPS запрещён.");
             }
-
-            // Smoothed instantaneous pace calculation
-            let currentSpeed = speed; // m/s from GPS hardware
-            if (currentSpeed === null) {
-              // Fallback if hardware speed is unavailable
-              const dist = haversineDistance(last.lat, last.lng, latitude, longitude);
-              const timeDiff = (now - last.time) / 1000;
-              currentSpeed = timeDiff > 0 ? dist / timeDiff : 0;
-            }
-
-            // Add to rolling buffer (last 5 readings ~ 5 seconds)
-            paceBufferRef.current.push(currentSpeed);
-            if (paceBufferRef.current.length > 5) {
-              paceBufferRef.current.shift();
-            }
-
-            // Calculate smoothed speed
-            const avgSpeed = paceBufferRef.current.reduce((a, b) => a + b, 0) / paceBufferRef.current.length;
-
-            // Convert m/s to min/km
-            // If moving slower than 0.5 m/s (1.8 km/h), consider it standing still
-            if (avgSpeed > 0.5) {
-              setCurrentPace(16.666667 / avgSpeed);
-            } else {
-              setCurrentPace(0);
-            }
-
-          } else {
-            // First position — initialize split tracking
-            splitStartTimeRef.current = now;
-            splitStartDistRef.current = 0;
-            paceBufferRef.current = [];
+            return;
           }
-          routeRef.current.push({ lat: latitude, lng: longitude, time: now });
+          if (location) {
+            processLocation(location.latitude, location.longitude, location.speed);
+          }
         }
-
-        lastPositionRef.current = { lat: latitude, lng: longitude, time: now };
-      },
-      (error) => {
-        console.error("GPS error details:", error.code, error.message);
-        if (error.code === error.PERMISSION_DENIED) {
-          setGpsError("Доступ к GPS запрещён. Разрешите геолокацию в настройках браузера.");
-        } else {
-          setGpsError(`Не удалось получить GPS-сигнал (Код ${error.code}: ${error.message || "Неизвестная ошибка"})`);
-        }
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 10000,
+      );
+      watchIdRef.current = watcherId;
+    } else {
+      if (!navigator.geolocation) {
+        setGpsError("GPS не поддерживается вашим браузером");
+        return;
       }
-    );
-  }, []);
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        (position) => {
+          processLocation(position.coords.latitude, position.coords.longitude, position.coords.speed);
+        },
+        (error) => {
+          console.error("GPS error details:", error.code, error.message);
+          if (error.code === error.PERMISSION_DENIED) {
+            setGpsError("Доступ к GPS запрещён. Разрешите геолокацию в настройках.");
+          } else {
+            setGpsError(`Не удалось получить GPS-сигнал (Код ${error.code}: ${error.message || "Неизвестная ошибка"})`);
+          }
+        },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+      );
+    }
+  }, [processLocation]);
 
   const stopGpsTracking = useCallback(() => {
     if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
+      if (BackgroundGeolocation && typeof watchIdRef.current === 'string') {
+        BackgroundGeolocation.removeWatcher({ id: watchIdRef.current });
+      } else {
+        navigator.geolocation.clearWatch(watchIdRef.current as number);
+      }
       watchIdRef.current = null;
     }
     if (simulationIntervalRef.current) {

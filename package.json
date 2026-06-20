@@ -11,6 +11,11 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@capacitor-community/background-geolocation": "^1.2.26",
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/core": "^8.4.1",
+    "@capacitor/geolocation": "^8.2.0",
+    "@capacitor/ios": "^8.4.1",
     "@prisma/client": "^5.21.1",
     "@types/leaflet": "^1.9.21",
     "bcryptjs": "^3.0.3",
@@ -31,6 +36,7 @@
     "uuid": "^14.0.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.4.1",
     "@playwright/test": "^1.61.0",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
