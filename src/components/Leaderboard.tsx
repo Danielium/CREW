@@ -5,25 +5,25 @@ import { Loader2, User } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
-export default function Leaderboard() {
+export default function Leaderboard({ clubId }: { clubId?: string }) {
   const { data: session } = useSession();
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/leaderboard', { cache: 'no-store' })
+    fetch(`/api/leaderboard${clubId ? `?clubId=${clubId}` : ''}`, { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (data.users) setUsers(data.users);
         setIsLoading(false);
       });
-  }, []);
+  }, [clubId]);
 
   if (isLoading) return <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" size={32} /></div>;
 
   return (
     <div className="flex flex-col px-4">
-      <h2 className="text-xl font-black uppercase tracking-tight mb-4">Индивидуальный Топ</h2>
+      <h2 className="text-xl font-black uppercase tracking-tight mb-4">{clubId ? "Атлеты Клуба" : "Индивидуальный Топ"}</h2>
       <div className="flex flex-col gap-2">
         {users.map((user, index) => {
           const isMe = user.id === (session?.user as any)?.id;

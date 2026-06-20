@@ -90,7 +90,7 @@ export default function ClubTab() {
       {/* Content based on tab */}
       <div className="mt-6">
         {activeTab === "События" && <FeedEvents userData={userData} />}
-        {activeTab === "Атлеты" && <Leaderboard />}
+        {activeTab === "Атлеты" && <Leaderboard clubId={userData?.clubMembers[0]?.clubId} />}
         {activeTab === "Клубы" && <GlobalClubs inClub={inClub} />}
       </div>
     </div>

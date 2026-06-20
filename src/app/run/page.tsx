@@ -461,7 +461,13 @@ export default function RunTab() {
       setActiveScreen("main");
     }
 
-    if (session?.user) { // TEMPORARILY UNCONDITIONAL FOR TESTING
+    if (finalDistance < 0.1 || finalTimeMs < 30000) {
+      alert("Пробежка слишком короткая (менее 100 метров или 30 секунд). Она не будет сохранена.");
+      setIsSaving(false);
+      return;
+    }
+
+    if (session?.user) {
       setIsSaving(true);
       try {
         // Build splits JSON — add final partial km if needed

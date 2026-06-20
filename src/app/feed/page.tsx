@@ -23,6 +23,36 @@ type CommentType = {
   content: string;
   createdAt: string;
   user: { id: string; name: string | null; image: string | null };
+  mediaUrl?: string | null;
+};
+
+const compressImage = async (file: File): Promise<string> => {
+  return new Promise<string>((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 1080;
+        if (width > height && width > maxDim) {
+          height *= maxDim / width;
+          width = maxDim;
+        } else if (height > maxDim) {
+          width *= maxDim / height;
+          height = maxDim;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", 0.7));
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
 };
 
 export default function FeedTab() {
@@ -42,6 +72,8 @@ export default function FeedTab() {
   const [commentsData, setCommentsData] = useState<Record<string, CommentType[]>>({});
   const [newCommentContent, setNewCommentContent] = useState<Record<string, string>>({});
   const [isPostingComment, setIsPostingComment] = useState(false);
+  const [commentImageFiles, setCommentImageFiles] = useState<Record<string, File | null>>({});
+  const [commentImagePreviews, setCommentImagePreviews] = useState<Record<string, string | null>>({});
   
   // Current User State (for Avatar)
   const [currentUser, setCurrentUser] = useState<{ id: string; name: string | null; image: string | null } | null>(null);
@@ -96,11 +128,7 @@ export default function FeedTab() {
       let uploadedMediaUrl = null;
       if (attachedImageFile) {
         setIsUploadingImage(true);
-        uploadedMediaUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(attachedImageFile);
-        });
+        uploadedMediaUrl = await compressImage(attachedImageFile);
         setIsUploadingImage(false);
       }
 
@@ -164,17 +192,24 @@ export default function FeedTab() {
   };
 
   const handlePostComment = async (postId: string) => {
-    const content = newCommentContent[postId];
-    if (!session?.user || !content?.trim()) return;
+    const content = newCommentContent[postId] || "";
+    const attachedFile = commentImageFiles[postId];
+    if (!session?.user || (!content.trim() && !attachedFile)) return;
 
     setIsPostingComment(true);
     try {
+      let uploadedMediaUrl = null;
+      if (attachedFile) {
+        uploadedMediaUrl = await compressImage(attachedFile);
+      }
+
       const res = await fetch(`/api/posts/${postId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: (session.user as any).id,
-          content: content.trim()
+          content: content.trim(),
+          mediaUrl: uploadedMediaUrl
         })
       });
       const data = await res.json();
@@ -184,6 +219,8 @@ export default function FeedTab() {
           [postId]: [...(prev[postId] || []), data.comment]
         }));
         setNewCommentContent(prev => ({ ...prev, [postId]: "" }));
+        setCommentImageFiles(prev => ({ ...prev, [postId]: null }));
+        setCommentImagePreviews(prev => ({ ...prev, [postId]: null }));
         
         // Update comment count optimistically
         setPosts(posts.map(p => {
@@ -454,7 +491,10 @@ export default function FeedTab() {
                                     </button>
                                   )}
                                 </div>
-                                <p className="text-sm text-foreground/90">{comment.content}</p>
+                                <p className="text-sm text-foreground/90 whitespace-pre-wrap">{comment.content}</p>
+                                {comment.mediaUrl && (
+                                  <img src={comment.mediaUrl} alt="Comment media" className="mt-2 rounded-lg max-h-40 w-auto object-cover border border-border" />
+                                )}
                               </div>
                             </div>
                           ))
@@ -462,21 +502,51 @@ export default function FeedTab() {
                       </div>
 
                       {/* Comment Input */}
-                      <div className="flex gap-2 items-center">
-                        <input
-                          type="text"
-                          placeholder="Написать комментарий..."
-                          value={newCommentContent[post.id] || ""}
-                          onChange={(e) => setNewCommentContent(prev => ({ ...prev, [post.id]: e.target.value }))}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handlePostComment(post.id);
-                            }
-                          }}
-                          className="flex-1 bg-card border border-border rounded-full px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                        />
-                        <button
+                      <div className="flex flex-col gap-2">
+                        {commentImagePreviews[post.id] && (
+                          <div className="relative w-fit">
+                            <img src={commentImagePreviews[post.id]!} alt="Preview" className="h-20 rounded-xl object-cover border border-border" />
+                            <button 
+                              onClick={() => {
+                                setCommentImageFiles(prev => ({ ...prev, [post.id]: null }));
+                                setCommentImagePreviews(prev => ({ ...prev, [post.id]: null }));
+                              }}
+                              className="absolute -top-2 -right-2 bg-background border border-border rounded-full p-1 hover:text-red-500"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        )}
+                        <div className="flex gap-2 items-center">
+                          <label className="cursor-pointer p-2 text-muted hover:text-primary transition-colors">
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  setCommentImageFiles(prev => ({ ...prev, [post.id]: file }));
+                                  setCommentImagePreviews(prev => ({ ...prev, [post.id]: URL.createObjectURL(file) }));
+                                }
+                              }}
+                            />
+                            <ImageIcon size={20} />
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Написать комментарий..."
+                            value={newCommentContent[post.id] || ""}
+                            onChange={(e) => setNewCommentContent(prev => ({ ...prev, [post.id]: e.target.value }))}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handlePostComment(post.id);
+                              }
+                            }}
+                            className="flex-1 bg-card border border-border rounded-full px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                          />
+                          <button
                           onClick={() => handlePostComment(post.id)}
                           disabled={!newCommentContent[post.id]?.trim() || isPostingComment}
                           className="w-9 h-9 rounded-full bg-primary text-black flex items-center justify-center disabled:opacity-50 shrink-0"

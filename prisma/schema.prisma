@@ -38,9 +38,10 @@ model Run {
   id            String   @id @default(cuid())
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  distance      Float    // in km
-  durationSec   Int
-  avgPace       Float    // min/km (calculated or stored)
+  distance      Float    @default(0) // in km
+  durationSec   Int      @default(0)
+  avgPace       Float    @default(0) // min/km (calculated or stored)
+  status        String   @default("COMPLETED") // "IN_PROGRESS" | "COMPLETED"
   routeData     String?  // JSON stringified coordinates
   startTime     DateTime @default(now())
   
@@ -134,6 +135,7 @@ model Comment {
   userId        String
   postId        String
   content       String
+  mediaUrl      String?
   createdAt     DateTime @default(now())
 
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)

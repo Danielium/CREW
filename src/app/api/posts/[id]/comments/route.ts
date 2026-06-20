@@ -37,9 +37,9 @@ export async function POST(
     }
 
     const { id } = await params;
-    const { content } = await req.json();
+    const { content, mediaUrl } = await req.json();
 
-    if (!content) {
+    if (!content && !mediaUrl) {
       return NextResponse.json({ success: false, error: "Missing fields" }, { status: 400 });
     }
 
@@ -47,7 +47,8 @@ export async function POST(
       data: {
         postId: id,
         userId: session.user.id,
-        content,
+        content: content || "",
+        mediaUrl: mediaUrl || null,
       },
       include: {
         user: {

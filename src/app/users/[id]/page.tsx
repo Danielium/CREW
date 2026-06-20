@@ -116,7 +116,7 @@ export default function PublicProfilePage() {
       ) : (
         <div className="flex flex-col gap-6 px-4 pt-6">
           {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             <div className="bg-card border border-border rounded-2xl p-4 flex flex-col items-center justify-center text-center">
               <Footprints size={16} className="text-primary mb-2 opacity-80" />
               <span className="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Пробежки</span>
@@ -127,16 +127,6 @@ export default function PublicProfilePage() {
               <Trophy size={16} className="text-[#CCFF00] mb-2 opacity-80" />
               <span className="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Дистанция</span>
               <span className="text-xl font-black">{totalKm.toFixed(0)}<span className="text-xs font-bold text-muted ml-0.5">км</span></span>
-            </div>
-
-            <div className="bg-card border border-border rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-              <Calendar size={16} className="text-blue-400 mb-2 opacity-80" />
-              <span className="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Ср. темп</span>
-              <span className="text-xl font-black font-mono">
-                {userData.runs?.length > 0 
-                  ? formatPace(userData.runs.reduce((acc: any, r: any) => acc + r.avgPace, 0) / userData.runs.length) 
-                  : "-"}
-              </span>
             </div>
           </div>
 
