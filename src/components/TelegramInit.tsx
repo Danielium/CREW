@@ -10,15 +10,19 @@ export function TelegramInit() {
       tg.ready();
       tg.expand();
       
-      // Попытка программно включить настоящий фуллскрин (Telegram 10.14+) с ретраями
-      const tryFullscreen = (retries = 3) => {
+      // Агрессивный вызов requestFullscreen, так как при первой загрузке (пока идет анимация открытия шторки)
+      // Telegram может игнорировать вызов.
+      const tryFullscreen = () => {
         if (tg.requestFullscreen) {
           try { tg.requestFullscreen(); } catch (e) {}
-        } else if (retries > 0) {
-          setTimeout(() => tryFullscreen(retries - 1), 500);
         }
       };
+      
       tryFullscreen();
+      setTimeout(tryFullscreen, 100);
+      setTimeout(tryFullscreen, 500);
+      setTimeout(tryFullscreen, 1000);
+      setTimeout(tryFullscreen, 2000);
       
       tg.setHeaderColor("#000000");
       tg.setBackgroundColor("#000000");
