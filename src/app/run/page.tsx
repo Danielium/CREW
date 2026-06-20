@@ -61,8 +61,6 @@ export default function RunTab() {
   const isRunningRef = useRef(false);
   const simulationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
-  const [activeRunId, setActiveRunId] = useState<string | null>(null);
-  const [showTelegramLiveHint, setShowTelegramLiveHint] = useState(false);
 
   const [isHoldingStop, setIsHoldingStop] = useState(false);
   const holdTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -356,7 +354,7 @@ export default function RunTab() {
     };
   }, [isRunning]);
 
-  const handleStart = async () => {
+  const handleStart = () => {
     if (!session?.user) {
       alert("Пожалуйста, войдите в аккаунт на вкладке Профиль, чтобы сохранять тренировки!");
       return;
@@ -374,24 +372,6 @@ export default function RunTab() {
     setTimeMs(0);
     setGpsError(null);
     setIsSimulating(false);
-    setActiveRunId(null);
-    setShowTelegramLiveHint(false);
-
-    try {
-      const res = await fetch("/api/runs/active", { 
-        method: "POST", 
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId: activeEvent?.id }) 
-      });
-      const data = await res.json();
-      if (data.success && data.run) {
-        setActiveRunId(data.run.id);
-        setShowTelegramLiveHint(true);
-        setTimeout(() => setShowTelegramLiveHint(false), 8000); // Hide after 8s
-      }
-    } catch (e) {
-      console.error("Failed to create active run on server", e);
-    }
 
     setIsRunning(true);
     setIsPaused(false);
@@ -458,41 +438,10 @@ export default function RunTab() {
       window.history.back();
     }
 
-    let finalDistance = distanceRef.current;
-    let finalTimeMs = timeMs;
-    let finalRoute = routeRef.current;
+    const finalDistance = distanceRef.current;
+    const finalTimeMs = timeMs;
+    const finalRoute = routeRef.current;
     const finalSplits = splitsRef.current;
-
-    // Fetch background live location from server
-    if (activeRunId) {
-      try {
-        const res = await fetch("/api/runs/active");
-        const data = await res.json();
-        if (data.success && data.run && data.run.routeData) {
-          const serverRoute = JSON.parse(data.run.routeData);
-          if (serverRoute.length > 0) {
-            let bgDistance = 0;
-            for (let i = 1; i < serverRoute.length; i++) {
-              const p1 = serverRoute[i - 1];
-              const p2 = serverRoute[i];
-              bgDistance += haversineDistance(p1.lat, p1.lng, p2.lat, p2.lng) / 1000;
-            }
-            // If server has more distance, we use it
-            if (bgDistance > finalDistance) {
-              finalDistance = bgDistance;
-              finalRoute = serverRoute;
-              if (serverRoute.length > 1) {
-                const startTime = serverRoute[0].timestamp || (Date.now() - finalTimeMs);
-                const endTime = serverRoute[serverRoute.length - 1].timestamp || Date.now();
-                finalTimeMs = endTime - startTime;
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.error("Failed to sync background run", e);
-      }
-    }
 
     const pace = finalDistance > 0 ? (finalTimeMs / 1000 / 60) / finalDistance : 0;
 
@@ -533,8 +482,7 @@ export default function RunTab() {
         // Build routeData
         const routeData = finalRoute.map((p) => ({ lat: p.lat, lng: p.lng }));
 
-        const endpoint = activeRunId ? `/api/runs/${activeRunId}/stop` : "/api/runs";
-        await fetch(endpoint, {
+        await fetch("/api/runs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -599,13 +547,6 @@ export default function RunTab() {
       {gpsError && (
         <div className="absolute top-0 left-0 right-0 z-[60] bg-red-500/90 text-white text-center text-xs font-bold py-2.5 px-4 backdrop-blur-sm flex items-center justify-between gap-4">
           <span className="text-left flex-1">{gpsError}</span>
-        </div>
-      )}
-
-      {/* Telegram Live Hint */}
-      {showTelegramLiveHint && (
-        <div className="absolute top-12 left-4 right-4 z-[60] bg-blue-500 text-white text-xs font-bold p-3 rounded-xl shadow-lg animate-in slide-in-from-top-4 fade-in">
-          🏃‍♂️ Трекинг начат! Чтобы бегать с выключенным экраном, сверните приложение крестиком и включите "Транслировать геопозицию" боту!
         </div>
       )}
 
