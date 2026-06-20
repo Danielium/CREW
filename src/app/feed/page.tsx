@@ -555,6 +555,7 @@ export default function FeedTab() {
                         </button>
                       </div>
                     </div>
+                  </div>
                   )}
                 </div>
               </div>
