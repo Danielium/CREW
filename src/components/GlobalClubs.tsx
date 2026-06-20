@@ -103,7 +103,7 @@ export default function GlobalClubs({ inClub }: { inClub?: boolean }) {
 
       <div className="mb-6">
         <h2 className="text-2xl font-black tracking-tight uppercase">Битва Клубов</h2>
-        <p className="text-xs text-muted uppercase tracking-wider font-bold mt-1">Топ беговых клубов города</p>
+        <p className="text-xs text-muted uppercase tracking-wider font-bold mt-1">Топ беговых клубов мира</p>
       </div>
 
       <div className="flex flex-col gap-3">
