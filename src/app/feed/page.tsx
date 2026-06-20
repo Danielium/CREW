@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Search, Heart, MessageSquare, MapPin, Send, Loader2, User, ImageIcon, X, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { Capacitor } from '@capacitor/core';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { triggerHaptic } from "@/lib/haptics";
 
 // Types based on Prisma
 type Post = {
@@ -158,9 +157,7 @@ export default function FeedTab() {
   };
 
   const toggleLike = async (id: string) => {
-    if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
-      Haptics.impact({ style: ImpactStyle.Light });
-    }
+    triggerHaptic('light');
     // Optimistic UI for likes
     setPosts(prev => 
       prev.map(p => {

@@ -3,8 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { MapPin, ArrowLeft, Square, Play, Pause, Share2, ArrowRight, Loader2, QrCode, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
-import { Capacitor, registerPlugin } from '@capacitor/core';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { triggerHaptic } from "@/lib/haptics";
 import type { BackgroundGeolocationPlugin } from '@capacitor-community/background-geolocation';
 
 let BackgroundGeolocation: BackgroundGeolocationPlugin | null = null;
@@ -150,10 +149,8 @@ export default function RunTab() {
 
         const currentKm = Math.floor(distanceRef.current);
         if (currentKm > lastKmRef.current) {
-          if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
-            Haptics.impact({ style: ImpactStyle.Heavy });
-            setTimeout(() => Haptics.impact({ style: ImpactStyle.Heavy }), 300);
-          }
+          triggerHaptic('heavy');
+          setTimeout(() => triggerHaptic('heavy'), 300);
           const splitTime = (now - splitStartTimeRef.current) / 1000;
           const splitDist = distanceRef.current - splitStartDistRef.current;
           const paceMinPerKm = splitDist > 0 ? splitTime / 60 / splitDist : 0;
@@ -380,16 +377,12 @@ export default function RunTab() {
   useEffect(() => {
     if (countdown === null) return;
     if (countdown > 0) {
-      if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
-        Haptics.impact({ style: ImpactStyle.Medium });
-      }
+      triggerHaptic('medium');
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
     } else {
       // Countdown finished
-      if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
-        Haptics.impact({ style: ImpactStyle.Heavy });
-      }
+      triggerHaptic('heavy');
       const timer = setTimeout(() => {
         setCountdown(null);
         setIsRunning(true);
@@ -424,25 +417,19 @@ export default function RunTab() {
     setGpsError(null);
     setIsSimulating(false);
 
-    if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
-      Haptics.impact({ style: ImpactStyle.Light });
-    }
+    triggerHaptic('light');
 
     setCountdown(3); // Start countdown
   };
 
   const handlePause = () => {
-    if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
-      Haptics.impact({ style: ImpactStyle.Light });
-    }
+    triggerHaptic('light');
     setIsPaused(true);
     stopGpsTracking();
   };
 
   const handleResume = () => {
-    if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
-      Haptics.impact({ style: ImpactStyle.Light });
-    }
+    triggerHaptic('light');
     setIsPaused(false);
     // Reset lastPosition so we don't count the distance during pause
     lastPositionRef.current = null;
@@ -458,9 +445,7 @@ export default function RunTab() {
     if (isSaving) return;
     
     setIsHoldingStop(true);
-    if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
-      Haptics.impact({ style: ImpactStyle.Medium });
-    }
+    triggerHaptic('medium');
     if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
     
     holdTimeoutRef.current = setTimeout(() => {
