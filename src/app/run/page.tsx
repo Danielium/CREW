@@ -547,14 +547,6 @@ export default function RunTab() {
       {gpsError && (
         <div className="absolute top-0 left-0 right-0 z-[60] bg-red-500/90 text-white text-center text-xs font-bold py-2.5 px-4 backdrop-blur-sm flex items-center justify-between gap-4">
           <span className="text-left flex-1">{gpsError}</span>
-          {!isSimulating && (
-            <button 
-              onClick={startSimulation}
-              className="bg-white text-black px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider active:scale-95 transition-all cursor-pointer flex-shrink-0"
-            >
-              Симулировать бег
-            </button>
-          )}
         </div>
       )}
 
