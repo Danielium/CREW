@@ -6,7 +6,7 @@ export const triggerHaptic = async (style: 'light' | 'medium' | 'heavy' = 'light
 
   // 1. Try Telegram Web App Haptics
   const tg = (window as any).Telegram?.WebApp;
-  if (tg?.HapticFeedback) {
+  if (tg?.HapticFeedback && tg.platform !== "unknown" && tg.platform !== "") {
     try {
       tg.HapticFeedback.impactOccurred(style);
       return;
