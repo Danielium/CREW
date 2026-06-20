@@ -33,6 +33,7 @@ export default function RunTab() {
   const [isSaving, setIsSaving] = useState(false);
   const [timeMs, setTimeMs] = useState(0);
   const [distance, setDistance] = useState(0); // in km
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   const [autoPause, setAutoPause] = useState(false);
   const [audioComments, setAudioComments] = useState(true);
@@ -372,8 +373,29 @@ export default function RunTab() {
       window.dispatchEvent(new Event("showNav"));
     };
   }, [isRunning]);
+  useEffect(() => {
+    if (countdown === null) return;
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      // Countdown finished
+      const timer = setTimeout(() => {
+        setCountdown(null);
+        setIsRunning(true);
+        setIsPaused(false);
+        startGpsTracking();
+        window.history.pushState({ running: true }, "");
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown, startGpsTracking]);
 
   const handleStart = () => {
+    // Request Wake Lock
+    if ("wakeLock" in navigator) {
+      navigator.wakeLock.request("screen").catch(() => {});
+    }
     if (!session?.user) {
       alert("Пожалуйста, войдите в аккаунт на вкладке Профиль, чтобы сохранять тренировки!");
       return;
@@ -392,10 +414,7 @@ export default function RunTab() {
     setGpsError(null);
     setIsSimulating(false);
 
-    setIsRunning(true);
-    setIsPaused(false);
-    startGpsTracking();
-    window.history.pushState({ running: true }, "");
+    setCountdown(3); // Start countdown
   };
 
   const handlePause = () => {
@@ -569,6 +588,17 @@ export default function RunTab() {
         </div>
       )}
 
+      {/* Countdown Overlay */}
+      {countdown !== null && (
+        <div className="absolute inset-0 z-[100] bg-background/95 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in">
+          <div 
+            className="text-[12rem] font-black text-primary italic drop-shadow-[0_0_40px_rgba(20,255,0,0.4)] animate-in zoom-in spin-in-12 duration-500" 
+            key={countdown}
+          >
+            {countdown > 0 ? countdown : "GO!"}
+          </div>
+        </div>
+      )}
 
       <div className="w-full h-full flex flex-col relative z-10">
           <div className="pt-8 px-6 z-10 flex justify-center">

@@ -36,6 +36,7 @@
     "uuid": "^14.0.0"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.4.1",
     "@playwright/test": "^1.61.0",
     "@tailwindcss/postcss": "^4",

@@ -155,20 +155,31 @@ export default function FeedTab() {
     }
   };
 
-  const toggleLike = (id: string) => {
+  const toggleLike = async (id: string) => {
     // Optimistic UI for likes
-    setPosts(posts.map(p => {
-      if (p.id === id) {
-        const liked = !p.isLiked;
-        return { 
-          ...p, 
-          isLiked: liked,
-          _count: { ...p._count, likes: p._count.likes + (liked ? 1 : -1) }
-        };
-      }
-      return p;
-    }));
-    // In real app, make POST /api/likes here
+    setPosts(prev => 
+      prev.map(p => {
+        if (p.id === id) {
+          const liked = !p.isLiked;
+          return {
+            ...p,
+            isLiked: liked,
+            _count: { ...p._count, likes: p._count.likes + (liked ? 1 : -1) }
+          };
+        }
+        return p;
+      })
+    );
+
+    try {
+      await fetch('/api/likes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: id })
+      });
+    } catch (e) {
+      console.error("Failed to toggle like", e);
+    }
   };
 
   const toggleComments = async (postId: string) => {
