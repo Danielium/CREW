@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Mail, Lock, User, Target, ChevronRight, Check, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
+import { triggerHaptic } from "@/lib/haptics";
+import Image from "next/image";
 
 type Mode = "LOGIN" | "REGISTER_1" | "REGISTER_2" | "REGISTER_3" | "REGISTER_4";
 
@@ -18,7 +20,14 @@ const GOALS = [
 
 export default function LoginPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("LOGIN");
+  const [rawMode, setRawMode] = useState<Mode>("LOGIN");
+  
+  const setMode = (newMode: Mode) => {
+    triggerHaptic('light');
+    setRawMode(newMode);
+  };
+  
+  const mode = rawMode;
   
   // Form State
   const [email, setEmail] = useState("");
@@ -57,6 +66,7 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    triggerHaptic('medium');
     setIsLoading(true);
     setError("");
 
