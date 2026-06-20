@@ -709,14 +709,14 @@ export default function RunTab() {
               {!isRunning ? (
                 <button
                   onClick={handleStart}
-                  className="w-24 h-24 rounded-full bg-primary text-black flex items-center justify-center shadow-[0_0_40px_rgba(204,255,0,0.4)] active:scale-95 transition-all border-4 border-background"
+                  className="w-24 h-24 rounded-full bg-primary text-black flex items-center justify-center shadow-[0_0_40px_rgba(204,255,0,0.4)] active:scale-95 transition-all"
                 >
                   <span className="font-black text-xl uppercase tracking-wider">Старт</span>
                 </button>
               ) : (
                 <button
                   onClick={isPaused ? handleResume : handlePause}
-                  className={`w-28 h-28 rounded-full flex items-center justify-center active:scale-95 transition-all border-4 border-background ${
+                  className={`w-28 h-28 rounded-full flex items-center justify-center active:scale-95 transition-all ${
                     isPaused ? "bg-primary text-black shadow-[0_0_40px_rgba(204,255,0,0.4)]" : "bg-orange-500 text-white shadow-[0_0_40px_rgba(249,115,22,0.4)]"
                   }`}
                 >
