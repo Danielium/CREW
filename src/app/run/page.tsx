@@ -296,8 +296,7 @@ export default function RunTab() {
     setIsPaused(false);
 
     if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
+      stopGpsTracking();
     }
 
     if (!window.history.state?.running) {
@@ -349,7 +348,7 @@ export default function RunTab() {
   useEffect(() => {
     return () => {
       if (watchIdRef.current !== null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
+        stopGpsTracking();
       }
       if (simulationIntervalRef.current) {
         clearInterval(simulationIntervalRef.current);
