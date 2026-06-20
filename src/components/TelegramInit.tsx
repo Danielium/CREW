@@ -10,8 +10,7 @@ export function TelegramInit() {
       tg.ready();
       tg.expand();
       
-      // Агрессивный вызов requestFullscreen, так как при первой загрузке (пока идет анимация открытия шторки)
-      // Telegram может игнорировать вызов.
+      // Агрессивный вызов requestFullscreen
       const tryFullscreen = () => {
         if (tg.requestFullscreen) {
           try { tg.requestFullscreen(); } catch (e) {}
@@ -23,6 +22,14 @@ export function TelegramInit() {
       setTimeout(tryFullscreen, 500);
       setTimeout(tryFullscreen, 1000);
       setTimeout(tryFullscreen, 2000);
+
+      // Жесткий хак: если это первый запуск сессии, принудительно перезагружаем страницу.
+      // Telegram iOS/Android багует с requestFullscreen при первом открытии шторки.
+      // При перезагрузке шторка уже открыта, и фуллскрин срабатывает мгновенно.
+      if (!sessionStorage.getItem("tg_reloaded_for_fullscreen")) {
+        sessionStorage.setItem("tg_reloaded_for_fullscreen", "true");
+        window.location.reload();
+      }
       
       tg.setHeaderColor("#000000");
       tg.setBackgroundColor("#000000");
