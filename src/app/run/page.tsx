@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { MapPin, ArrowLeft, Square, Play, Pause, Share2, ArrowRight, Loader2, QrCode, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { triggerHaptic } from "@/lib/haptics";
 import type { BackgroundGeolocationPlugin } from '@capacitor-community/background-geolocation';
 
