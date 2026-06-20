@@ -99,7 +99,7 @@ export default function ProgressTab() {
         <h1 className="text-2xl font-black tracking-tight uppercase">Прогресс</h1>
       </div>
 
-      <div className="flex flex-col gap-6 px-4">
+      <div className="flex flex-col gap-6 px-4 mt-6">
         {/* Running Stats Overview */}
         <div className="bg-card rounded-[24px] border border-border overflow-hidden shadow-lg grid grid-cols-2 divide-x divide-border bg-gradient-to-b from-card to-background/50">
           <div className="p-6 flex flex-col items-center justify-center text-center">
