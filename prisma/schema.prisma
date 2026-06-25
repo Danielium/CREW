@@ -13,8 +13,7 @@ datasource db {
 model User {
   id            String       @id @default(cuid())
   name          String?
-  email         String?      @unique
-  emailVerified DateTime?
+  telegramUsername String?      @unique
   image         String?
   password      String?
   goal          String?
@@ -29,9 +28,9 @@ model User {
   eventsCreated Event[]      @relation("EventCreator")
   eventsAttended Event[]     @relation("EventAttendees")
   eventsCheckedIn Event[]    @relation("EventCheckedIn")
-  posts         Post[]
-  likes         Like[]
-  comments      Comment[]
+  
+  runProposals  RunProposal[] @relation("RunProposalCreator")
+  joinRequests  RunJoinRequest[] @relation("JoinRequestUser")
 }
 
 model Run {
@@ -48,8 +47,6 @@ model Run {
   eventId       String?
   event         Event?   @relation("EventRuns", fields: [eventId], references: [id], onDelete: SetNull)
   splits        String?  // JSON stringified array
-  
-  post          Post?
 }
 
 model Club {
@@ -103,43 +100,33 @@ model Event {
   runs          Run[]    @relation("EventRuns")
 }
 
-model Post {
-  id            String   @id @default(cuid())
-  userId        String
-  type          String   // "RUN" | "ACHIEVEMENT" | "TEXT"
-  runId         String?  @unique
-  content       String?
-  mediaUrl      String?
-  createdAt     DateTime @default(now())
+model RunProposal {
+  id              String   @id @default(cuid())
+  creatorId       String
+  lat             Float
+  lng             Float
+  routeData       String?  // JSON stringified coordinates
+  pace            String?
+  startTime       DateTime
+  maxParticipants Int      @default(0) // 0 means no limit
+  status          String   @default("ACTIVE") // ACTIVE, CANCELLED, COMPLETED
+  createdAt       DateTime @default(now())
+
+  creator         User     @relation("RunProposalCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  requests        RunJoinRequest[] @relation("RunJoinRequests")
+}
+
+model RunJoinRequest {
+  id              String   @id @default(cuid())
+  proposalId      String
+  userId          String
+  status          String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  createdAt       DateTime @default(now())
+
+  proposal        RunProposal @relation("RunJoinRequests", fields: [proposalId], references: [id], onDelete: Cascade)
+  user            User        @relation("JoinRequestUser", fields: [userId], references: [id], onDelete: Cascade)
   
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  run           Run?     @relation(fields: [runId], references: [id], onDelete: SetNull)
-  likes         Like[]
-  comments      Comment[]
-}
-
-model Like {
-  id            String   @id @default(cuid())
-  userId        String
-  postId        String
-  createdAt     DateTime @default(now())
-
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post          Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, postId])
-}
-
-model Comment {
-  id            String   @id @default(cuid())
-  userId        String
-  postId        String
-  content       String
-  mediaUrl      String?
-  createdAt     DateTime @default(now())
-
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post          Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  @@unique([proposalId, userId])
 }
 
 model Account {

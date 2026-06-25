@@ -18,7 +18,7 @@ export async function POST(req: Request) {
       await prisma.user.create({
         data: {
           id: userId,
-          email: session.user.email || `recovered-${userId}@crew.app`,
+          telegramUsername: session.user.email || `@recovered-${userId}`,
           name: session.user.name || "Runner",
         }
       });

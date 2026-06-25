@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Mail, Lock, User, Target, ChevronRight, Check, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Loader2, Send, Lock, User, Target, ChevronRight, Check, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
 import { triggerHaptic } from "@/lib/haptics";
@@ -30,11 +30,31 @@ export default function LoginPage() {
   const mode = rawMode;
   
   // Form State
-  const [email, setEmail] = useState("");
+  const [telegramUsername, setTelegramUsername] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [goals, setGoals] = useState<string[]>([]);
   const [customGoal, setCustomGoal] = useState("");
+  const [isTgLogin, setIsTgLogin] = useState(false);
+  
+  useEffect(() => {
+    if (typeof window !== "undefined" && (window as any).Telegram?.WebApp) {
+      const tg = (window as any).Telegram.WebApp;
+      if (tg.initDataUnsafe?.user) {
+        const user = tg.initDataUnsafe.user;
+        if (user.username) {
+          setTelegramUsername('@' + user.username);
+        }
+        if (user.first_name) {
+          setName(user.first_name + (user.last_name ? ' ' + user.last_name : ''));
+        }
+        if (user.photo_url) {
+          setImagePreview(user.photo_url);
+        }
+        setIsTgLogin(true);
+      }
+    }
+  }, []);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -72,13 +92,13 @@ export default function LoginPage() {
 
     try {
       const res = await signIn("credentials", {
-        email,
+        telegramUsername,
         password,
         redirect: false,
       });
 
       if (res?.error) {
-        setError("Неверный email или пароль");
+        setError("Неверный юзернейм или пароль");
       } else {
         router.push("/profile");
         router.refresh();
@@ -90,10 +110,10 @@ export default function LoginPage() {
     }
   };
 
-  const handleCheckEmail = async (e: React.FormEvent | React.MouseEvent) => {
+  const handleCheckUsername = async (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      setError("Введите email и пароль");
+    if (!telegramUsername.trim() || !password.trim()) {
+      setError("Введите Telegram username и пароль");
       return;
     }
     if (password.length < 6) {
@@ -105,20 +125,24 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await fetch("/api/auth/check-email", {
+      const res = await fetch("/api/auth/check-username", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ telegramUsername }),
       });
       const data = await res.json();
       
       if (data.exists) {
-        setError("Пользователь с таким email уже существует");
+        setError("Пользователь с таким юзернеймом уже существует");
       } else {
-        setMode("REGISTER_2");
+        if (isTgLogin) {
+          setMode("REGISTER_4"); // Skip name & avatar
+        } else {
+          setMode("REGISTER_2");
+        }
       }
     } catch (err) {
-      setError("Ошибка при проверке email");
+      setError("Ошибка при проверке юзернейма");
     } finally {
       setIsLoading(false);
     }
@@ -145,10 +169,13 @@ export default function LoginPage() {
         finalGoals.push(customGoal.trim());
       }
 
+      // Если есть файл, используем его, иначе используем tg URL из imagePreview
+      const avatarStyle = uploadedImageUrl || imagePreview;
+
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name, avatarStyle: uploadedImageUrl, goal: JSON.stringify(finalGoals) })
+        body: JSON.stringify({ telegramUsername, password, name, avatarStyle, goal: JSON.stringify(finalGoals) })
       });
 
       const data = await res.json();
@@ -161,7 +188,7 @@ export default function LoginPage() {
 
       // Auto login after registration
       const loginRes = await signIn("credentials", {
-        email,
+        telegramUsername,
         password,
         redirect: false,
       });
@@ -233,13 +260,13 @@ export default function LoginPage() {
               {error && <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-xl text-sm font-medium">{error}</div>}
 
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted"><Mail size={20} /></div>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required className="w-full bg-card border border-border rounded-[20px] py-4 pl-12 pr-4 text-foreground placeholder:text-muted/50 focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted"><Send size={20} /></div>
+                <input type="text" value={telegramUsername} onChange={(e) => setTelegramUsername(e.target.value)} placeholder="Telegram Username (@username)" required className="w-full bg-card border border-border rounded-[20px] py-4 pl-12 pr-4 text-foreground placeholder:text-muted/50 focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
               </div>
 
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted"><Lock size={20} /></div>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Пароль" required className="w-full bg-card border border-border rounded-[20px] py-4 pl-12 pr-4 text-foreground placeholder:text-muted/50 focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Придумайте пароль" required className="w-full bg-card border border-border rounded-[20px] py-4 pl-12 pr-4 text-foreground placeholder:text-muted/50 focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
               </div>
 
               <button type="submit" disabled={isLoading} className="w-full bg-foreground text-background font-black uppercase tracking-wider py-4 rounded-[20px] flex justify-center items-center mt-6 hover:bg-muted transition-all disabled:opacity-70 active:scale-95">
@@ -248,7 +275,7 @@ export default function LoginPage() {
 
               <div className="mt-auto mb-8 text-center">
                 <p className="text-muted mb-4">Впервые здесь?</p>
-                <button type="button" disabled={isLoading} onClick={handleCheckEmail} className="w-full bg-primary text-black font-black uppercase tracking-wider py-4 rounded-[20px] flex justify-center items-center hover:bg-[#b3e600] active:scale-95 transition-all disabled:opacity-50">
+                <button type="button" disabled={isLoading} onClick={handleCheckUsername} className="w-full bg-primary text-black font-black uppercase tracking-wider py-4 rounded-[20px] flex justify-center items-center hover:bg-[#b3e600] active:scale-95 transition-all disabled:opacity-50">
                   {isLoading ? <Loader2 className="animate-spin" size={24} /> : "Создать аккаунт"}
                 </button>
               </div>

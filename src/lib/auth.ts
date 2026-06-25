@@ -15,17 +15,22 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
+        telegramUsername: { label: "Telegram Username", type: "text" },
         password: { label: "Пароль", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        if (!credentials?.telegramUsername || !credentials?.password) {
           return null;
         }
 
         try {
+          let tUsername = credentials.telegramUsername.toLowerCase();
+          if (!tUsername.startsWith('@')) {
+            tUsername = '@' + tUsername;
+          }
+
           const user = await prisma.user.findUnique({
-            where: { email: credentials.email.toLowerCase() }
+            where: { telegramUsername: tUsername }
           });
 
           if (!user || !user.password) {
@@ -37,7 +42,7 @@ export const authOptions: NextAuthOptions = {
 
           return {
             id: user.id,
-            email: user.email,
+            email: user.telegramUsername, // Map telegramUsername to email field in NextAuth JWT to avoid ts errors without extending types deeply
             name: user.name,
             // image: user.image, // Removed: Storing large Base64 strings in JWT causes 494 Header Too Large errors
           };
