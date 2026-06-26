@@ -40,16 +40,18 @@ function MapController({ onMapClick, forceCenter }: any) {
   return null;
 }
 
-export default function TinderMap({ proposals, onSelectProposal, onMapClick, forceCenter }: { proposals: any[], onSelectProposal: (p: any) => void, onMapClick?: (latlng: any) => void, forceCenter?: [number, number] | null }) {
-  const [center, setCenter] = useState<[number, number]>([55.7558, 37.6173]);
-  const [hasSetInitialLocation, setHasSetInitialLocation] = useState(false);
+function UserLocationMarker({ setInitialLocation }: { setInitialLocation: (latlng: [number, number]) => void }) {
+  const [position, setPosition] = useState<[number, number] | null>(null);
 
-  // Request user location on mount
   useEffect(() => {
+    let watchId: number;
+
     const handleLocation = (lat: number, lng: number) => {
-      if (!hasSetInitialLocation) {
-        setCenter([lat, lng]);
-        setHasSetInitialLocation(true);
+      const numLat = Number(lat);
+      const numLng = Number(lng);
+      if (!isNaN(numLat) && !isNaN(numLng)) {
+        setPosition([numLat, numLng]);
+        setInitialLocation([numLat, numLng]);
       }
     };
 
@@ -60,19 +62,56 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
         tg.LocationManager.getLocation((data: any) => {
           if (data) handleLocation(data.latitude, data.longitude);
         });
+        // We could theoretically poll here if Telegram doesn't provide a watch API
       });
     } else if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
+      watchId = navigator.geolocation.watchPosition(
         (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),
-        () => {}
+        () => {},
+        { enableHighAccuracy: true }
       );
     }
-  }, [hasSetInitialLocation]);
+
+    return () => {
+      if (watchId && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, []);
+
+  if (!position) return null;
+
+  return (
+    <>
+      <CircleMarker 
+        center={position} 
+        radius={10} 
+        pathOptions={{ color: "#CCFF00", fillColor: "#CCFF00", fillOpacity: 0.3, weight: 1 }} 
+      />
+      <CircleMarker 
+        center={position} 
+        radius={6} 
+        pathOptions={{ color: "#FFFFFF", fillColor: "#CCFF00", fillOpacity: 1, weight: 2 }} 
+      />
+    </>
+  );
+}
+
+export default function TinderMap({ proposals, onSelectProposal, onMapClick, forceCenter }: { proposals: any[], onSelectProposal: (p: any) => void, onMapClick?: (latlng: any) => void, forceCenter?: [number, number] | null }) {
+  const [initialCenter, setInitialCenter] = useState<[number, number] | null>(null);
+  const [hasFlown, setHasFlown] = useState(false);
+
+  const handleSetInitialLocation = (latlng: [number, number]) => {
+    if (!hasFlown) {
+      setInitialCenter(latlng);
+      setHasFlown(true);
+    }
+  };
 
   return (
     <div className="w-full h-[100dvh] absolute top-0 left-0 z-0">
       <MapContainer
-        center={center}
+        center={[55.7558, 37.6173]}
         zoom={14}
         style={{ width: "100%", height: "100%" }}
         zoomControl={false}
@@ -80,7 +119,7 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
       >
         <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
         
-        <MapController onMapClick={onMapClick} forceCenter={forceCenter || (hasSetInitialLocation ? center : null)} />
+        <MapController onMapClick={onMapClick} forceCenter={forceCenter || initialCenter} />
 
         {proposals.map(p => (
           <Marker 
@@ -93,32 +132,7 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
           />
         ))}
 
-        {hasSetInitialLocation && (
-          <>
-            {/* Position outer ring */}
-            <CircleMarker 
-              center={center} 
-              radius={10} 
-              pathOptions={{ 
-                color: "#CCFF00", 
-                fillColor: "#CCFF00", 
-                fillOpacity: 0.3, 
-                weight: 1 
-              }} 
-            />
-            {/* Position center dot */}
-            <CircleMarker 
-              center={center} 
-              radius={6} 
-              pathOptions={{ 
-                color: "#FFFFFF", 
-                fillColor: "#CCFF00", 
-                fillOpacity: 1, 
-                weight: 2 
-              }} 
-            />
-          </>
-        )}
+        <UserLocationMarker setInitialLocation={handleSetInitialLocation} />
       </MapContainer>
     </div>
   );
