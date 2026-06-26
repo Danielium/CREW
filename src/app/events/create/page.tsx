@@ -148,31 +148,27 @@ export default function CreateEventPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Дата</label>
-            <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors relative">
-              <Calendar size={18} className="text-primary absolute left-3" />
+        <div className="flex flex-col gap-2">
+          <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted flex items-center gap-2">
+            <Clock size={16} /> Дата и время старта
+          </label>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-card border border-border rounded-2xl flex items-center pl-4 pr-2 py-3 focus-within:border-primary transition-colors">
               <input 
-                type="date"
-                required
-                className="bg-transparent border-none outline-none w-full font-medium text-sm pl-8 appearance-none cursor-pointer"
-                value={form.date}
-                onChange={(e) => setForm({...form, date: e.target.value})}
+                type="date" 
+                value={form.date} 
+                onChange={e => setForm({...form, date: e.target.value})} 
+                required 
+                className="bg-transparent border-none outline-none w-full font-medium text-sm cursor-pointer appearance-none" 
               />
             </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Время</label>
-            <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors relative">
-              <Clock size={18} className="text-primary absolute left-3" />
+            <div className="bg-card border border-border rounded-2xl flex items-center px-4 py-3 focus-within:border-primary transition-colors">
               <input 
-                type="time"
-                required
-                className="bg-transparent border-none outline-none w-full font-medium text-sm pl-8 appearance-none cursor-pointer"
-                value={form.time}
-                onChange={(e) => setForm({...form, time: e.target.value})}
+                type="time" 
+                value={form.time} 
+                onChange={e => setForm({...form, time: e.target.value})} 
+                required 
+                className="bg-transparent border-none outline-none w-full font-medium text-sm cursor-pointer appearance-none" 
               />
             </div>
           </div>
