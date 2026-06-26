@@ -20,10 +20,17 @@ export default function ClubTab() {
 
     if (status === "authenticated" && session?.user) {
       fetch(`/api/users?userId=${(session.user as any).id}`)
-        .then(res => res.json())
+        .then(async res => {
+          const data = await res.json();
+          if (res.status === 404) {
+            import("next-auth/react").then(({ signOut }) => signOut({ callbackUrl: "/login" }));
+          }
+          return data;
+        })
         .then(data => {
-          if (data.user) setUserData(data.user);
-          // If in club, default to События, else Клубы
+          if (data.user) {
+            setUserData(data.user);
+          }
           if (data?.user?.clubMembers && data.user.clubMembers.length > 0) {
             setActiveTab("События");
           }

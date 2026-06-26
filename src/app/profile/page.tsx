@@ -57,6 +57,9 @@ export default function ProfileTab() {
         setEditName(data.user.name || "");
         setEditAvatar(data.user.image || "");
         setEditIsPrivate(data.user.isPrivate || false);
+      } else if (res.status === 404) {
+        // Очищаем сессию, если пользователя удалили из БД
+        signOut({ callbackUrl: "/login" });
       }
     } catch (e) {
       console.error(e);
