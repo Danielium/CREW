@@ -36,7 +36,7 @@ export default function MapPage() {
   const handleTouchMove = (e: React.TouchEvent) => {
     if (touchStartY === 0) return;
     const currentY = e.touches[0].clientY;
-    if (currentY - touchStartY > 50) {
+    if (currentY - touchStartY > 120) {
       setSelectedProposal(null);
       setTouchStartY(0);
     }
