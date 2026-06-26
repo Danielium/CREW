@@ -63,7 +63,20 @@ export async function GET(req: Request) {
       }
     });
 
-    return NextResponse.json({ proposals });
+    const userId = session?.user ? (session.user as any).id : "";
+
+    const visibleProposals = proposals.filter((p) => {
+      // If no limit or not full, show it
+      if (p.maxParticipants === 0 || p._count.requests < p.maxParticipants) {
+        return true;
+      }
+      // If full, only show to creator or accepted participants
+      if (p.creator.id === userId) return true;
+      if (p.requests.some(r => r.status === "ACCEPTED")) return true;
+      return false;
+    });
+
+    return NextResponse.json({ proposals: visibleProposals });
   } catch (error) {
     console.error("Map events fetch error", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

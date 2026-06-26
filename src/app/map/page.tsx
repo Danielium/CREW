@@ -22,6 +22,13 @@ export default function MapPage() {
   const [forceCenter, setForceCenter] = useState<[number, number] | null>(null);
   const [touchStartY, setTouchStartY] = useState(0);
 
+  const [isEditingProposal, setIsEditingProposal] = useState(false);
+  const [editDate, setEditDate] = useState("");
+  const [editTime, setEditTime] = useState("");
+  const [editPace, setEditPace] = useState("");
+  const [editLimit, setEditLimit] = useState("");
+  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartY(e.touches[0].clientY);
   };
@@ -104,6 +111,59 @@ export default function MapPage() {
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handleEditClick = () => {
+    if (!selectedProposal) return;
+    const d = new Date(selectedProposal.startTime);
+    
+    // adjust for local timezone offset when getting YYYY-MM-DD
+    const localDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+    
+    setEditDate(localDate);
+    setEditTime(d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false}));
+    setEditPace(selectedProposal.pace || "");
+    setEditLimit((selectedProposal.maxParticipants || 0).toString());
+    setIsEditingProposal(true);
+  };
+
+  const handleDeleteProposal = async () => {
+    if (!selectedProposal || !confirm("Точно удалить маячок?")) return;
+    try {
+      const res = await fetch(`/api/proposals/${selectedProposal.id}`, { method: "DELETE" });
+      if (res.ok) {
+        setSelectedProposal(null);
+        fetchProposals();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedProposal || !editDate || !editTime) return;
+    setIsSubmittingEdit(true);
+    try {
+      const startTime = new Date(`${editDate}T${editTime}`).toISOString();
+      const res = await fetch(`/api/proposals/${selectedProposal.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startTime,
+          pace: editPace,
+          maxParticipants: parseInt(editLimit) || 0
+        })
+      });
+      if (res.ok) {
+        setIsEditingProposal(false);
+        fetchProposals();
+        setSelectedProposal(null);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSubmittingEdit(false);
     }
   };
 
@@ -191,55 +251,91 @@ export default function MapPage() {
           <div className="flex flex-col gap-6">
             <h2 className="text-2xl font-black uppercase tracking-tight">Совместная пробежка</h2>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-muted/30 rounded-2xl p-4 flex flex-col gap-1">
-                <div className="flex items-center gap-2 text-muted">
-                  <Clock size={16} />
-                  <span className="text-xs uppercase font-bold tracking-wider">Старт</span>
+            {isEditingProposal ? (
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted">Дата и время</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <input type="date" className="bg-muted/30 border-none outline-none rounded-2xl p-4 font-medium text-sm" value={editDate} onChange={e => setEditDate(e.target.value)} />
+                    <input type="time" className="bg-muted/30 border-none outline-none rounded-2xl p-4 font-medium text-sm" value={editTime} onChange={e => setEditTime(e.target.value)} />
+                  </div>
                 </div>
-                <span className="font-bold text-lg">
-                  {new Date(selectedProposal.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                </span>
-                <span className="text-xs text-muted">
-                  {new Date(selectedProposal.startTime).toLocaleDateString()}
-                </span>
-              </div>
-              
-              <div className="bg-muted/30 rounded-2xl p-4 flex flex-col gap-1">
-                <div className="flex items-center gap-2 text-muted">
-                  <Activity size={16} />
-                  <span className="text-xs uppercase font-bold tracking-wider">Темп</span>
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted">Темп (мин/км)</label>
+                  <input type="text" placeholder="Например: 5:30 или 5:00 - 6:00" className="bg-muted/30 border-none outline-none rounded-2xl p-4 font-medium text-sm w-full" value={editPace} onChange={e => setEditPace(e.target.value)} />
                 </div>
-                <span className="font-bold text-lg">{selectedProposal.pace || "Любой"}</span>
-                <span className="text-xs text-muted">мин/км</span>
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted">Лимит участников (0 = безлимит)</label>
+                  <input type="number" min="0" className="bg-muted/30 border-none outline-none rounded-2xl p-4 font-medium text-sm w-full" value={editLimit} onChange={e => setEditLimit(e.target.value)} />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                  <button onClick={() => setIsEditingProposal(false)} disabled={isSubmittingEdit} className="py-4 bg-muted text-foreground rounded-2xl font-bold uppercase tracking-wider active:scale-95 transition-transform disabled:opacity-50 text-sm">
+                    Отмена
+                  </button>
+                  <button onClick={handleSaveEdit} disabled={isSubmittingEdit} className="py-4 bg-primary text-black rounded-2xl font-bold uppercase tracking-wider active:scale-95 transition-transform disabled:opacity-50 text-sm">
+                    {isSubmittingEdit ? "Сохранение..." : "Сохранить"}
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-muted/30 rounded-2xl p-4 flex flex-col gap-1">
+                    <div className="flex items-center gap-2 text-muted">
+                      <Clock size={16} />
+                      <span className="text-xs uppercase font-bold tracking-wider">Старт</span>
+                    </div>
+                    <span className="font-bold text-lg">
+                      {new Date(selectedProposal.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </span>
+                    <span className="text-xs text-muted">
+                      {new Date(selectedProposal.startTime).toLocaleDateString()}
+                    </span>
+                  </div>
+                  
+                  <div className="bg-muted/30 rounded-2xl p-4 flex flex-col gap-1">
+                    <div className="flex items-center gap-2 text-muted">
+                      <Activity size={16} />
+                      <span className="text-xs uppercase font-bold tracking-wider">Темп</span>
+                    </div>
+                    <span className="font-bold text-lg">{selectedProposal.pace || "Любой"}</span>
+                    <span className="text-xs text-muted">мин/км</span>
+                  </div>
+                </div>
 
-            <div className="bg-muted/30 rounded-2xl p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Users size={20} className="text-primary" />
-                <span className="font-medium text-sm">Участники</span>
-              </div>
-              <span className="font-black">
-                {selectedProposal._count?.requests || 0} / {selectedProposal.maxParticipants === 0 ? '∞' : selectedProposal.maxParticipants}
-              </span>
-            </div>
+                <div className="bg-muted/30 rounded-2xl p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Users size={20} className="text-primary" />
+                    <span className="font-medium text-sm">Участники</span>
+                  </div>
+                  <span className="font-black">
+                    {selectedProposal._count?.requests || 0} / {selectedProposal.maxParticipants === 0 ? '∞' : selectedProposal.maxParticipants}
+                  </span>
+                </div>
 
-            <div className="mt-2">
-              {selectedProposal.requests && selectedProposal.requests.length > 0 ? (
-                <div className="w-full py-4 text-center bg-muted/50 rounded-2xl font-bold uppercase tracking-wider text-sm">
-                  {selectedProposal.requests[0].status === "PENDING" ? "Запрос ожидает ответа" : 
-                   selectedProposal.requests[0].status === "ACCEPTED" ? "Вы участвуете! 🎉" : 
-                   "Заявка отклонена"}
+                <div className="mt-2">
+                  {selectedProposal.requests && selectedProposal.requests.length > 0 ? (
+                    <div className="w-full py-4 text-center bg-muted/50 rounded-2xl font-bold uppercase tracking-wider text-sm">
+                      {selectedProposal.requests[0].status === "PENDING" ? "Запрос ожидает ответа" : 
+                       selectedProposal.requests[0].status === "ACCEPTED" ? "Вы участвуете! 🎉" : 
+                       "Заявка отклонена"}
+                    </div>
+                  ) : selectedProposal.creator?.id === (session?.user as any)?.id ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      <button onClick={handleDeleteProposal} className="py-4 bg-red-500/10 text-red-500 rounded-2xl font-bold uppercase tracking-wider active:scale-95 transition-transform text-sm">
+                        Удалить
+                      </button>
+                      <button onClick={handleEditClick} className="py-4 bg-primary/20 text-primary rounded-2xl font-bold uppercase tracking-wider active:scale-95 transition-transform text-sm">
+                        Изменить
+                      </button>
+                    </div>
+                  ) : (
+                    <SwipeButton onConfirm={handleSwipeJoin} />
+                  )}
                 </div>
-              ) : selectedProposal.creator?.id === (session?.user as any)?.id ? (
-                <div className="w-full py-4 text-center bg-muted/50 rounded-2xl font-bold uppercase tracking-wider text-sm">
-                  Ваша пробежка
-                </div>
-              ) : (
-                <SwipeButton onConfirm={handleSwipeJoin} />
-              )}
-            </div>
+              </>
+            )}
           </div>
         )}
       </div>

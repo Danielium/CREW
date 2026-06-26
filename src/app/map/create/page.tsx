@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
-import { ArrowLeft, Loader2, MapPin, Clock, Activity, Calendar } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, Clock, Activity, Calendar, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { triggerHaptic } from "@/lib/haptics";
 import dynamic from "next/dynamic";
@@ -18,6 +18,7 @@ function CreateProposalInner() {
   const [isPaceToModified, setIsPaceToModified] = useState(false);
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
+  const [maxParticipants, setMaxParticipants] = useState("");
 
   const searchParams = useSearchParams();
 
@@ -96,7 +97,7 @@ function CreateProposalInner() {
           lng: position[1],
           pace: finalPace,
           startTime: startTime.toISOString(),
-          maxParticipants: 0
+          maxParticipants: parseInt(maxParticipants) || 0
         })
       });
 
@@ -199,6 +200,22 @@ function CreateProposalInner() {
                    }}
                  />
                </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted flex items-center gap-2">
+              <Users size={16} /> Лимит участников
+            </label>
+            <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors">
+              <input 
+                type="number" 
+                min="0"
+                placeholder="Без ограничений (0)"
+                className="bg-transparent border-none outline-none w-full font-medium"
+                value={maxParticipants}
+                onChange={(e) => setMaxParticipants(e.target.value)}
+              />
             </div>
           </div>
 
