@@ -159,16 +159,16 @@ export default function CreateEventPage() {
                 value={form.date} 
                 onChange={e => setForm({...form, date: e.target.value})} 
                 required 
-                className="bg-transparent border-none outline-none w-full font-medium text-sm cursor-pointer appearance-none" 
+                className="bg-transparent border-none outline-none w-full font-medium text-sm cursor-pointer" 
               />
             </div>
-            <div className="bg-card border border-border rounded-2xl flex items-center px-4 py-3 focus-within:border-primary transition-colors">
+            <div className="bg-card border border-border rounded-2xl flex items-center pl-4 pr-2 py-3 focus-within:border-primary transition-colors">
               <input 
                 type="time" 
                 value={form.time} 
                 onChange={e => setForm({...form, time: e.target.value})} 
                 required 
-                className="bg-transparent border-none outline-none w-full font-medium text-sm cursor-pointer appearance-none" 
+                className="bg-transparent border-none outline-none w-full font-medium text-sm cursor-pointer" 
               />
             </div>
           </div>
