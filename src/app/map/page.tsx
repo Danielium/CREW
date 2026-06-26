@@ -37,7 +37,7 @@ export default function MapPage() {
     setShowHint(true);
     const timer = setTimeout(() => {
       setShowHint(false);
-    }, 5000);
+    }, 3000);
     return () => clearTimeout(timer);
   }, []);
 
