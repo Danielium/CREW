@@ -16,10 +16,13 @@ export const authOptions: NextAuthOptions = {
       name: "credentials",
       credentials: {
         telegramUsername: { label: "Telegram Username", type: "text" },
-        password: { label: "Пароль", type: "password" }
+        password: { label: "Пароль", type: "password" },
+        isTgWebApp: { label: "isTgWebApp", type: "text" },
+        name: { label: "Name", type: "text" },
+        image: { label: "Image", type: "text" }
       },
       async authorize(credentials) {
-        if (!credentials?.telegramUsername || !credentials?.password) {
+        if (!credentials?.telegramUsername) {
           return null;
         }
 
@@ -28,6 +31,33 @@ export const authOptions: NextAuthOptions = {
           if (!tUsername.startsWith('@')) {
             tUsername = '@' + tUsername;
           }
+
+          if (credentials.isTgWebApp === "true") {
+            let user = await prisma.user.findUnique({
+              where: { telegramUsername: tUsername }
+            });
+
+            if (!user) {
+              const dummyPassword = await bcrypt.hash(Math.random().toString(36).slice(-10), 10);
+              user = await prisma.user.create({
+                data: {
+                  telegramUsername: tUsername,
+                  name: credentials.name || tUsername,
+                  image: credentials.image || null,
+                  password: dummyPassword,
+                }
+              });
+            }
+
+            return {
+              id: user.id,
+              email: user.telegramUsername,
+              name: user.name,
+            };
+          }
+
+          // Fallback to standard password check
+          if (!credentials.password) return null;
 
           const user = await prisma.user.findUnique({
             where: { telegramUsername: tUsername }

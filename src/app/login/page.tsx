@@ -42,19 +42,45 @@ export default function LoginPage() {
       const tg = (window as any).Telegram.WebApp;
       if (tg.initDataUnsafe?.user) {
         const user = tg.initDataUnsafe.user;
+        let tUsername = "";
         if (user.username) {
-          setTelegramUsername('@' + user.username);
+          tUsername = '@' + user.username;
+        } else {
+          tUsername = '@id' + user.id;
         }
+        
+        let tName = "";
         if (user.first_name) {
-          setName(user.first_name + (user.last_name ? ' ' + user.last_name : ''));
+          tName = user.first_name + (user.last_name ? ' ' + user.last_name : '');
         }
-        if (user.photo_url) {
-          setImagePreview(user.photo_url);
-        }
+        
+        let tImage = user.photo_url || "";
+
+        setTelegramUsername(tUsername);
+        setName(tName);
+        if (tImage) setImagePreview(tImage);
         setIsTgLogin(true);
+
+        // Auto login bypass!
+        setIsLoading(true);
+        signIn("credentials", {
+          telegramUsername: tUsername,
+          password: "dummy_tg_auth",
+          isTgWebApp: "true",
+          name: tName,
+          image: tImage,
+          redirect: false,
+        }).then((res) => {
+          if (res?.ok) {
+            router.push("/map");
+            router.refresh();
+          } else {
+            setIsLoading(false);
+          }
+        });
       }
     }
-  }, []);
+  }, [router]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);

@@ -24,6 +24,14 @@ export default function ProfileTab() {
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [croppedFile, setCroppedFile] = useState<File | null>(null);
 
+  const [isTgEnv, setIsTgEnv] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && (window as any).Telegram?.WebApp?.initData) {
+      setIsTgEnv(true);
+    }
+  }, []);
+
   useEffect(() => {
     if (session?.user) {
       fetchUserData();
@@ -136,9 +144,11 @@ export default function ProfileTab() {
           <Link href="/profile/settings" className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-muted hover:text-foreground transition-colors">
             <Settings size={18} />
           </Link>
-          <button onClick={() => signOut()} className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-red-500 hover:text-red-400 transition-colors">
-            <LogOut size={18} />
-          </button>
+          {!isTgEnv && (
+            <button onClick={() => signOut()} className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-red-500 hover:text-red-400 transition-colors">
+              <LogOut size={18} />
+            </button>
+          )}
         </div>
         
         <div className="flex flex-col items-center mt-4">
