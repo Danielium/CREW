@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { Bell, MapPin, Clock, Users, X, Plus, Activity } from "lucide-react";
+import { Bell, MapPin, Clock, Users, X, Plus, Activity, ArrowLeft } from "lucide-react";
 import { SwipeButton } from "@/components/SwipeButton";
 import { triggerHaptic } from "@/lib/haptics";
 import Link from "next/link";
@@ -24,6 +24,12 @@ export default function MapPage() {
     if (status === "unauthenticated") {
       router.push("/login");
     }
+
+    // Hide BottomNav on this screen
+    window.dispatchEvent(new Event("hideNav"));
+    return () => {
+      window.dispatchEvent(new Event("showNav"));
+    };
   }, [status, router]);
 
   useEffect(() => {
@@ -80,9 +86,12 @@ export default function MapPage() {
 
       {/* Top UI Overlay */}
       <div className="absolute top-0 left-0 w-full p-6 pt-12 flex justify-between items-start pointer-events-none z-10">
-        <div className="bg-black/40 backdrop-blur-md rounded-full px-4 py-2 border border-white/10 pointer-events-auto">
-          <h1 className="font-black tracking-tight uppercase text-lg">Карта</h1>
-        </div>
+        <button 
+          onClick={() => router.back()} 
+          className="bg-black/40 backdrop-blur-md rounded-full w-12 h-12 flex items-center justify-center border border-white/10 pointer-events-auto active:scale-95 transition-transform"
+        >
+          <ArrowLeft size={24} />
+        </button>
 
         <Link href="/map/requests" className="pointer-events-auto">
           <div className="relative w-12 h-12 bg-black/40 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center active:scale-95 transition-transform">
