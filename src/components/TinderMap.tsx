@@ -20,49 +20,54 @@ const crewIcon = new L.DivIcon({
   iconAnchor: [12, 12],
 });
 
-function MapEventsHandler({ setCenter, onMapClick }: any) {
+function MapController({ onMapClick, forceCenter }: any) {
   const map = useMapEvents({
-    moveend: () => {
-      setCenter(map.getCenter());
-    },
     click: (e) => {
       if (onMapClick) onMapClick(e.latlng);
     }
   });
-  
+
   useEffect(() => {
     map.invalidateSize();
   }, [map]);
 
-  return null;
-}
-
-function MapRecenter({ center }: { center: [number, number] }) {
-  const map = useMap();
   useEffect(() => {
-    if (center) map.setView(center);
-  }, [center, map]);
+    if (forceCenter) {
+      map.flyTo(forceCenter, 14, { duration: 1 });
+    }
+  }, [forceCenter, map]);
+
   return null;
 }
 
 export default function TinderMap({ proposals, onSelectProposal, onMapClick, forceCenter }: { proposals: any[], onSelectProposal: (p: any) => void, onMapClick?: (latlng: any) => void, forceCenter?: [number, number] | null }) {
   const [center, setCenter] = useState<[number, number]>([55.7558, 37.6173]);
+  const [hasSetInitialLocation, setHasSetInitialLocation] = useState(false);
 
   // Request user location on mount
   useEffect(() => {
-    if (navigator.geolocation) {
+    const handleLocation = (lat: number, lng: number) => {
+      if (!hasSetInitialLocation) {
+        setCenter([lat, lng]);
+        setHasSetInitialLocation(true);
+      }
+    };
+
+    const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
+    
+    if (tg?.LocationManager) {
+      tg.LocationManager.init(() => {
+        tg.LocationManager.getLocation((data: any) => {
+          if (data) handleLocation(data.latitude, data.longitude);
+        });
+      });
+    } else if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => setCenter([pos.coords.latitude, pos.coords.longitude]),
+        (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),
         () => {}
       );
     }
-  }, []);
-
-  useEffect(() => {
-    if (forceCenter) {
-      setCenter(forceCenter);
-    }
-  }, [forceCenter]);
+  }, [hasSetInitialLocation]);
 
   return (
     <div className="w-full h-[100dvh] absolute top-0 left-0 z-0">
@@ -75,8 +80,7 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
       >
         <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
         
-        <MapEventsHandler setCenter={setCenter} onMapClick={onMapClick} />
-        <MapRecenter center={center} />
+        <MapController onMapClick={onMapClick} forceCenter={forceCenter || (hasSetInitialLocation ? center : null)} />
 
         {proposals.map(p => (
           <Marker 
