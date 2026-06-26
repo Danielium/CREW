@@ -149,20 +149,20 @@ export default function RequestsInbox() {
                         <h3 className="font-bold">{otherUser.name}</h3>
                         <p className="text-xs text-primary font-mono">{otherUser.telegramUsername || "Скрыт"}</p>
                       </div>
+                      
+                      {otherUser.telegramUsername && (
+                        <Link href={`https://t.me/${otherUser.telegramUsername.replace('@', '')}`} target="_blank">
+                          <button className="w-12 h-12 bg-[#0088cc] text-white rounded-full flex items-center justify-center active:scale-95 transition-transform flex-shrink-0">
+                            <Send size={20} className="relative right-0.5" />
+                          </button>
+                        </Link>
+                      )}
                     </div>
                     
                     <div className="bg-background rounded-xl p-3 flex justify-between items-center text-sm">
                       <span className="text-muted">Пробежка:</span>
                       <span className="font-bold">{new Date(match.proposal.startTime).toLocaleDateString()} в {new Date(match.proposal.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                     </div>
-
-                    {otherUser.telegramUsername && (
-                      <Link href={`https://t.me/${otherUser.telegramUsername.replace('@', '')}`} target="_blank">
-                        <button className="w-full py-3 bg-[#0088cc] text-white rounded-xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform">
-                          <Send size={18} /> Написать в Telegram
-                        </button>
-                      </Link>
-                    )}
                   </div>
                 );
               })
