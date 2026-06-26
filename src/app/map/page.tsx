@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { Bell, MapPin, Clock, Users, X, Search, Activity, ArrowLeft } from "lucide-react";
+import { Bell, MapPin, Clock, Users, X, Search, Activity, ArrowLeft, LocateFixed } from "lucide-react";
 import { SwipeButton } from "@/components/SwipeButton";
 import { triggerHaptic } from "@/lib/haptics";
 import Link from "next/link";
@@ -128,20 +128,42 @@ export default function MapPage() {
     }
   };
 
+  const handleLocateMe = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        setForceCenter([pos.coords.latitude, pos.coords.longitude]);
+      }, (err) => {
+        console.error("Error getting location", err);
+      });
+    }
+  };
+
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden bg-black text-foreground">
       <TinderMap proposals={proposals} onSelectProposal={handleSelectProposal} onMapClick={handleMapClick} forceCenter={forceCenter} />
 
       {/* Top UI Overlay */}
-      <div className="absolute top-0 left-0 w-full p-6 pt-12 flex justify-between items-start pointer-events-none z-10">
+      <div className="absolute top-0 left-0 w-full p-6 pt-12 flex justify-between items-center pointer-events-none z-10 gap-3">
         <button 
           onClick={() => router.back()} 
-          className="bg-black/40 backdrop-blur-md rounded-full w-12 h-12 flex items-center justify-center border border-white/10 pointer-events-auto active:scale-95 transition-transform"
+          className="bg-black/40 flex-shrink-0 backdrop-blur-md rounded-full w-12 h-12 flex items-center justify-center border border-white/10 pointer-events-auto active:scale-95 transition-transform"
         >
           <ArrowLeft size={24} />
         </button>
 
-        <Link href="/map/requests" className="pointer-events-auto">
+        {/* Search Input always visible */}
+        <form onSubmit={handleSearch} className="flex-1 pointer-events-auto relative">
+          <input 
+            type="text" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Найти локацию..."
+            className="w-full bg-black/40 backdrop-blur-md text-white border border-white/10 rounded-full pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-primary placeholder:text-white/50"
+          />
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" />
+        </form>
+
+        <Link href="/map/requests" className="pointer-events-auto flex-shrink-0">
           <div className="relative w-12 h-12 bg-black/40 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center active:scale-95 transition-transform">
             <Bell size={24} />
             {hasUnreadRequests && (
@@ -151,29 +173,10 @@ export default function MapPage() {
         </Link>
       </div>
 
-      {/* Search Input Overlay */}
-      {isSearching && (
-        <div className="absolute top-24 left-0 w-full px-6 z-10 pointer-events-auto">
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <input 
-              type="text" 
-              autoFocus
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Найти город, улицу..."
-              className="flex-1 bg-black/60 backdrop-blur-md text-white border border-white/20 rounded-full px-6 py-3 focus:outline-none focus:border-primary"
-            />
-            <button type="button" onClick={() => setIsSearching(false)} className="w-12 h-12 bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
-              <X size={20} />
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* FAB Search Button */}
+      {/* FAB Locate Me Button */}
       <div className="absolute bottom-24 right-6 z-10">
-        <button onClick={() => setIsSearching(!isSearching)} className="w-14 h-14 bg-primary text-black rounded-full shadow-[0_0_20px_rgba(204,255,0,0.4)] flex items-center justify-center active:scale-90 transition-transform">
-          <Search size={28} />
+        <button onClick={handleLocateMe} className="w-14 h-14 bg-primary text-black rounded-full shadow-[0_0_20px_rgba(204,255,0,0.4)] flex items-center justify-center active:scale-95 transition-transform pointer-events-auto">
+          <LocateFixed size={28} />
         </button>
       </div>
 
