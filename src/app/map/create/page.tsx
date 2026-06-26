@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
-import { ArrowLeft, Loader2, MapPin, Clock, Activity } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, Clock, Activity, Calendar } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { triggerHaptic } from "@/lib/haptics";
 import dynamic from "next/dynamic";
@@ -139,22 +139,24 @@ function CreateProposalInner() {
               <Clock size={16} /> Дата и время старта
             </label>
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-card border border-border rounded-2xl flex items-center pl-4 pr-2 py-3 focus-within:border-primary transition-colors">
+              <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors relative">
+                <Calendar size={18} className="text-primary absolute left-3 pointer-events-none" />
                 <input 
                   type="date" 
                   value={date} 
                   onChange={e => setDate(e.target.value)} 
                   required 
-                  className="bg-transparent border-none outline-none w-full font-medium text-sm cursor-pointer" 
+                  className="bg-transparent border-none outline-none w-full font-medium text-sm pl-8 cursor-pointer" 
                 />
               </div>
-              <div className="bg-card border border-border rounded-2xl flex items-center pl-4 pr-2 py-3 focus-within:border-primary transition-colors">
+              <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors relative">
+                <Clock size={18} className="text-primary absolute left-3 pointer-events-none" />
                 <input 
                   type="time" 
                   value={time} 
                   onChange={e => setTime(e.target.value)} 
                   required 
-                  className="bg-transparent border-none outline-none w-full font-medium text-sm cursor-pointer" 
+                  className="bg-transparent border-none outline-none w-full font-medium text-sm pl-8 cursor-pointer" 
                 />
               </div>
             </div>
