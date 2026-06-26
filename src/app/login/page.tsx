@@ -30,8 +30,11 @@ export default function LoginPage() {
   const [name, setName] = useState("");
 
   const [isTgLogin, setIsTgLogin] = useState(false);
+  const [isCheckingTg, setIsCheckingTg] = useState(true);
   
   useEffect(() => {
+    let timeout: NodeJS.Timeout;
+
     if (typeof window !== "undefined" && (window as any).Telegram?.WebApp) {
       const tg = (window as any).Telegram.WebApp;
       if (tg.initDataUnsafe?.user) {
@@ -66,14 +69,19 @@ export default function LoginPage() {
           redirect: false,
         }).then((res) => {
           if (res?.ok) {
-            router.push("/club");
+            router.push("/");
             router.refresh();
           } else {
             setIsLoading(false);
+            setIsCheckingTg(false);
           }
         });
+        return; // Don't turn off checking state if we are bypassing
       }
     }
+    
+    timeout = setTimeout(() => setIsCheckingTg(false), 200);
+    return () => clearTimeout(timeout);
   }, [router]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -212,7 +220,7 @@ export default function LoginPage() {
         setError("Аккаунт создан, но войти не удалось. Попробуйте войти вручную.");
         setMode("LOGIN");
       } else {
-        router.push("/club");
+        router.push("/");
         router.refresh();
       }
     } catch (err) {
@@ -230,7 +238,7 @@ export default function LoginPage() {
     if (mode === "REGISTER_4") setMode("REGISTER_3");
   };
 
-  if (isTgLogin) {
+  if (isCheckingTg || isTgLogin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="animate-spin text-primary" size={40} />
