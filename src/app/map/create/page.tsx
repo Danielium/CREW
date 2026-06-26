@@ -108,8 +108,24 @@ function CreateProposalInner() {
               <Clock size={16} /> Дата и время старта
             </label>
             <div className="grid grid-cols-2 gap-4">
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} required className="w-full min-w-0 bg-card border border-border rounded-2xl py-3 pl-4 pr-8 focus:border-primary transition-colors" />
-              <input type="time" value={time} onChange={e => setTime(e.target.value)} required className="w-full min-w-0 bg-card border border-border rounded-2xl py-3 pl-4 pr-8 focus:border-primary transition-colors" />
+              <div className="bg-card border border-border rounded-2xl flex items-center p-3 focus-within:border-primary transition-colors">
+                <input 
+                  type="date" 
+                  value={date} 
+                  onChange={e => setDate(e.target.value)} 
+                  required 
+                  className="bg-transparent border-none outline-none w-full font-medium text-sm appearance-none cursor-pointer min-w-0" 
+                />
+              </div>
+              <div className="bg-card border border-border rounded-2xl flex items-center p-3 focus-within:border-primary transition-colors">
+                <input 
+                  type="time" 
+                  value={time} 
+                  onChange={e => setTime(e.target.value)} 
+                  required 
+                  className="bg-transparent border-none outline-none w-full font-medium text-sm appearance-none cursor-pointer min-w-0" 
+                />
+              </div>
             </div>
           </div>
 
