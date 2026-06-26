@@ -20,11 +20,13 @@ const crewIcon = new L.DivIcon({
   iconAnchor: [12, 12],
 });
 
-function MapEventsHandler({ setCenter, fetchProposals }: any) {
+function MapEventsHandler({ setCenter, onMapClick }: any) {
   const map = useMapEvents({
     moveend: () => {
       setCenter(map.getCenter());
-      // In a real app, we'd fetch proposals based on map bounds here
+    },
+    click: (e) => {
+      if (onMapClick) onMapClick(e.latlng);
     }
   });
   
@@ -35,7 +37,15 @@ function MapEventsHandler({ setCenter, fetchProposals }: any) {
   return null;
 }
 
-export default function TinderMap({ proposals, onSelectProposal }: { proposals: any[], onSelectProposal: (p: any) => void }) {
+function MapRecenter({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    if (center) map.setView(center);
+  }, [center, map]);
+  return null;
+}
+
+export default function TinderMap({ proposals, onSelectProposal, onMapClick, forceCenter }: { proposals: any[], onSelectProposal: (p: any) => void, onMapClick?: (latlng: any) => void, forceCenter?: [number, number] | null }) {
   const [center, setCenter] = useState<[number, number]>([55.7558, 37.6173]);
 
   // Request user location on mount
@@ -48,6 +58,12 @@ export default function TinderMap({ proposals, onSelectProposal }: { proposals: 
     }
   }, []);
 
+  useEffect(() => {
+    if (forceCenter) {
+      setCenter(forceCenter);
+    }
+  }, [forceCenter]);
+
   return (
     <div className="w-full h-[100dvh] absolute top-0 left-0 z-0">
       <MapContainer
@@ -59,7 +75,8 @@ export default function TinderMap({ proposals, onSelectProposal }: { proposals: 
       >
         <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
         
-        <MapEventsHandler setCenter={setCenter} />
+        <MapEventsHandler setCenter={setCenter} onMapClick={onMapClick} />
+        <MapRecenter center={center} />
 
         {proposals.map(p => (
           <Marker 

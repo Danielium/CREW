@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { ArrowLeft, Loader2, MapPin, Clock, Activity } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { triggerHaptic } from "@/lib/haptics";
 import dynamic from "next/dynamic";
 
@@ -9,7 +9,7 @@ const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false }
 
 
 
-export default function CreateProposal() {
+function CreateProposalInner() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [position, setPosition] = useState<[number, number]>([55.7558, 37.6173]);
@@ -17,14 +17,21 @@ export default function CreateProposal() {
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
 
+  const searchParams = useSearchParams();
+
   useEffect(() => {
-    if (navigator.geolocation) {
+    const lat = searchParams.get('lat');
+    const lng = searchParams.get('lng');
+    
+    if (lat && lng) {
+      setPosition([parseFloat(lat), parseFloat(lng)]);
+    } else if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setPosition([pos.coords.latitude, pos.coords.longitude]),
         () => {}
       );
     }
-  }, []);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,5 +115,13 @@ export default function CreateProposal() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function CreateProposal() {
+  return (
+    <Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center bg-black"><Loader2 className="animate-spin text-primary" size={32} /></div>}>
+      <CreateProposalInner />
+    </Suspense>
   );
 }

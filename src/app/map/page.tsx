@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { Bell, MapPin, Clock, Users, X, Plus, Activity, ArrowLeft } from "lucide-react";
+import { Bell, MapPin, Clock, Users, X, Search, Activity, ArrowLeft } from "lucide-react";
 import { SwipeButton } from "@/components/SwipeButton";
 import { triggerHaptic } from "@/lib/haptics";
 import Link from "next/link";
@@ -17,6 +17,9 @@ export default function MapPage() {
   const [proposals, setProposals] = useState<any[]>([]);
   const [selectedProposal, setSelectedProposal] = useState<any | null>(null);
   const [hasUnreadRequests, setHasUnreadRequests] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [forceCenter, setForceCenter] = useState<[number, number] | null>(null);
 
   useEffect(() => {
     // If unauthenticated and finished loading, redirect to login (or let them view map read-only?)
@@ -79,10 +82,30 @@ export default function MapPage() {
     }
   };
 
+  const handleMapClick = (latlng: any) => {
+    // If they click empty space, go to create page with coords
+    router.push(`/map/create?lat=${latlng.lat}&lng=${latlng.lng}`);
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
+      const data = await res.json();
+      if (data && data.length > 0) {
+        setForceCenter([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+        setIsSearching(false);
+        setSearchQuery("");
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden bg-black text-foreground">
-      {/* Map Background */}
-      <TinderMap proposals={proposals} onSelectProposal={handleSelectProposal} />
+      <TinderMap proposals={proposals} onSelectProposal={handleSelectProposal} onMapClick={handleMapClick} forceCenter={forceCenter} />
 
       {/* Top UI Overlay */}
       <div className="absolute top-0 left-0 w-full p-6 pt-12 flex justify-between items-start pointer-events-none z-10">
@@ -103,13 +126,30 @@ export default function MapPage() {
         </Link>
       </div>
 
-      {/* FAB to create run */}
+      {/* Search Input Overlay */}
+      {isSearching && (
+        <div className="absolute top-24 left-0 w-full px-6 z-10 pointer-events-auto">
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <input 
+              type="text" 
+              autoFocus
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Найти город, улицу..."
+              className="flex-1 bg-black/60 backdrop-blur-md text-white border border-white/20 rounded-full px-6 py-3 focus:outline-none focus:border-primary"
+            />
+            <button type="button" onClick={() => setIsSearching(false)} className="w-12 h-12 bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
+              <X size={20} />
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* FAB Search Button */}
       <div className="absolute bottom-24 right-6 z-10">
-        <Link href="/map/create">
-          <div className="w-14 h-14 bg-primary text-black rounded-full shadow-[0_0_20px_rgba(204,255,0,0.4)] flex items-center justify-center active:scale-90 transition-transform">
-            <Plus size={32} />
-          </div>
-        </Link>
+        <button onClick={() => setIsSearching(!isSearching)} className="w-14 h-14 bg-primary text-black rounded-full shadow-[0_0_20px_rgba(204,255,0,0.4)] flex items-center justify-center active:scale-90 transition-transform">
+          <Search size={28} />
+        </button>
       </div>
 
       {/* Bottom Sheet */}
