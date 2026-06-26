@@ -48,11 +48,14 @@ export async function GET(req: Request) {
         _count: {
           select: { requests: { where: { status: "ACCEPTED" } } }
         },
-        // We do NOT include telegramUsername here! Anonymity first.
         creator: {
           select: {
             id: true, // Needed to check if it's our own
           }
+        },
+        requests: {
+          where: { userId: session?.user ? (session.user as any).id : "" },
+          select: { status: true }
         }
       },
       orderBy: {

@@ -223,7 +223,19 @@ export default function MapPage() {
             </div>
 
             <div className="mt-2">
-              <SwipeButton onConfirm={handleSwipeJoin} />
+              {selectedProposal.requests && selectedProposal.requests.length > 0 ? (
+                <div className="w-full py-4 text-center bg-muted/50 rounded-2xl font-bold uppercase tracking-wider text-sm">
+                  {selectedProposal.requests[0].status === "PENDING" ? "Запрос ожидает ответа" : 
+                   selectedProposal.requests[0].status === "ACCEPTED" ? "Вы участвуете! 🎉" : 
+                   "Заявка отклонена"}
+                </div>
+              ) : selectedProposal.creator?.id === (session?.user as any)?.id ? (
+                <div className="w-full py-4 text-center bg-muted/50 rounded-2xl font-bold uppercase tracking-wider text-sm">
+                  Ваша пробежка
+                </div>
+              ) : (
+                <SwipeButton onConfirm={handleSwipeJoin} />
+              )}
             </div>
           </div>
         )}
