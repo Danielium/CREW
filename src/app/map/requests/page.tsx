@@ -53,9 +53,10 @@ export default function RequestsInbox() {
     }
   };
 
-  const allMatches = [...data.matches.asCreator, ...data.matches.asParticipant].sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  const allMatches = [
+    ...(data.matches.asCreator || []).map((m: any) => ({ ...m, isCreatorRole: true })),
+    ...(data.matches.asParticipant || []).map((m: any) => ({ ...m, isCreatorRole: false }))
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-black text-foreground">
@@ -104,7 +105,7 @@ export default function RequestsInbox() {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-bold">{req.user.name}</h3>
-                      <p className="text-xs text-muted">{req.user.totalDistance} км всего</p>
+                      <p className="text-xs text-muted">Пробежал: {(req.user.totalDistance || 0).toFixed(1)} км</p>
                     </div>
                   </div>
                   
@@ -114,7 +115,7 @@ export default function RequestsInbox() {
                   </div>
 
                   <div className="flex gap-2">
-                    <button onClick={() => handleAction(req.id, "REJECTED")} className="flex-1 py-3 bg-red-500/10 text-red-500 rounded-xl font-bold flex justify-center active:scale-95 transition-transform">
+                    <button onClick={() => handleAction(req.id, "REJECTED")} className="flex-1 py-3 bg-card border border-border text-foreground rounded-xl font-bold flex justify-center active:scale-95 transition-transform">
                       <X size={20} />
                     </button>
                     <button onClick={() => handleAction(req.id, "ACCEPTED")} className="flex-1 py-3 bg-primary text-black rounded-xl font-bold flex justify-center active:scale-95 transition-transform">
@@ -132,8 +133,7 @@ export default function RequestsInbox() {
             ) : (
               allMatches.map((match: any) => {
                 // Determine if I am creator or participant
-                const isCreator = match.proposal.creatorId !== match.userId; // If creatorId != userId of request, then I am creator (because this is myAccepted)
-                const otherUser = isCreator ? match.user : match.proposal.creator;
+                const otherUser = match.isCreatorRole ? match.user : match.proposal.creator;
                 
                 return (
                   <div key={match.id} className="bg-card border border-primary/30 rounded-2xl p-4 flex flex-col gap-4">
