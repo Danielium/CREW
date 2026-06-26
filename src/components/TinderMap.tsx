@@ -12,12 +12,16 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
-// Custom Crew Pin
 const crewIcon = new L.DivIcon({
-  html: `<div style="width: 24px; height: 24px; background: #CCFF00; border-radius: 50%; border: 3px solid #000; box-shadow: 0 0 10px rgba(204,255,0,0.5);"></div>`,
+  html: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#CCFF00" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 32px; height: 32px; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.5));">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+      <circle cx="12" cy="10" r="3" fill="#000"></circle>
+    </svg>
+  `,
   className: '',
-  iconSize: [24, 24],
-  iconAnchor: [12, 12],
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
 });
 
 function MapController({ onMapClick, forceCenter }: any) {

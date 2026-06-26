@@ -20,6 +20,20 @@ export default function MapPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [forceCenter, setForceCenter] = useState<[number, number] | null>(null);
+  const [touchStartY, setTouchStartY] = useState(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartY(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY === 0) return;
+    const currentY = e.touches[0].clientY;
+    if (currentY - touchStartY > 50) {
+      setSelectedProposal(null);
+      setTouchStartY(0);
+    }
+  };
 
   useEffect(() => {
     // If unauthenticated and finished loading, redirect to login (or let them view map read-only?)
@@ -154,16 +168,14 @@ export default function MapPage() {
 
       {/* Bottom Sheet */}
       <div 
-        className={`absolute bottom-0 left-0 w-full bg-card border-t border-border rounded-t-[32px] p-6 pb-24 transition-transform duration-500 ease-out z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${selectedProposal ? 'translate-y-0' : 'translate-y-full'}`}
+        className={`absolute bottom-0 left-0 w-full bg-card border-t border-border rounded-t-[32px] p-6 pt-2 pb-24 transition-transform duration-500 ease-out z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${selectedProposal ? 'translate-y-0' : 'translate-y-full'}`}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
       >
+        <div className="w-12 h-1.5 bg-muted/50 rounded-full mx-auto mb-6 cursor-pointer" onClick={() => setSelectedProposal(null)} />
         {selectedProposal && (
           <div className="flex flex-col gap-6">
-            <div className="flex justify-between items-start">
-              <h2 className="text-2xl font-black uppercase tracking-tight">Совместная пробежка</h2>
-              <button onClick={() => setSelectedProposal(null)} className="p-2 bg-muted/50 rounded-full active:scale-90">
-                <X size={20} />
-              </button>
-            </div>
+            <h2 className="text-2xl font-black uppercase tracking-tight">Совместная пробежка</h2>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-muted/30 rounded-2xl p-4 flex flex-col gap-1">
