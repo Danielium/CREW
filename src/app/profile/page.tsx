@@ -93,12 +93,16 @@ export default function ProfileTab() {
       const data = await res.json();
       if (data.user) {
         setUserData(data.user);
-        // Force session update so the avatar updates across the app (navbar etc)
-        await updateSession({ name: data.user.name, image: data.user.image });
+        // Force session update so the name updates across the app (navbar etc)
+        // We DO NOT pass image to updateSession because large base64 strings cause 413 Payload Too Large in NextAuth session cookies
+        await updateSession({ name: data.user.name });
         setShowEditModal(false);
+      } else {
+        alert("Ошибка при сохранении профиля: " + (data.error || JSON.stringify(data)));
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      alert("Сетевая ошибка при сохранении: " + e.message);
     } finally {
       setIsSaving(false);
     }
