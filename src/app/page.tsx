@@ -10,35 +10,37 @@ import GlobalClubs from "@/components/GlobalClubs";
 import Leaderboard from "@/components/Leaderboard";
 
 export default function ClubTab() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState("Клубы");
   const [userData, setUserData] = useState<any>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
 
   useEffect(() => {
-    if (session?.user) {
+    if (status === "loading") return; // Wait for session to initialize
+
+    if (status === "authenticated" && session?.user) {
       fetch(`/api/users?userId=${(session.user as any).id}`)
         .then(res => res.json())
         .then(data => {
           if (data.user) setUserData(data.user);
-          setIsLoadingUser(false);
           // If in club, default to События, else Клубы
           if (data?.user?.clubMembers && data.user.clubMembers.length > 0) {
             setActiveTab("События");
           }
+          setIsLoadingUser(false);
         })
         .catch(() => setIsLoadingUser(false));
     } else {
       setIsLoadingUser(false);
     }
-  }, [session]);
+  }, [session, status]);
 
   const inClub = userData?.clubMembers?.length > 0;
   
   const tabs = inClub ? ["События", "Атлеты", "Клубы"] : ["Клубы"];
 
-  if (isLoadingUser) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={40} /></div>;
+  if (isLoadingUser || status === "loading") {
+    return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-primary" size={40} /></div>;
   }
 
   return (

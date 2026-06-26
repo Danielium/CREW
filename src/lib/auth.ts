@@ -47,6 +47,18 @@ export const authOptions: NextAuthOptions = {
                   password: dummyPassword,
                 }
               });
+            } else {
+              // Update name and image if provided by TG this time
+              const updateData: any = {};
+              if (credentials.name && credentials.name !== user.name) updateData.name = credentials.name;
+              if (credentials.image && credentials.image !== user.image) updateData.image = credentials.image;
+              
+              if (Object.keys(updateData).length > 0) {
+                user = await prisma.user.update({
+                  where: { id: user.id },
+                  data: updateData
+                });
+              }
             }
 
             return {

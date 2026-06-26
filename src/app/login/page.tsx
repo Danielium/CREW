@@ -66,7 +66,7 @@ export default function LoginPage() {
           redirect: false,
         }).then((res) => {
           if (res?.ok) {
-            router.push("/map");
+            router.push("/club");
             router.refresh();
           } else {
             setIsLoading(false);
@@ -212,7 +212,7 @@ export default function LoginPage() {
         setError("Аккаунт создан, но войти не удалось. Попробуйте войти вручную.");
         setMode("LOGIN");
       } else {
-        router.push("/profile");
+        router.push("/club");
         router.refresh();
       }
     } catch (err) {
@@ -229,6 +229,14 @@ export default function LoginPage() {
     if (mode === "REGISTER_3") setMode("REGISTER_2");
     if (mode === "REGISTER_4") setMode("REGISTER_3");
   };
+
+  if (isTgLogin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="animate-spin text-primary" size={40} />
+      </div>
+    );
+  }
 
   return (
     <div className="absolute inset-0 flex flex-col text-foreground p-6 bg-background z-50 overflow-hidden">
