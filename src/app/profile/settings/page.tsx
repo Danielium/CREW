@@ -2,6 +2,7 @@
 import { ArrowLeft, Bell, Globe, Shield, LogOut, ChevronRight, X } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { signOut } from "next-auth/react";
 
 export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
@@ -15,11 +16,17 @@ export default function SettingsPage() {
   const [privacy, setPrivacy] = useState("CLUB");
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
+  const [isTgEnv, setIsTgEnv] = useState(false);
+
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
     const savedPrivacy = localStorage.getItem("profilePrivacy");
     if (savedPrivacy) setPrivacy(savedPrivacy);
+
+    if (typeof window !== "undefined" && (window as any).Telegram?.WebApp?.initData) {
+      setIsTgEnv(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -142,11 +149,13 @@ export default function SettingsPage() {
         </div>
 
         {/* Danger Zone */}
-        <div className="mt-8">
-          <Link href="/" className="w-full bg-red-500/10 border border-red-500/20 text-red-500 font-bold uppercase tracking-widest text-center py-4 rounded-[20px] hover:bg-red-500/20 active:scale-95 transition-all flex justify-center items-center gap-2">
-            <LogOut size={18} /> Выйти из аккаунта
-          </Link>
-        </div>
+        {!isTgEnv && (
+          <div className="mt-8">
+            <button onClick={() => signOut()} className="w-full bg-red-500/10 border border-red-500/20 text-red-500 font-bold uppercase tracking-widest text-center py-4 rounded-[20px] hover:bg-red-500/20 active:scale-95 transition-all flex justify-center items-center gap-2">
+              <LogOut size={18} /> Выйти из аккаунта
+            </button>
+          </div>
+        )}
 
       </div>
 

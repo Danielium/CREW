@@ -89,19 +89,6 @@ export default function PublicProfilePage() {
           </div>
           
           <h1 className="text-3xl font-black mt-4 uppercase text-center">{userData.name || "Гость"}</h1>
-          {userData.goal && (
-            <p className="text-primary font-bold text-sm uppercase tracking-wider text-center px-4 leading-snug mt-1">
-              {(() => {
-                try {
-                  const parsed = JSON.parse(userData.goal);
-                  if (Array.isArray(parsed)) return parsed.join(' • ');
-                  return userData.goal;
-                } catch (e) {
-                  return userData.goal;
-                }
-              })()}
-            </p>
-          )}
         </div>
       </div>
 

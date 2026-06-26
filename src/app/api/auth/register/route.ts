@@ -5,19 +5,20 @@ import bcrypt from 'bcryptjs';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    let { telegramUsername, password, name, avatarStyle, goal } = body;
-    if (telegramUsername) {
-      telegramUsername = telegramUsername.toLowerCase();
-      if (!telegramUsername.startsWith('@')) {
-        telegramUsername = '@' + telegramUsername;
-      }
-    }
+    let { telegramUsername, password, name, avatarStyle } = body;
 
     if (!telegramUsername || !password || !name) {
       return NextResponse.json(
         { error: "Username, password, and name are required" },
         { status: 400 }
       );
+    }
+
+    if (telegramUsername) {
+      telegramUsername = telegramUsername.toLowerCase();
+      if (!telegramUsername.startsWith('@')) {
+        telegramUsername = '@' + telegramUsername;
+      }
     }
 
     // Check if user exists
@@ -42,7 +43,6 @@ export async function POST(request: Request) {
         name,
         password: hashedPassword,
         image: avatarStyle || null,
-        goal: goal || null,
       },
     });
 

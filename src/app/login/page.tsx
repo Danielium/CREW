@@ -11,12 +11,7 @@ import Image from "next/image";
 
 type Mode = "LOGIN" | "REGISTER_1" | "REGISTER_2" | "REGISTER_3" | "REGISTER_4";
 
-const GOALS = [
-  { id: "health", icon: "❤️", title: "Для здоровья", desc: "Поддерживать тонус и хорошее самочувствие" },
-  { id: "weight", icon: "🔥", title: "Похудение", desc: "Сбросить лишний вес и стать стройнее" },
-  { id: "marathon", icon: "🏃‍♂️", title: "Подготовка к гонке", desc: "Пробежать свой первый забег или улучшить время" },
-  { id: "fun", icon: "✨", title: "Просто в кайф", desc: "Бегаю для себя, без строгих планов" },
-];
+// Registration no longer includes goals
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,8 +28,7 @@ export default function LoginPage() {
   const [telegramUsername, setTelegramUsername] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [goals, setGoals] = useState<string[]>([]);
-  const [customGoal, setCustomGoal] = useState("");
+
   const [isTgLogin, setIsTgLogin] = useState(false);
   
   useEffect(() => {
@@ -190,18 +184,13 @@ export default function LoginPage() {
         });
       }
 
-      const finalGoals = [...goals];
-      if (customGoal.trim()) {
-        finalGoals.push(customGoal.trim());
-      }
-
       // Если есть файл, используем его, иначе используем tg URL из imagePreview
       const avatarStyle = uploadedImageUrl || imagePreview;
 
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ telegramUsername, password, name, avatarStyle, goal: JSON.stringify(finalGoals) })
+        body: JSON.stringify({ telegramUsername, password, name, avatarStyle })
       });
 
       const data = await res.json();
@@ -371,77 +360,13 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <button onClick={() => setMode("REGISTER_4")} className="w-full bg-primary text-black font-black uppercase tracking-wider py-4 rounded-[20px] flex justify-center items-center mt-4 mb-8 hover:bg-[#b3e600] active:scale-95 transition-all shrink-0">
-              Далее <ChevronRight size={20} className="ml-1" />
+            <button onClick={handleRegister} disabled={isLoading} className="w-full bg-primary text-black font-black uppercase tracking-wider py-4 rounded-[20px] flex justify-center items-center mt-4 mb-8 hover:bg-[#b3e600] active:scale-95 transition-all shrink-0">
+              {isLoading ? <Loader2 className="animate-spin" size={24} /> : "Завершить и Войти"}
             </button>
           </div>
         )}
 
-        {/* ======================================================== */}
-        {/* REGISTER 4: GOAL & FINISH */}
-        {/* ======================================================== */}
-        {mode === "REGISTER_4" && (
-          <div className="flex flex-col flex-1 min-h-0 animate-in fade-in slide-in-from-right-8 duration-500">
-            <div className="mb-8">
-              <h1 className="text-4xl font-black uppercase mb-4 leading-tight">Главная<br/>Цель</h1>
-              <p className="text-muted">Шаг 4 из 4. Зачем вы бегаете?</p>
-            </div>
 
-            <form onSubmit={handleRegister} className="flex flex-col flex-1 min-h-0">
-              {error && <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-xl text-sm font-medium mb-4">{error}</div>}
-
-              <div className="flex-1 overflow-y-auto min-h-0">
-                <div className="flex flex-col gap-3">
-                  {GOALS.map(g => (
-                    <div 
-                      key={g.id}
-                      onClick={() => {
-                        if (goals.includes(g.title)) {
-                          setGoals(goals.filter(t => t !== g.title));
-                        } else {
-                          setGoals([...goals, g.title]);
-                        }
-                      }}
-                      className={`flex items-center p-4 rounded-2xl border-2 transition-all cursor-pointer ${goals.includes(g.title) ? 'border-primary bg-primary/10' : 'border-border bg-card hover:border-muted'}`}
-                    >
-                      <div className="text-3xl mr-4">{g.icon}</div>
-                      <div className="flex-1">
-                        <div className="font-bold text-lg">{g.title}</div>
-                        <div className="text-xs text-muted leading-tight mt-1">{g.desc}</div>
-                      </div>
-                      {goals.includes(g.title) && <Check size={24} className="text-primary ml-2" />}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-4 mb-8">
-                  <input 
-                    type="text" 
-                    value={customGoal}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      const words = val.trim().split(/\s+/).filter(w => w.length > 0);
-                      if (words.length <= 3) {
-                        setCustomGoal(val);
-                      } else if (val.length < customGoal.length) {
-                        setCustomGoal(val); // allow backspace
-                      }
-                    }}
-                    placeholder="Или напишите свою (макс. 3 слова)" 
-                    className="w-full bg-card border border-border rounded-[20px] py-4 px-4 text-foreground placeholder:text-muted/50 focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm font-semibold" 
-                  />
-                </div>
-
-                <button type="submit" disabled={isLoading || (goals.length === 0 && !customGoal.trim())} className="w-full bg-primary text-black font-black uppercase tracking-wider py-4 rounded-[20px] flex justify-center items-center hover:bg-[#b3e600] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0 mt-8">
-                  {isLoading ? <Loader2 className="animate-spin" size={24} /> : "Завершить и Войти"}
-                </button>
-                
-                {/* Safari scroll padding hack: Safari ignores padding-bottom on scroll containers, so we use a dummy div */}
-                <div className="h-32 shrink-0 w-full" aria-hidden="true" />
-              </div>
-            </form>
-          </div>
-        )}
 
       </div>
 

@@ -172,19 +172,6 @@ export default function ProfileTab() {
           </div>
           
           <h1 className="text-3xl font-black mt-4 uppercase text-center">{userData?.name || session?.user?.name || "Гость"}</h1>
-          <p className="text-primary font-bold text-sm uppercase tracking-wider text-center px-4 leading-snug">
-            {(() => {
-              const goalStr = userData?.goal;
-              if (!goalStr) return "Ставьте цели и достигайте их!";
-              try {
-                const parsed = JSON.parse(goalStr);
-                if (Array.isArray(parsed)) return parsed.join(' • ');
-                return goalStr;
-              } catch (e) {
-                return goalStr;
-              }
-            })()}
-          </p>
           
         </div>
       </div>
