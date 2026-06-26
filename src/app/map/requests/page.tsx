@@ -1,0 +1,175 @@
+"use client";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Check, X, Loader2, Send } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { triggerHaptic } from "@/lib/haptics";
+
+export default function RequestsInbox() {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"REQUESTS" | "MATCHES">("REQUESTS");
+  const [isLoading, setIsLoading] = useState(true);
+  const [data, setData] = useState<any>({ incomingPending: [], matches: { asCreator: [], asParticipant: [] } });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const res = await fetch("/api/map-events/request");
+      const json = await res.json();
+      if (json.incomingPending) {
+        setData(json);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAction = async (requestId: string, status: "ACCEPTED" | "REJECTED") => {
+    triggerHaptic('medium');
+    try {
+      // Optimistic update
+      setData((prev: any) => ({
+        ...prev,
+        incomingPending: prev.incomingPending.filter((r: any) => r.id !== requestId)
+      }));
+
+      await fetch("/api/map-events/request", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestId, status })
+      });
+      
+      if (status === "ACCEPTED") {
+        fetchData(); // reload to get it into matches
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const allMatches = [...data.matches.asCreator, ...data.matches.asParticipant].sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  return (
+    <div className="flex flex-col min-h-[100dvh] bg-black text-foreground">
+      {/* Header */}
+      <div className="flex items-center gap-4 p-4 border-b border-border">
+        <button onClick={() => router.back()} className="p-2 bg-card rounded-full active:scale-95">
+          <ArrowLeft size={24} />
+        </button>
+        <h1 className="text-2xl font-black uppercase tracking-tight">Отклики</h1>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex p-4 gap-2">
+        <button 
+          onClick={() => { triggerHaptic('light'); setActiveTab("REQUESTS"); }}
+          className={`flex-1 py-3 rounded-full font-bold text-sm uppercase tracking-wider transition-colors ${activeTab === "REQUESTS" ? "bg-primary text-black" : "bg-card text-muted"}`}
+        >
+          Запросы {data.incomingPending.length > 0 && `(${data.incomingPending.length})`}
+        </button>
+        <button 
+          onClick={() => { triggerHaptic('light'); setActiveTab("MATCHES"); }}
+          className={`flex-1 py-3 rounded-full font-bold text-sm uppercase tracking-wider transition-colors ${activeTab === "MATCHES" ? "bg-primary text-black" : "bg-card text-muted"}`}
+        >
+          Мэтчи {allMatches.length > 0 && `(${allMatches.length})`}
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 p-4 overflow-y-auto">
+        {isLoading ? (
+          <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" size={32} /></div>
+        ) : activeTab === "REQUESTS" ? (
+          <div className="flex flex-col gap-4">
+            {data.incomingPending.length === 0 ? (
+              <div className="text-center text-muted py-10">Новых запросов пока нет</div>
+            ) : (
+              data.incomingPending.map((req: any) => (
+                <div key={req.id} className="bg-card border border-border rounded-2xl p-4 flex flex-col gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                      {req.user.image ? (
+                        <Image src={req.user.image} alt={req.user.name} width={48} height={48} className="object-cover w-full h-full" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xl font-bold">{req.user.name?.[0]}</div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold">{req.user.name}</h3>
+                      <p className="text-xs text-muted">{req.user.totalDistance} км всего</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-background rounded-xl p-3 flex justify-between items-center text-sm">
+                    <span className="text-muted">Пробежка:</span>
+                    <span className="font-bold">{new Date(req.proposal.startTime).toLocaleDateString()} в {new Date(req.proposal.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button onClick={() => handleAction(req.id, "REJECTED")} className="flex-1 py-3 bg-red-500/10 text-red-500 rounded-xl font-bold flex justify-center active:scale-95 transition-transform">
+                      <X size={20} />
+                    </button>
+                    <button onClick={() => handleAction(req.id, "ACCEPTED")} className="flex-1 py-3 bg-primary text-black rounded-xl font-bold flex justify-center active:scale-95 transition-transform">
+                      <Check size={20} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {allMatches.length === 0 ? (
+              <div className="text-center text-muted py-10">У вас пока нет мэтчей</div>
+            ) : (
+              allMatches.map((match: any) => {
+                // Determine if I am creator or participant
+                const isCreator = match.proposal.creatorId !== match.userId; // If creatorId != userId of request, then I am creator (because this is myAccepted)
+                const otherUser = isCreator ? match.user : match.proposal.creator;
+                
+                return (
+                  <div key={match.id} className="bg-card border border-primary/30 rounded-2xl p-4 flex flex-col gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-muted overflow-hidden flex-shrink-0 relative">
+                        {otherUser.image ? (
+                          <Image src={otherUser.image} alt={otherUser.name} width={48} height={48} className="object-cover w-full h-full" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xl font-bold">{otherUser.name?.[0]}</div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-bold">{otherUser.name}</h3>
+                        <p className="text-xs text-primary font-mono">{otherUser.telegramUsername || "Скрыт"}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-background rounded-xl p-3 flex justify-between items-center text-sm">
+                      <span className="text-muted">Пробежка:</span>
+                      <span className="font-bold">{new Date(match.proposal.startTime).toLocaleDateString()} в {new Date(match.proposal.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+
+                    {otherUser.telegramUsername && (
+                      <Link href={`https://t.me/${otherUser.telegramUsername.replace('@', '')}`} target="_blank">
+                        <button className="w-full py-3 bg-[#0088cc] text-white rounded-xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                          <Send size={18} /> Написать в Telegram
+                        </button>
+                      </Link>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

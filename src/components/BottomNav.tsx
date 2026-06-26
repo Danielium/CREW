@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Layers, Activity, Users, BarChart, User } from "lucide-react";
+import { Map as MapIcon, Activity, Users, BarChart, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -51,7 +51,7 @@ export default function BottomNav() {
   }, []);
 
   const navItems = [
-    { name: "Лента", path: "/feed", icon: Layers },
+    { name: "Карта", path: "/map", icon: MapIcon },
     { name: "Бег", path: "/run", icon: Activity },
     { name: "Клуб", path: "/", icon: Users },
     { name: "Прогресс", path: "/progress", icon: BarChart },
