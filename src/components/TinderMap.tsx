@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, CircleMarker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -92,6 +92,33 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
             }}
           />
         ))}
+
+        {hasSetInitialLocation && (
+          <>
+            {/* Position outer ring */}
+            <CircleMarker 
+              center={center} 
+              radius={10} 
+              pathOptions={{ 
+                color: "#CCFF00", 
+                fillColor: "#CCFF00", 
+                fillOpacity: 0.3, 
+                weight: 1 
+              }} 
+            />
+            {/* Position center dot */}
+            <CircleMarker 
+              center={center} 
+              radius={6} 
+              pathOptions={{ 
+                color: "#FFFFFF", 
+                fillColor: "#CCFF00", 
+                fillOpacity: 1, 
+                weight: 2 
+              }} 
+            />
+          </>
+        )}
       </MapContainer>
     </div>
   );
