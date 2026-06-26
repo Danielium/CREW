@@ -21,6 +21,7 @@ export default function MapPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [forceCenter, setForceCenter] = useState<[number, number] | null>(null);
   const [touchStartY, setTouchStartY] = useState(0);
+  const [touchOffset, setTouchOffset] = useState(0);
 
   const [isEditingProposal, setIsEditingProposal] = useState(false);
   const [editDate, setEditDate] = useState("");
@@ -31,15 +32,30 @@ export default function MapPage() {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartY(e.touches[0].clientY);
+    setTouchOffset(0);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (touchStartY === 0) return;
     const currentY = e.touches[0].clientY;
-    if (currentY - touchStartY > 120) {
+    const diff = currentY - touchStartY;
+    
+    if (diff > 0) {
+      setTouchOffset(diff);
+    }
+    
+    if (diff > 120) {
       setSelectedProposal(null);
       setTouchStartY(0);
+      setTouchOffset(0);
     }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchOffset <= 120) {
+      setTouchOffset(0);
+    }
+    setTouchStartY(0);
   };
 
   useEffect(() => {
@@ -242,9 +258,11 @@ export default function MapPage() {
 
       {/* Bottom Sheet */}
       <div 
-        className={`absolute bottom-0 left-0 w-full bg-card border-t border-border rounded-t-[32px] p-6 pt-2 pb-24 transition-transform duration-500 ease-out z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${selectedProposal ? 'translate-y-0' : 'translate-y-full'}`}
+        className={`absolute bottom-0 left-0 w-full bg-card border-t border-border rounded-t-[32px] p-6 pt-2 pb-24 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${touchOffset > 0 ? 'transition-none' : 'transition-transform duration-500 ease-out'}`}
+        style={{ transform: selectedProposal ? `translateY(${touchOffset}px)` : 'translateY(100%)' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <div className="w-12 h-1.5 bg-muted/50 rounded-full mx-auto mb-6 cursor-pointer" onClick={() => setSelectedProposal(null)} />
         {selectedProposal && (
