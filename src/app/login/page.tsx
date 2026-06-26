@@ -264,7 +264,7 @@ export default function LoginPage() {
         
         {mode !== "LOGIN" && (
           <div className="flex-1 flex justify-center items-center gap-2 pr-10">
-            {[1, 2, 3, 4].map(step => (
+            {[1, 2, 3].map(step => (
               <div 
                 key={step} 
                 className={`h-1.5 rounded-full transition-all duration-500 ${
