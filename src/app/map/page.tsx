@@ -22,6 +22,7 @@ export default function MapPage() {
   const [forceCenter, setForceCenter] = useState<[number, number] | null>(null);
   const [touchStartY, setTouchStartY] = useState(0);
   const [touchOffset, setTouchOffset] = useState(0);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const [isEditingProposal, setIsEditingProposal] = useState(false);
   const [editDate, setEditDate] = useState("");
@@ -35,6 +36,14 @@ export default function MapPage() {
     setTouchOffset(0);
   };
 
+  const closeSheet = () => {
+    setIsSheetOpen(false);
+    setTimeout(() => {
+      setSelectedProposal(null);
+      setIsEditingProposal(false);
+    }, 500);
+  };
+
   const handleTouchMove = (e: React.TouchEvent) => {
     if (touchStartY === 0) return;
     const currentY = e.touches[0].clientY;
@@ -45,7 +54,7 @@ export default function MapPage() {
     }
     
     if (diff > 120) {
-      setSelectedProposal(null);
+      closeSheet();
       setTouchStartY(0);
       setTouchOffset(0);
     }
@@ -102,6 +111,7 @@ export default function MapPage() {
   const handleSelectProposal = (p: any) => {
     triggerHaptic('medium');
     setSelectedProposal(p);
+    setIsSheetOpen(true);
   };
 
   const handleSwipeJoin = async () => {
@@ -119,11 +129,11 @@ export default function MapPage() {
         fetchProposals();
         // Wait a bit so the user can see the "Запрос отправлен" text on the button
         await new Promise(resolve => setTimeout(resolve, 800));
-        setSelectedProposal(null);
+        closeSheet();
       } else {
         // If it failed (e.g. already requested), we can also just close it
         await new Promise(resolve => setTimeout(resolve, 800));
-        setSelectedProposal(null);
+        closeSheet();
       }
     } catch (e) {
       console.error(e);
@@ -149,7 +159,7 @@ export default function MapPage() {
     try {
       const res = await fetch(`/api/proposals/${selectedProposal.id}`, { method: "DELETE" });
       if (res.ok) {
-        setSelectedProposal(null);
+        closeSheet();
         fetchProposals();
       }
     } catch (e) {
@@ -174,7 +184,7 @@ export default function MapPage() {
       if (res.ok) {
         setIsEditingProposal(false);
         fetchProposals();
-        setSelectedProposal(null);
+        closeSheet();
       }
     } catch (e) {
       console.error(e);
@@ -258,13 +268,13 @@ export default function MapPage() {
 
       {/* Bottom Sheet */}
       <div 
-        className={`absolute bottom-0 left-0 w-full bg-card border-t border-border rounded-t-[32px] p-6 pt-2 pb-24 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${touchOffset > 0 ? 'transition-none' : 'transition-transform duration-500 ease-out'}`}
-        style={{ transform: selectedProposal ? `translateY(${touchOffset}px)` : 'translateY(100%)' }}
+        className={`absolute bottom-0 left-0 w-full bg-card border-t border-border rounded-t-[32px] p-6 pt-2 pb-24 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${touchOffset > 0 ? 'transition-none' : 'transition-transform duration-500 ease-in-out'}`}
+        style={{ transform: isSheetOpen ? `translateY(${touchOffset}px)` : 'translateY(100%)' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <div className="w-12 h-1.5 bg-muted/50 rounded-full mx-auto mb-6 cursor-pointer" onClick={() => setSelectedProposal(null)} />
+        <div className="w-12 h-1.5 bg-muted/50 rounded-full mx-auto mb-6 cursor-pointer" onClick={closeSheet} />
         {selectedProposal && (
           <div className="flex flex-col gap-6">
             <h2 className="text-2xl font-black uppercase tracking-tight">Совместная пробежка</h2>
