@@ -106,6 +106,7 @@ export default function CreateClubPage() {
               type="text" 
               value={name}
               onChange={(e) => setName(e.target.value)}
+              maxLength={20}
               className="w-full bg-card border border-border rounded-2xl px-4 py-4 text-foreground text-lg focus:outline-none focus:border-primary transition-colors font-black uppercase tracking-wide"
               placeholder="GHOST RUNNERS"
             />

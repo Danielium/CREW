@@ -122,7 +122,7 @@ export default function GlobalClubs({ inClub }: { inClub?: boolean }) {
                   return null;
                 })()}
                 <div>
-                  <h3 className="font-black uppercase tracking-tight text-lg leading-none mb-1">{club.name}</h3>
+                  <h3 className={`font-black uppercase tracking-tight ${club.name.length > 12 ? 'text-sm break-all' : 'text-lg'} leading-none mb-1`}>{club.name}</h3>
                   <div className="flex items-center gap-3 text-[10px] text-muted font-bold uppercase tracking-wider">
                     <span className="flex items-center gap-1"><Users size={12}/> {club._count.members}</span>
                     <span className="text-primary">{club.joinType}</span>

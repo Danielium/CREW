@@ -135,7 +135,7 @@ export default function ClubProfilePage() {
               } catch(e) {}
               return null;
             })()}
-            <h1 className="text-4xl font-black uppercase tracking-tight leading-none">{club.name}</h1>
+            <h1 className={`${club.name.length > 12 ? 'text-2xl' : 'text-4xl'} font-black uppercase tracking-tight leading-none break-words`}>{club.name}</h1>
           </div>
           <div className="flex items-center gap-4 text-xs text-muted font-medium uppercase tracking-wider">
             <span className="flex items-center gap-1"><Users size={14}/> {club.members.filter((m: any)=>m.status==="ACTIVE").length} Атлетов</span>
