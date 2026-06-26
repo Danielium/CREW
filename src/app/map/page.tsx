@@ -23,6 +23,7 @@ export default function MapPage() {
   const [touchStartY, setTouchStartY] = useState(0);
   const [touchOffset, setTouchOffset] = useState(0);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [showHint, setShowHint] = useState(true);
 
   const [isEditingProposal, setIsEditingProposal] = useState(false);
   const [editDate, setEditDate] = useState("");
@@ -30,6 +31,20 @@ export default function MapPage() {
   const [editPace, setEditPace] = useState("");
   const [editLimit, setEditLimit] = useState("");
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+
+  useEffect(() => {
+    // Check localStorage so we don't annoy them every time if they've already seen it
+    const hasSeenHint = localStorage.getItem("hasSeenMapHint");
+    if (hasSeenHint) {
+      setShowHint(false);
+    } else {
+      const timer = setTimeout(() => {
+        setShowHint(false);
+        localStorage.setItem("hasSeenMapHint", "true");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartY(e.touches[0].clientY);
@@ -257,6 +272,14 @@ export default function MapPage() {
             )}
           </div>
         </Link>
+      </div>
+
+      {/* Hint Tooltip */}
+      <div className={`absolute top-28 left-1/2 -translate-x-1/2 w-11/12 max-w-sm pointer-events-none z-10 transition-all duration-700 ease-in-out ${showHint ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+        <div className="bg-primary/90 text-black font-bold text-sm text-center py-3 px-4 rounded-2xl shadow-xl border border-primary/50 flex items-center justify-center gap-2">
+          <MapPin size={18} className="flex-shrink-0" />
+          <span className="leading-tight">Нажми в любое место на карте, чтобы назначить пробежку и собрать людей</span>
+        </div>
       </div>
 
       {/* FAB Locate Me Button */}
