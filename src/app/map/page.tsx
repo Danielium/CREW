@@ -84,15 +84,21 @@ export default function MapPage() {
   const handleSwipeJoin = async () => {
     if (!selectedProposal) return;
     
-    const res = await fetch("/api/map-events/request", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ proposalId: selectedProposal.id })
-    });
-    
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error);
+    const proposalId = selectedProposal.id;
+    triggerHaptic('heavy');
+    setSelectedProposal(null); // Optimistically close immediately
+
+    try {
+      const res = await fetch(`/api/map-events/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ proposalId })
+      });
+      if (res.ok) {
+        fetchProposals();
+      }
+    } catch (e) {
+      console.error(e);
     }
   };
 

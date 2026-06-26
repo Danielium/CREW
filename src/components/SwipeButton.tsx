@@ -19,7 +19,6 @@ export function SwipeButton({
   const [startX, setStartX] = useState(0);
   const [currentX, setCurrentX] = useState(0);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLDivElement>(null);
@@ -38,14 +37,14 @@ export function SwipeButton({
   }, [currentX, maxSwipe]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (isSuccess || isLoading) return;
+    if (isSuccess) return;
     setIsDragging(true);
     setStartX(e.clientX - currentX);
     triggerHaptic('light');
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDragging || isSuccess || isLoading) return;
+    if (!isDragging || isSuccess) return;
     
     let newX = e.clientX - startX;
     if (newX < 0) newX = 0;
@@ -58,7 +57,7 @@ export function SwipeButton({
   };
 
   const handlePointerUp = () => {
-    if (!isDragging || isSuccess || isLoading) return;
+    if (!isDragging || isSuccess) return;
     setIsDragging(false);
     
     if (currentX < maxSwipe) {
@@ -69,16 +68,16 @@ export function SwipeButton({
 
   const handleSuccess = async () => {
     setIsDragging(false);
-    setIsLoading(true);
+    setIsSuccess(true);
     triggerHaptic('heavy');
     
     try {
+      // Don't await if we want optimistic UI!
+      // Or we can await, but since we removed isLoading, it won't show a spinner.
       await onConfirm();
-      setIsSuccess(true);
     } catch (e) {
       setCurrentX(0);
-    } finally {
-      setIsLoading(false);
+      setIsSuccess(false);
     }
   };
 
@@ -92,9 +91,7 @@ export function SwipeButton({
     >
       {/* Background Text */}
       <div className="absolute inset-0 flex items-center justify-center font-black uppercase tracking-wider text-sm pointer-events-none z-0">
-        {isLoading ? (
-          <Loader2 className="animate-spin text-primary" />
-        ) : isSuccess ? (
+        {isSuccess ? (
           successText
         ) : (
           <span className="text-muted/60 pl-8">{text}</span>
@@ -102,7 +99,7 @@ export function SwipeButton({
       </div>
 
       {/* Swipe Progress Fill */}
-      {!isSuccess && !isLoading && (
+      {!isSuccess && (
         <div 
           className="absolute top-0 left-0 bottom-0 bg-primary/20 transition-all z-0 rounded-full"
           style={{ width: `${currentX + 64}px` }} // 64 is approx thumb width
