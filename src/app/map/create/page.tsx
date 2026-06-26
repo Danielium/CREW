@@ -13,13 +13,18 @@ function CreateProposalInner() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [position, setPosition] = useState<[number, number]>([55.7558, 37.6173]);
-  const [pace, setPace] = useState("5:30");
+  const [paceFrom, setPaceFrom] = useState("5:30");
+  const [paceTo, setPaceTo] = useState("");
+  const [isPaceToModified, setIsPaceToModified] = useState(false);
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
 
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    // Hide navigation bar
+    window.dispatchEvent(new Event('hideNav'));
+
     const lat = searchParams.get('lat');
     const lng = searchParams.get('lng');
     
@@ -31,6 +36,11 @@ function CreateProposalInner() {
         () => {}
       );
     }
+
+    return () => {
+      // Show navigation bar on unmount
+      window.dispatchEvent(new Event('showNav'));
+    };
   }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,13 +52,18 @@ function CreateProposalInner() {
 
     try {
       const startTime = new Date(`${date}T${time}`);
+      let finalPace = paceFrom;
+      if (isPaceToModified && paceTo && paceTo !== paceFrom) {
+        finalPace = `${paceFrom} - ${paceTo}`;
+      }
+
       const res = await fetch("/api/map-events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           lat: position[0],
           lng: position[1],
-          pace,
+          pace: finalPace,
           startTime: startTime.toISOString(),
           maxParticipants: 0
         })
@@ -102,7 +117,40 @@ function CreateProposalInner() {
             <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted flex items-center gap-2">
               <Activity size={16} /> Ожидаемый темп (мин/км)
             </label>
-            <input type="text" value={pace} onChange={e => setPace(e.target.value)} placeholder="5:30" required className="w-full bg-card border border-border rounded-2xl p-4 focus:border-primary transition-colors" />
+            <div className="grid grid-cols-2 gap-4">
+               <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors">
+                 <span className="text-muted text-xs font-bold uppercase">ОТ</span>
+                 <input 
+                   type="text" 
+                   placeholder=":"
+                   pattern="^\d{1,2}:[0-5]\d$"
+                   title="Введите темп в формате ММ:СС (например, 5:30)"
+                   maxLength={5}
+                   className="bg-transparent border-none outline-none w-full font-medium"
+                   value={paceFrom}
+                   onChange={(e) => {
+                     setPaceFrom(e.target.value);
+                     if (!isPaceToModified) setPaceTo(e.target.value);
+                   }}
+                 />
+               </div>
+               <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors">
+                 <span className="text-muted text-xs font-bold uppercase">ДО</span>
+                 <input 
+                   type="text" 
+                   placeholder=":"
+                   pattern="^\d{1,2}:[0-5]\d$"
+                   title="Введите темп в формате ММ:СС (например, 5:30)"
+                   maxLength={5}
+                   className="bg-transparent border-none outline-none w-full font-medium"
+                   value={paceTo}
+                   onChange={(e) => {
+                     setPaceTo(e.target.value);
+                     setIsPaceToModified(true);
+                   }}
+                 />
+               </div>
+            </div>
           </div>
 
           <button 
