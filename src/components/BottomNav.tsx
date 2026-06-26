@@ -58,7 +58,7 @@ export default function BottomNav() {
     { name: "Профиль", path: "/profile", icon: User },
   ];
 
-  if (pathname === '/run' || pathname === '/login' || pathname.startsWith('/events/') || pathname === '/map/create') {
+  if (pathname === '/run' || pathname === '/login' || pathname.startsWith('/events/') || pathname.startsWith('/map')) {
     return null;
   }
 
