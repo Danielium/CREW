@@ -44,9 +44,10 @@ function UserLocationMarker({ setInitialLocation }: { setInitialLocation: (latln
   const [position, setPosition] = useState<[number, number] | null>(null);
 
   useEffect(() => {
-    let watchId: number;
+    let watchId: number | null = null;
+    let capWatchId: string | null = null;
 
-    const handleLocation = (lat: number, lng: number) => {
+    const handleLocation = (lat: number | string, lng: number | string) => {
       const numLat = Number(lat);
       const numLng = Number(lng);
       if (!isNaN(numLat) && !isNaN(numLng)) {
@@ -55,26 +56,51 @@ function UserLocationMarker({ setInitialLocation }: { setInitialLocation: (latln
       }
     };
 
-    const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
-    
-    if (tg?.LocationManager) {
-      tg.LocationManager.init(() => {
-        tg.LocationManager.getLocation((data: any) => {
-          if (data) handleLocation(data.latitude, data.longitude);
+    const startWatching = async () => {
+      try {
+        const { Capacitor } = await import('@capacitor/core');
+        if (Capacitor.isNativePlatform()) {
+          const { Geolocation } = await import('@capacitor/geolocation');
+          const perm = await Geolocation.checkPermissions();
+          if (perm.location !== 'granted') {
+            await Geolocation.requestPermissions();
+          }
+          capWatchId = await Geolocation.watchPosition({ enableHighAccuracy: true }, (pos, err) => {
+            if (pos) handleLocation(pos.coords.latitude, pos.coords.longitude);
+          });
+          return;
+        }
+      } catch (e) {
+        console.error("Capacitor geolocation error:", e);
+      }
+
+      // Fallbacks
+      const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
+      if (tg?.LocationManager) {
+        tg.LocationManager.init(() => {
+          tg.LocationManager.getLocation((data: any) => {
+            if (data) handleLocation(data.latitude, data.longitude);
+          });
         });
-        // We could theoretically poll here if Telegram doesn't provide a watch API
-      });
-    } else if (navigator.geolocation) {
-      watchId = navigator.geolocation.watchPosition(
-        (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),
-        () => {},
-        { enableHighAccuracy: true }
-      );
-    }
+      } else if (navigator.geolocation) {
+        watchId = navigator.geolocation.watchPosition(
+          (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),
+          () => {},
+          { enableHighAccuracy: true }
+        );
+      }
+    };
+
+    startWatching();
 
     return () => {
       if (watchId && navigator.geolocation) {
         navigator.geolocation.clearWatch(watchId);
+      }
+      if (capWatchId) {
+        import('@capacitor/geolocation').then(({ Geolocation }) => {
+          Geolocation.clearWatch({ id: capWatchId as string });
+        });
       }
     };
   }, []);

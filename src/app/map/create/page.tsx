@@ -30,11 +30,42 @@ function CreateProposalInner() {
     
     if (lat && lng) {
       setPosition([parseFloat(lat), parseFloat(lng)]);
-    } else if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setPosition([pos.coords.latitude, pos.coords.longitude]),
-        () => {}
-      );
+    } else {
+      const getInitialPosition = async () => {
+        try {
+          const { Capacitor } = await import('@capacitor/core');
+          if (Capacitor.isNativePlatform()) {
+            const { Geolocation } = await import('@capacitor/geolocation');
+            const perm = await Geolocation.checkPermissions();
+            if (perm.location !== 'granted') {
+              await Geolocation.requestPermissions();
+            }
+            const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+            setPosition([pos.coords.latitude, pos.coords.longitude]);
+            return;
+          }
+        } catch (e) {
+          console.error("Capacitor geolocation error:", e);
+        }
+
+        // Fallbacks
+        const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
+        if (tg?.LocationManager) {
+          tg.LocationManager.init(() => {
+            tg.LocationManager.getLocation((data: any) => {
+              if (data) setPosition([data.latitude, data.longitude]);
+            });
+          });
+        } else if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => setPosition([pos.coords.latitude, pos.coords.longitude]),
+            () => {},
+            { enableHighAccuracy: true }
+          );
+        }
+      };
+
+      getInitialPosition();
     }
 
     return () => {
