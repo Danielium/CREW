@@ -23,7 +23,7 @@ export default function MapPage() {
   const [touchStartY, setTouchStartY] = useState(0);
   const [touchOffset, setTouchOffset] = useState(0);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [showHint, setShowHint] = useState(false); // start false to avoid flashing
+  const [showHint, setShowHint] = useState(false);
 
   const [isEditingProposal, setIsEditingProposal] = useState(false);
   const [editDate, setEditDate] = useState("");
@@ -33,16 +33,12 @@ export default function MapPage() {
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 
   useEffect(() => {
-    // Check localStorage so we don't annoy them every time if they've already seen it
-    const hasSeenHint = localStorage.getItem("hasSeenMapHint");
-    if (!hasSeenHint) {
-      setShowHint(true); // show it since they haven't seen it
-      const timer = setTimeout(() => {
-        setShowHint(false);
-        localStorage.setItem("hasSeenMapHint", "true");
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
+    // Show the hint every time the map is opened
+    setShowHint(true);
+    const timer = setTimeout(() => {
+      setShowHint(false);
+    }, 5000);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
