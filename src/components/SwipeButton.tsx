@@ -107,7 +107,7 @@ export function SwipeButton({
       )}
 
       {/* Draggable Thumb */}
-      {!isSuccess && !isLoading && (
+      {!isSuccess && (
         <div 
           ref={thumbRef}
           className="absolute left-1 top-1 bottom-1 w-14 bg-primary rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing z-10 shadow-lg"
