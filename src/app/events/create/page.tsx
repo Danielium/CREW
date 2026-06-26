@@ -154,23 +154,23 @@ export default function CreateEventPage() {
           </label>
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors relative">
-              <Calendar size={18} className="text-primary absolute left-3 pointer-events-none" />
+              <Calendar size={18} className="text-primary absolute left-3 z-30 pointer-events-none" />
               <input 
                 type="date" 
                 value={form.date} 
                 onChange={e => setForm({...form, date: e.target.value})} 
                 required 
-                className="bg-transparent border-none outline-none w-full font-medium text-sm pl-8 cursor-pointer" 
+                className="bg-transparent border-none outline-none w-full font-medium text-sm pl-8 cursor-pointer relative z-20" 
               />
             </div>
             <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors relative">
-              <Clock size={18} className="text-primary absolute left-3 pointer-events-none" />
+              <Clock size={18} className="text-primary absolute left-3 z-30 pointer-events-none" />
               <input 
                 type="time" 
                 value={form.time} 
                 onChange={e => setForm({...form, time: e.target.value})} 
                 required 
-                className="bg-transparent border-none outline-none w-full font-medium text-sm pl-8 cursor-pointer" 
+                className="bg-transparent border-none outline-none w-full font-medium text-sm pl-8 cursor-pointer relative z-20" 
               />
             </div>
           </div>
