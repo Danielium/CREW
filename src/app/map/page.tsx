@@ -85,8 +85,6 @@ export default function MapPage() {
     if (!selectedProposal) return;
     
     const proposalId = selectedProposal.id;
-    triggerHaptic('heavy');
-    setSelectedProposal(null); // Optimistically close immediately
 
     try {
       const res = await fetch(`/api/map-events/request`, {
@@ -96,6 +94,13 @@ export default function MapPage() {
       });
       if (res.ok) {
         fetchProposals();
+        // Wait a bit so the user can see the "Запрос отправлен" text on the button
+        await new Promise(resolve => setTimeout(resolve, 800));
+        setSelectedProposal(null);
+      } else {
+        // If it failed (e.g. already requested), we can also just close it
+        await new Promise(resolve => setTimeout(resolve, 800));
+        setSelectedProposal(null);
       }
     } catch (e) {
       console.error(e);
