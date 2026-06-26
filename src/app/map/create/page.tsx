@@ -13,7 +13,7 @@ function CreateProposalInner() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [position, setPosition] = useState<[number, number]>([55.7558, 37.6173]);
-  const [paceFrom, setPaceFrom] = useState("5:30");
+  const [paceFrom, setPaceFrom] = useState("");
   const [paceTo, setPaceTo] = useState("");
   const [isPaceToModified, setIsPaceToModified] = useState(false);
   const [time, setTime] = useState("");
@@ -108,8 +108,8 @@ function CreateProposalInner() {
               <Clock size={16} /> Дата и время старта
             </label>
             <div className="grid grid-cols-2 gap-4">
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} required className="w-full bg-card border border-border rounded-2xl p-4 focus:border-primary transition-colors" />
-              <input type="time" value={time} onChange={e => setTime(e.target.value)} required className="w-full bg-card border border-border rounded-2xl p-4 focus:border-primary transition-colors" />
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} required className="w-full min-w-0 bg-card border border-border rounded-2xl py-3 pl-4 pr-8 focus:border-primary transition-colors" />
+              <input type="time" value={time} onChange={e => setTime(e.target.value)} required className="w-full min-w-0 bg-card border border-border rounded-2xl py-3 pl-4 pr-8 focus:border-primary transition-colors" />
             </div>
           </div>
 
