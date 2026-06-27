@@ -411,7 +411,7 @@ function MapContent() {
 
       {/* Pin Cycler Buttons removed from bottom */}
       {/* FAB Locate Me Button */}
-      <div className="absolute bottom-24 right-6 z-10">
+      <div className="absolute bottom-36 right-6 z-10">
         <button onClick={handleLocateMe} className="w-14 h-14 bg-primary text-black rounded-full shadow-[0_0_20px_rgba(204,255,0,0.4)] flex items-center justify-center active:scale-95 transition-transform pointer-events-auto">
           <LocateFixed size={28} />
         </button>
