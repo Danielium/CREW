@@ -484,31 +484,38 @@ export default function FeedTab() {
                           <div className="text-sm text-muted text-center py-2">Пока нет комментариев</div>
                         ) : (
                           commentsData[post.id].map(comment => (
-                            <div key={comment.id} className="flex gap-2">
-                              <Link href={`/users/${comment.user.id}`} onClick={(e) => e.stopPropagation()} className="shrink-0 mt-1">
-                                {comment.user.image ? (
-                                  <img src={comment.user.image} className="w-8 h-8 rounded-full border border-border object-cover" />
-                                ) : (
-                                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center border border-border"><User size={14} /></div>
-                                )}
-                              </Link>
-                              <div className="flex-1 bg-card border border-border rounded-xl px-3 py-2">
-                                <div className="flex justify-between items-baseline mb-1">
-                                  <div className="flex items-baseline gap-2">
-                                    <Link href={`/users/${comment.user.id}`} onClick={(e) => e.stopPropagation()} className="font-bold text-sm hover:underline">{comment.user.name || "Аноним"}</Link>
-                                    <span className="text-[10px] text-muted">{formatTimeAgo(comment.createdAt)}</span>
+                              <div key={comment.id} className="flex gap-3 pt-2 pb-1">
+                                <Link href={`/users/${comment.user.id}`} onClick={(e) => e.stopPropagation()} className="shrink-0">
+                                  {comment.user.image ? (
+                                    <img src={comment.user.image} className="w-10 h-10 rounded-full border border-border object-cover" />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center border border-border"><User size={18} /></div>
+                                  )}
+                                </Link>
+                                <div className="flex-1 flex flex-col min-w-0">
+                                  <div className="flex justify-between items-start mb-0.5">
+                                    <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5">
+                                      <Link href={`/users/${comment.user.id}`} onClick={(e) => e.stopPropagation()} className="font-bold text-[15px] hover:underline text-foreground">
+                                        {comment.user.name || "Аноним"}
+                                      </Link>
+                                      {comment.user.telegramUsername && (
+                                        <span className="text-sm text-muted">@{comment.user.telegramUsername}</span>
+                                      )}
+                                      <span className="text-sm text-muted">· {formatTimeAgo(comment.createdAt)}</span>
+                                    </div>
+                                    {session?.user && (session.user as any).id === comment.user?.id && (
+                                      <button onClick={(e) => { e.stopPropagation(); handleDeleteComment(post.id, comment.id); }} className="text-muted hover:text-red-500 transition-colors p-1 -mr-1">
+                                        <Trash2 size={14} />
+                                      </button>
+                                    )}
                                   </div>
-                                  {session?.user && (session.user as any).id === comment.user?.id && (
-                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteComment(post.id, comment.id); }} className="text-muted hover:text-red-500 transition-colors">
-                                      <Trash2 size={12} />
-                                    </button>
+                                  <p className="text-[15px] text-foreground whitespace-pre-wrap leading-snug">{comment.content}</p>
+                                  {comment.mediaUrl && (
+                                    <div className="mt-3 rounded-xl overflow-hidden border border-border bg-card">
+                                      <img src={comment.mediaUrl} alt="Comment media" className="w-full h-auto object-cover max-h-[300px]" />
+                                    </div>
                                   )}
                                 </div>
-                                <p className="text-sm text-foreground/90 whitespace-pre-wrap">{comment.content}</p>
-                                {comment.mediaUrl && (
-                                  <img src={comment.mediaUrl} alt="Comment media" className="mt-2 rounded-lg max-h-40 w-auto object-cover border border-border" />
-                                )}
-                              </div>
                             </div>
                           ))
                         )}
