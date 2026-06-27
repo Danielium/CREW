@@ -46,7 +46,7 @@ export default function BottomNav() {
     { name: "Профиль", path: "/profile", icon: User },
   ];
 
-  if (pathname === '/login' || pathname.startsWith('/club/logo-builder')) {
+  if (pathname === '/login' || pathname.startsWith('/club/logo-builder') || pathname.startsWith('/map/create') || pathname.startsWith('/map/requests') || pathname.startsWith('/events/')) {
     return null;
   }
 

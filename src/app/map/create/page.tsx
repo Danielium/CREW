@@ -113,7 +113,7 @@ function CreateProposalInner() {
       });
 
       if (res.ok) {
-        router.push("/map");
+        router.push("/");
         router.refresh();
       }
     } catch (err) {

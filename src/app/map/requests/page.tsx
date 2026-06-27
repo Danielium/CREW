@@ -158,7 +158,7 @@ export default function RequestsInbox() {
                             </button>
                           </Link>
                         )}
-                        <Link href={`/map?lat=${match.proposal.lat}&lng=${match.proposal.lng}&focus=${match.proposal.id}`}>
+                        <Link href={`/?lat=${match.proposal.lat}&lng=${match.proposal.lng}&focus=${match.proposal.id}`}>
                           <button className="w-12 h-12 bg-card border border-border text-primary rounded-full flex items-center justify-center active:scale-95 transition-transform flex-shrink-0">
                             <MapPin size={22} />
                           </button>
