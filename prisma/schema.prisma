@@ -31,6 +31,10 @@ model User {
   
   runProposals  RunProposal[] @relation("RunProposalCreator")
   joinRequests  RunJoinRequest[] @relation("JoinRequestUser")
+  
+  posts         Post[]
+  likes         Like[]
+  comments      Comment[]
 }
 
 model Run {
@@ -47,6 +51,8 @@ model Run {
   eventId       String?
   event         Event?   @relation("EventRuns", fields: [eventId], references: [id], onDelete: SetNull)
   splits        String?  // JSON stringified array
+  
+  post          Post?
 }
 
 model Club {
@@ -162,4 +168,43 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Post {
+  id            String   @id @default(cuid())
+  userId        String
+  type          String   // "RUN" | "ACHIEVEMENT" | "TEXT"
+  runId         String?  @unique
+  content       String?
+  mediaUrl      String?
+  createdAt     DateTime @default(now())
+  
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  run           Run?     @relation(fields: [runId], references: [id], onDelete: SetNull)
+  likes         Like[]
+  comments      Comment[]
+}
+
+model Like {
+  id            String   @id @default(cuid())
+  userId        String
+  postId        String
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post          Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+}
+
+model Comment {
+  id            String   @id @default(cuid())
+  userId        String
+  postId        String
+  content       String
+  mediaUrl      String?
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post          Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
