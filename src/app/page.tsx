@@ -369,15 +369,8 @@ function MapContent() {
 
       {/* Top UI Overlay */}
       <div className="absolute top-0 left-0 w-full p-6 pt-12 flex justify-between items-center pointer-events-none z-10 gap-3">
-        {/* Cycle Buttons in Top Left */}
-        <div className="flex gap-2 pointer-events-auto flex-shrink-0">
-          <button onClick={() => cyclePins(-1)} className="w-12 h-12 bg-black/40 backdrop-blur-md border border-white/10 text-white rounded-full flex items-center justify-center active:scale-95 transition-transform">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-          </button>
-          <button onClick={() => cyclePins(1)} className="w-12 h-12 bg-black/40 backdrop-blur-md border border-white/10 text-white rounded-full flex items-center justify-center active:scale-95 transition-transform">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-        </div>
+        {/* Empty Spacer for Symmetry with Bell Icon */}
+        <div className="w-12 h-12 flex-shrink-0"></div>
 
         {/* Search Input always visible */}
         <form onSubmit={handleSearch} className="flex-1 pointer-events-auto relative">
@@ -407,6 +400,16 @@ function MapContent() {
           <MapPin size={18} className="flex-shrink-0 text-primary" />
           <span className="leading-tight">Нажми в любое место на карте, чтобы назначить пробежку и собрать людей</span>
         </div>
+      </div>
+
+      {/* Pin Cycler Buttons (Left) */}
+      <div className="absolute bottom-36 left-6 z-10 flex gap-2 pointer-events-auto">
+        <button onClick={() => cyclePins(-1)} className="w-14 h-14 bg-card border border-border text-foreground rounded-full shadow-[0_0_20px_rgba(0,0,0,0.4)] flex items-center justify-center active:scale-95 transition-transform">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <button onClick={() => cyclePins(1)} className="w-14 h-14 bg-card border border-border text-foreground rounded-full shadow-[0_0_20px_rgba(0,0,0,0.4)] flex items-center justify-center active:scale-95 transition-transform">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
       </div>
 
       {/* Pin Cycler Buttons removed from bottom */}
