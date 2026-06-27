@@ -13,7 +13,7 @@ type Post = {
   content: string | null;
   mediaUrl: string | null;
   createdAt: string;
-  user: { id: string; name: string | null; image: string | null };
+  user: { id: string; name: string | null; image: string | null; telegramUsername?: string | null };
   run: { distance: number; avgPace: number; durationSec: number } | null;
   _count: { likes: number; comments?: number };
   isLiked?: boolean; // We'll manage this locally for now
@@ -23,7 +23,7 @@ type CommentType = {
   id: string;
   content: string;
   createdAt: string;
-  user: { id: string; name: string | null; image: string | null };
+  user: { id: string; name: string | null; image: string | null; telegramUsername?: string | null };
   mediaUrl?: string | null;
 };
 
@@ -452,7 +452,7 @@ export default function FeedTab() {
                   )}
 
                   {/* Action Bar */}
-                  <div className="flex items-center gap-6 text-muted mt-2">
+                  <div className="flex items-center gap-4 text-muted mt-2">
                     <button 
                       onClick={(e) => { e.stopPropagation(); toggleLike(post.id); }}
                       className={`flex items-center gap-1.5 transition-colors group ${post.isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
