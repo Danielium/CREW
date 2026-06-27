@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Edit2, Trash2, Calendar, MapPin, Activity, Clock, BarChart2, User, KeyRound, Lock, Check, Plus, Footprints, Play } from "lucide-react";
+import { Loader2, Edit2, Trash2, Calendar, MapPin, Activity, Clock, BarChart2, User, KeyRound, Lock, Check, Plus, Footprints, Play, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PinShowModal from "@/components/PinShowModal";
@@ -239,7 +239,7 @@ export default function FeedEvents({ userData }: { userData: any }) {
                 {!isPast && (
                   <div className="flex items-center gap-2 relative z-10">
                     <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleJoinEvent(ev.id); }} className="p-2 rounded-full bg-black border border-primary/20 text-primary hover:bg-black/80 hover:border-primary/50 transition-colors" title={isAttending ? "Отменить участие" : "Присоединиться"}>
-                      {isAttending ? <Check size={16} /> : <Plus size={16} />}
+                      {isAttending ? <X size={16} /> : <Plus size={16} />}
                     </button>
                   </div>
                 )}
