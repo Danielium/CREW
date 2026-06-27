@@ -1,18 +1,19 @@
 "use client";
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Bell, MapPin, Clock, Users, X, Search, Activity, ArrowLeft, LocateFixed } from "lucide-react";
 import { SwipeButton } from "@/components/SwipeButton";
 import { triggerHaptic } from "@/lib/haptics";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const TinderMap = dynamic(() => import("@/components/TinderMap"), { ssr: false });
 
-export default function MapPage() {
+function MapContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   
   const [proposals, setProposals] = useState<any[]>([]);
   const [selectedProposal, setSelectedProposal] = useState<any | null>(null);
@@ -24,6 +25,23 @@ export default function MapPage() {
   const [touchOffset, setTouchOffset] = useState(0);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [showHint, setShowHint] = useState(false);
+
+  useEffect(() => {
+    const lat = searchParams.get('lat');
+    const lng = searchParams.get('lng');
+    const focus = searchParams.get('focus');
+    
+    if (lat && lng) {
+      setForceCenter([parseFloat(lat), parseFloat(lng)]);
+    }
+    
+    if (focus && proposals.length > 0) {
+      const p = proposals.find(pr => pr.id === focus);
+      if (p && !selectedProposal) {
+        handleSelectProposal(p);
+      }
+    }
+  }, [searchParams, proposals]);
 
   const [isEditingProposal, setIsEditingProposal] = useState(false);
   const [editDate, setEditDate] = useState("");
@@ -234,6 +252,53 @@ export default function MapPage() {
     }
   };
 
+  const [activePinIndex, setActivePinIndex] = useState(-1);
+  const [sortedProposals, setSortedProposals] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (proposals.length === 0) return;
+    
+    const saved = localStorage.getItem('lastKnownLocation');
+    let userLoc = [55.7558, 37.6173]; // fallback
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.length === 2) userLoc = parsed;
+      } catch (e) {}
+    }
+
+    const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+      const R = 6371; 
+      const dLat = (lat2-lat1) * Math.PI / 180;
+      const dLon = (lon2-lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    };
+
+    const sorted = [...proposals].sort((a, b) => {
+      const distA = getDistance(userLoc[0], userLoc[1], a.lat, a.lng);
+      const distB = getDistance(userLoc[0], userLoc[1], b.lat, b.lng);
+      return distA - distB;
+    });
+
+    setSortedProposals(sorted);
+  }, [proposals]);
+
+  const cyclePins = (direction: 1 | -1) => {
+    if (sortedProposals.length === 0) return;
+    triggerHaptic('medium');
+    let newIdx = activePinIndex + direction;
+    if (newIdx < 0) newIdx = sortedProposals.length - 1;
+    if (newIdx >= sortedProposals.length) newIdx = 0;
+    
+    setActivePinIndex(newIdx);
+    const p = sortedProposals[newIdx];
+    setForceCenter([p.lat, p.lng]);
+    handleSelectProposal(p);
+  };
+
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden bg-black text-foreground">
       <TinderMap proposals={proposals} onSelectProposal={handleSelectProposal} onMapClick={handleMapClick} forceCenter={forceCenter} />
@@ -276,6 +341,18 @@ export default function MapPage() {
           <span className="leading-tight">Нажми в любое место на карте, чтобы назначить пробежку и собрать людей</span>
         </div>
       </div>
+
+      {/* Pin Cycler Buttons (Left) */}
+      {proposals.length > 0 && (
+        <div className="absolute bottom-24 left-6 z-10 flex gap-2 pointer-events-auto">
+          <button onClick={() => cyclePins(-1)} className="w-14 h-14 bg-card border border-border text-foreground rounded-full shadow-[0_0_20px_rgba(0,0,0,0.4)] flex items-center justify-center active:scale-95 transition-transform">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button onClick={() => cyclePins(1)} className="w-14 h-14 bg-card border border-border text-foreground rounded-full shadow-[0_0_20px_rgba(0,0,0,0.4)] flex items-center justify-center active:scale-95 transition-transform">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+      )}
 
       {/* FAB Locate Me Button */}
       <div className="absolute bottom-24 right-6 z-10">
@@ -386,5 +463,13 @@ export default function MapPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function MapPage() {
+  return (
+    <Suspense fallback={<div className="w-full h-[100dvh] bg-black flex items-center justify-center text-primary font-mono text-sm">ЗАГРУЗКА КАРТЫ...</div>}>
+      <MapContent />
+    </Suspense>
   );
 }

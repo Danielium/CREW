@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Check, X, Loader2, Send } from "lucide-react";
+import { ArrowLeft, Check, X, Loader2, Send, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -150,13 +150,20 @@ export default function RequestsInbox() {
                         <p className="text-xs text-primary font-mono">{otherUser.telegramUsername || "Скрыт"}</p>
                       </div>
                       
-                      {otherUser.telegramUsername && (
-                        <Link href={`https://t.me/${otherUser.telegramUsername.replace('@', '')}`} target="_blank">
-                          <button className="w-12 h-12 bg-[#0088cc] text-white rounded-full flex items-center justify-center active:scale-95 transition-transform flex-shrink-0">
-                            <Send size={20} className="relative right-0.5" />
+                      <div className="flex gap-2">
+                        {otherUser.telegramUsername && (
+                          <Link href={`https://t.me/${otherUser.telegramUsername.replace('@', '')}`} target="_blank">
+                            <button className="w-12 h-12 bg-[#0088cc] text-white rounded-full flex items-center justify-center active:scale-95 transition-transform flex-shrink-0">
+                              <Send size={20} className="relative right-0.5" />
+                            </button>
+                          </Link>
+                        )}
+                        <Link href={`/map?lat=${match.proposal.lat}&lng=${match.proposal.lng}&focus=${match.proposal.id}`}>
+                          <button className="w-12 h-12 bg-card border border-border text-primary rounded-full flex items-center justify-center active:scale-95 transition-transform flex-shrink-0">
+                            <MapPin size={22} />
                           </button>
                         </Link>
-                      )}
+                      </div>
                     </div>
                     
                     <div className="bg-background rounded-xl p-3 flex justify-between items-center text-sm">

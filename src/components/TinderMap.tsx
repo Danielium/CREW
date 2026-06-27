@@ -127,11 +127,26 @@ function UserLocationMarker({ setInitialLocation }: { setInitialLocation: (latln
   );
 }
 
+const getInitialCenter = (): [number, number] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('lastKnownLocation');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.length === 2) return parsed;
+      }
+    } catch (e) {}
+  }
+  return [55.7558, 37.6173];
+};
+
 export default function TinderMap({ proposals, onSelectProposal, onMapClick, forceCenter }: { proposals: any[], onSelectProposal: (p: any) => void, onMapClick?: (latlng: any) => void, forceCenter?: [number, number] | null }) {
   const [initialCenter, setInitialCenter] = useState<[number, number] | null>(null);
   const [hasFlown, setHasFlown] = useState(false);
+  const [defaultCenter] = useState<[number, number]>(getInitialCenter());
 
   const handleSetInitialLocation = (latlng: [number, number]) => {
+    localStorage.setItem('lastKnownLocation', JSON.stringify(latlng));
     if (!hasFlown) {
       setInitialCenter(latlng);
       setHasFlown(true);
@@ -141,7 +156,7 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
   return (
     <div className="w-full h-[100dvh] absolute top-0 left-0 z-0">
       <MapContainer
-        center={[55.7558, 37.6173]}
+        center={defaultCenter}
         zoom={14}
         style={{ width: "100%", height: "100%" }}
         zoomControl={false}
