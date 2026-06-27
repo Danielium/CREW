@@ -44,7 +44,7 @@ function MapController({ onMapClick, forceCenter }: any) {
   return null;
 }
 
-function UserLocationMarker({ setInitialLocation }: { setInitialLocation: (latlng: [number, number]) => void }) {
+function UserLocationMarker({ setInitialLocation, triggerLocate }: { setInitialLocation: (latlng: [number, number]) => void, triggerLocate?: number }) {
   const [position, setPosition] = useState<[number, number] | null>(null);
 
   useEffect(() => {
@@ -134,7 +134,7 @@ function UserLocationMarker({ setInitialLocation }: { setInitialLocation: (latln
         });
       }
     };
-  }, []);
+  }, [triggerLocate]);
 
   if (!position) return null;
 
@@ -167,7 +167,7 @@ const getInitialCenter = (): [number, number] => {
   return [55.7558, 37.6173];
 };
 
-export default function TinderMap({ proposals, onSelectProposal, onMapClick, forceCenter }: { proposals: any[], onSelectProposal: (p: any) => void, onMapClick?: (latlng: any) => void, forceCenter?: [number, number] | null }) {
+export default function TinderMap({ proposals, onSelectProposal, onMapClick, forceCenter, triggerLocate }: { proposals: any[], onSelectProposal: (p: any) => void, onMapClick?: (latlng: any) => void, forceCenter?: [number, number] | null, triggerLocate?: number }) {
   const [initialCenter, setInitialCenter] = useState<[number, number] | null>(null);
   const [hasFlown, setHasFlown] = useState(false);
   const [defaultCenter] = useState<[number, number]>(getInitialCenter());
@@ -204,7 +204,7 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
           />
         ))}
 
-        <UserLocationMarker setInitialLocation={handleSetInitialLocation} />
+        <UserLocationMarker setInitialLocation={handleSetInitialLocation} triggerLocate={triggerLocate} />
       </MapContainer>
     </div>
   );

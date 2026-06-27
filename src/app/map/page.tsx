@@ -258,10 +258,26 @@ function MapContent() {
     }
   };
 
+  const [triggerLocate, setTriggerLocate] = useState(0);
+
   const handleLocateMe = async () => {
+    triggerHaptic('light');
+    setTriggerLocate(prev => prev + 1);
+
     const handleLocation = (lat: number, lng: number) => {
       setForceCenter([lat, lng]);
     };
+
+    // INSTANT FEEDBACK
+    const saved = localStorage.getItem('lastKnownLocation');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.length === 2) {
+          handleLocation(parsed[0], parsed[1]);
+        }
+      } catch (e) {}
+    }
 
     try {
       const { Capacitor } = await import('@capacitor/core');
@@ -353,7 +369,7 @@ function MapContent() {
 
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden bg-black text-foreground">
-      <TinderMap proposals={proposals} onSelectProposal={handleSelectProposal} onMapClick={handleMapClick} forceCenter={forceCenter} />
+      <TinderMap proposals={proposals} onSelectProposal={handleSelectProposal} onMapClick={handleMapClick} forceCenter={forceCenter} triggerLocate={triggerLocate} />
 
       {/* Top UI Overlay */}
       <div className="absolute top-0 left-0 w-full p-6 pt-12 flex justify-between items-center pointer-events-none z-10 gap-3">
