@@ -99,7 +99,9 @@ function UserLocationMarker({ setInitialLocation, triggerLocate }: { setInitialL
             if (data) handleLocation(data.latitude, data.longitude);
           });
         });
-      } else if (navigator.geolocation) {
+      }
+      
+      if (navigator.geolocation) {
         // Force an immediate fetch to ensure marker renders quickly
         navigator.geolocation.getCurrentPosition(
           (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),

@@ -304,7 +304,9 @@ function MapContent() {
           if (data) handleLocation(data.latitude, data.longitude);
         });
       });
-    } else if ("geolocation" in navigator) {
+    } 
+    
+    if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition((pos) => {
         handleLocation(pos.coords.latitude, pos.coords.longitude);
       }, (err) => {
