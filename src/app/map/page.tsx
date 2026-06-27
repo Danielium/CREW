@@ -112,13 +112,29 @@ function MapContent() {
   useEffect(() => {
     fetchProposals();
     checkUnreadRequests();
+    
+    // Auto-refresh every 10 seconds
+    const interval = setInterval(() => {
+      fetchProposals();
+      checkUnreadRequests();
+    }, 10000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const fetchProposals = async () => {
     try {
       const res = await fetch("/api/map-events");
       const data = await res.json();
-      if (data.proposals) setProposals(data.proposals);
+      if (data.proposals) {
+        setProposals(data.proposals);
+        // Also update selected proposal if it's currently open
+        setSelectedProposal((prev: any) => {
+          if (!prev) return null;
+          const updated = data.proposals.find((p: any) => p.id === prev.id);
+          return updated || prev;
+        });
+      }
     } catch (e) {
       console.error(e);
     }
