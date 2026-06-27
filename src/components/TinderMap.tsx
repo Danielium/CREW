@@ -69,6 +69,19 @@ function UserLocationMarker({ setInitialLocation }: { setInitialLocation: (latln
           if (perm.location !== 'granted') {
             await Geolocation.requestPermissions();
           }
+          try {
+            const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 5000 });
+            handleLocation(pos.coords.latitude, pos.coords.longitude);
+          } catch (e) {
+            console.warn("Capacitor high accuracy error:", e);
+            try {
+              const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 5000 });
+              handleLocation(pos.coords.latitude, pos.coords.longitude);
+            } catch (fallbackErr) {
+              console.error("Capacitor low accuracy error:", fallbackErr);
+            }
+          }
+
           capWatchId = await Geolocation.watchPosition({ enableHighAccuracy: true }, (pos, err) => {
             if (pos) handleLocation(pos.coords.latitude, pos.coords.longitude);
           });
@@ -87,9 +100,23 @@ function UserLocationMarker({ setInitialLocation }: { setInitialLocation: (latln
           });
         });
       } else if (navigator.geolocation) {
+        // Force an immediate fetch to ensure marker renders quickly
+        navigator.geolocation.getCurrentPosition(
+          (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),
+          (err) => {
+            console.warn("High accuracy getCurrentPosition error:", err);
+            navigator.geolocation.getCurrentPosition(
+              (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),
+              (fallbackErr) => console.warn("Low accuracy fallback error:", fallbackErr),
+              { enableHighAccuracy: false, timeout: 5000 }
+            );
+          },
+          { enableHighAccuracy: true, timeout: 5000 }
+        );
+        
         watchId = navigator.geolocation.watchPosition(
           (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),
-          () => {},
+          (err) => console.warn("watchPosition error:", err),
           { enableHighAccuracy: true }
         );
       }

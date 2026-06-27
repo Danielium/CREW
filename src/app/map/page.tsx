@@ -258,13 +258,47 @@ function MapContent() {
     }
   };
 
-  const handleLocateMe = () => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        setForceCenter([pos.coords.latitude, pos.coords.longitude]);
-      }, (err) => {
-        console.error("Error getting location", err);
+  const handleLocateMe = async () => {
+    const handleLocation = (lat: number, lng: number) => {
+      setForceCenter([lat, lng]);
+    };
+
+    try {
+      const { Capacitor } = await import('@capacitor/core');
+      if (Capacitor.isNativePlatform()) {
+        const { Geolocation } = await import('@capacitor/geolocation');
+        try {
+          const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 5000 });
+          handleLocation(pos.coords.latitude, pos.coords.longitude);
+        } catch (e) {
+          console.warn("Capacitor high acc error:", e);
+          const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 5000 });
+          handleLocation(pos.coords.latitude, pos.coords.longitude);
+        }
+        return;
+      }
+    } catch (e) {
+      console.warn("Capacitor geolocation not used in map page");
+    }
+
+    const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
+    if (tg?.LocationManager) {
+      tg.LocationManager.init(() => {
+        tg.LocationManager.getLocation((data: any) => {
+          if (data) handleLocation(data.latitude, data.longitude);
+        });
       });
+    } else if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        handleLocation(pos.coords.latitude, pos.coords.longitude);
+      }, (err) => {
+        console.warn("High accuracy error:", err);
+        navigator.geolocation.getCurrentPosition((pos) => {
+          handleLocation(pos.coords.latitude, pos.coords.longitude);
+        }, (fallbackErr) => {
+          console.error("Low accuracy error:", fallbackErr);
+        }, { enableHighAccuracy: false, timeout: 5000 });
+      }, { enableHighAccuracy: true, timeout: 5000 });
     }
   };
 
