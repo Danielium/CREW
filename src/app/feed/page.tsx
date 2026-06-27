@@ -316,8 +316,8 @@ export default function FeedTab() {
   return (
     <div className="flex flex-col min-h-[100dvh] text-foreground pb-24 relative z-10">
       {/* Header Sticky */}
-      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-4 pt-12 flex justify-between items-center">
-        <h1 className="text-2xl font-black tracking-tight uppercase">ЛЕНТА</h1>
+      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border px-4 pb-3 pt-8 flex justify-center items-center">
+        <h1 className="text-xl font-black tracking-tight uppercase">Лента</h1>
       </div>
 
       {/* Composer (Tweet Box) */}
