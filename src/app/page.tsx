@@ -364,7 +364,7 @@ function MapContent() {
   };
 
   return (
-    <div className="relative w-full h-[100dvh] overflow-hidden bg-black text-foreground">
+    <div className="absolute inset-0 bg-black text-foreground flex flex-col overflow-hidden">
       <TinderMap proposals={proposals} onSelectProposal={handleSelectProposal} onMapClick={handleMapClick} forceCenter={forceCenter} triggerLocate={triggerLocate} />
 
       {/* Top UI Overlay */}

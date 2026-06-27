@@ -452,7 +452,7 @@ export default function FeedTab() {
                   )}
 
                   {/* Action Bar */}
-                  <div className="flex items-center justify-between text-muted mt-2 max-w-[200px]">
+                  <div className="flex items-center gap-6 text-muted mt-2">
                     <button 
                       onClick={(e) => { e.stopPropagation(); toggleLike(post.id); }}
                       className={`flex items-center gap-1.5 transition-colors group ${post.isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
