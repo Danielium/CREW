@@ -13,7 +13,6 @@ export default function BottomNav() {
     let accumulatedScrollUp = 0;
 
     const handleScroll = (e: Event) => {
-      // Disable scroll hiding logic if forced hidden by run mode
       const target = e.target as HTMLElement;
       const currentScrollY = target.scrollTop;
       const deltaY = currentScrollY - lastScrollY;
@@ -34,31 +33,20 @@ export default function BottomNav() {
       container.addEventListener("scroll", handleScroll, { passive: true });
     }
     
-    // Global events to force hide/show (used by the Run tracker)
-    const forceHide = () => setIsVisible(false);
-    const forceShow = () => setIsVisible(true);
-    
-    window.addEventListener("hideNav", forceHide);
-    window.addEventListener("showNav", forceShow);
-    
     return () => {
       if (container) {
         container.removeEventListener("scroll", handleScroll);
       }
-      window.removeEventListener("hideNav", forceHide);
-      window.removeEventListener("showNav", forceShow);
     };
   }, []);
 
   const navItems = [
-    { name: "Карта", path: "/map", icon: MapIcon },
-    { name: "Бег", path: "/run", icon: Activity },
-    { name: "Клуб", path: "/", icon: Users },
-    { name: "Прогресс", path: "/progress", icon: BarChart },
+    { name: "Карта", path: "/", icon: MapIcon },
+    { name: "Лента", path: "/feed", icon: Users },
     { name: "Профиль", path: "/profile", icon: User },
   ];
 
-  if (pathname === '/run' || pathname === '/login' || pathname.startsWith('/events/') || pathname.startsWith('/map') || pathname.startsWith('/club/logo-builder')) {
+  if (pathname === '/login' || pathname.startsWith('/club/logo-builder')) {
     return null;
   }
 

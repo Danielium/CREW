@@ -217,6 +217,18 @@ export default function ProfileTab() {
           </div>
         </div>
 
+        {/* Integrations Placeholder */}
+        <div className="mb-24">
+          <h3 className="font-bold uppercase text-sm tracking-wider mb-4">Интеграции</h3>
+          <div className="bg-card border border-border rounded-[24px] p-5">
+            <p className="text-sm text-muted mb-4 leading-relaxed">
+              Поскольку мы убрали встроенный трекер бега, здесь скоро появятся настройки подключения внешних сервисов (Strava, Apple Health, Garmin и др.) для автоматической синхронизации твоей статистики.
+            </p>
+            <button disabled className="w-full bg-background border border-border text-foreground font-bold uppercase text-sm py-3 rounded-full opacity-50 cursor-not-allowed">
+              Подключить Strava (скоро)
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* EDIT PROFILE MODAL */}
