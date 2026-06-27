@@ -136,3 +136,28 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+// Cancel a request / Leave a run
+export async function DELETE(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const url = new URL(req.url);
+    const proposalId = url.searchParams.get("proposalId");
+    const userId = (session.user as any).id;
+
+    if (!proposalId) return NextResponse.json({ error: "Missing proposalId" }, { status: 400 });
+
+    await prisma.runJoinRequest.deleteMany({
+      where: {
+        proposalId,
+        userId
+      }
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}

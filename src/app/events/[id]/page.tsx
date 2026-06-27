@@ -49,7 +49,7 @@ export default function EventDetailsPage() {
       if (res.ok) {
         setEvent((prev: any) => ({
           ...prev,
-          checkedInUsers: prev.checkedInUsers.filter((u: any) => u.id !== userId)
+          attendees: prev.attendees.filter((u: any) => u.id !== userId)
         }));
       }
     } catch (e) {
@@ -125,10 +125,10 @@ export default function EventDetailsPage() {
           )}
         </div>
 
-        <h2 className="text-xl font-black uppercase tracking-tight mb-4">Результаты участников ({event.checkedInUsers.length})</h2>
+        <h2 className="text-xl font-black uppercase tracking-tight mb-4">Участники ({event.attendees?.length || 0})</h2>
         
         <div className="flex flex-col gap-3">
-          {event.checkedInUsers.map((user: any) => {
+          {event.attendees?.map((user: any) => {
             const run = event.runs?.find((r: any) => r.userId === user.id);
             const isExpanded = expandedUser === user.id;
             const splits = run?.splits ? JSON.parse(run.splits) : null;
@@ -153,12 +153,7 @@ export default function EventDetailsPage() {
                         <div className="text-xs text-primary font-mono mt-0.5">{run.distance.toFixed(2)} км • {Math.floor(run.avgPace)}:{(Math.floor((run.avgPace % 1) * 60)).toString().padStart(2, '0')} /км</div>
                       ) : (
                         <div className="text-xs text-muted mt-0.5">
-                          {(() => {
-                            const diff = new Date(event.date).getTime() - Date.now();
-                            if (diff > 60 * 60 * 1000) return "Готовится к старту";
-                            if (diff < -4 * 60 * 60 * 1000) return "Нет результатов";
-                            return "Ещё бежит...";
-                          })()}
+                          Участник
                         </div>
                       )}
                     </div>
@@ -207,9 +202,9 @@ export default function EventDetailsPage() {
             );
           })}
           
-          {event.checkedInUsers.length === 0 && (
+          {(!event.attendees || event.attendees.length === 0) && (
             <div className="text-center p-8 bg-card border border-border rounded-2xl text-muted text-sm">
-              Пока никто не отметился на старте
+              Пока нет участников
             </div>
           )}
         </div>

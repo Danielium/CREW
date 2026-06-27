@@ -238,21 +238,6 @@ export default function FeedEvents({ userData }: { userData: any }) {
                 {/* Actions */}
                 {!isPast && (
                   <div className="flex items-center gap-2 relative z-10">
-                    {isAttending && !ev.checkedInUsers?.some((u: any) => u.id === userData?.id) && canStartRun && (
-                      <button 
-                        onClick={(e) => { 
-                          e.preventDefault(); 
-                          e.stopPropagation(); 
-                          localStorage.setItem("activeEventId", ev.id);
-                          localStorage.setItem("activeEventTitle", ev.title);
-                          router.push('/run');
-                        }} 
-                        className="p-2 rounded-full bg-black border border-primary/20 text-primary hover:bg-black/80 hover:border-primary/50 transition-colors flex items-center justify-center" 
-                        title="Начать пробежку"
-                      >
-                        <Play size={16} fill="currentColor" />
-                      </button>
-                    )}
                     <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleJoinEvent(ev.id); }} className="p-2 rounded-full bg-black border border-primary/20 text-primary hover:bg-black/80 hover:border-primary/50 transition-colors" title={isAttending ? "Отменить участие" : "Присоединиться"}>
                       {isAttending ? <Check size={16} /> : <Plus size={16} />}
                     </button>

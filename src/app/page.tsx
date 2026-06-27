@@ -178,6 +178,21 @@ function MapContent() {
     }
   };
 
+  const handleCancelRequest = async () => {
+    if (!selectedProposal) return;
+    try {
+      const res = await fetch(`/api/map-events/request?proposalId=${selectedProposal.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        fetchProposals();
+        closeSheet();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleEditClick = () => {
     if (!selectedProposal) return;
     const d = new Date(selectedProposal.startTime);
@@ -495,10 +510,15 @@ function MapContent() {
 
                 <div className="mt-2">
                   {selectedProposal.requests && selectedProposal.requests.length > 0 ? (
-                    <div className="w-full py-4 text-center bg-muted/50 rounded-2xl font-bold uppercase tracking-wider text-sm">
-                      {selectedProposal.requests[0].status === "PENDING" ? "Запрос ожидает ответа" : 
-                       selectedProposal.requests[0].status === "ACCEPTED" ? "Вы участвуете! 🎉" : 
-                       "Заявка отклонена"}
+                    <div className="flex flex-col gap-2">
+                      <div className="w-full py-4 text-center bg-muted/50 rounded-2xl font-bold uppercase tracking-wider text-sm">
+                        {selectedProposal.requests[0].status === "PENDING" ? "Запрос ожидает ответа" : 
+                         selectedProposal.requests[0].status === "ACCEPTED" ? "Вы участвуете! 🎉" : 
+                         "Заявка отклонена"}
+                      </div>
+                      <button onClick={handleCancelRequest} className="w-full py-3 text-center bg-red-500/10 text-red-500 rounded-2xl font-bold uppercase tracking-wider text-sm active:scale-95 transition-transform">
+                        Отменить участие
+                      </button>
                     </div>
                   ) : selectedProposal.creator?.id === (session?.user as any)?.id ? (
                     <div className="grid grid-cols-2 gap-4">
