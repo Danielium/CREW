@@ -33,55 +33,75 @@ export default function LoginPage() {
   const [isCheckingTg, setIsCheckingTg] = useState(true);
   
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
+    let checkInterval: NodeJS.Timeout;
+    let fallbackTimeout: NodeJS.Timeout;
 
-    if (typeof window !== "undefined" && (window as any).Telegram?.WebApp) {
-      const tg = (window as any).Telegram.WebApp;
-      if (tg.initDataUnsafe?.user) {
-        const user = tg.initDataUnsafe.user;
-        let tUsername = "";
-        if (user.username) {
-          tUsername = '@' + user.username;
-        } else {
-          tUsername = '@id' + user.id;
-        }
-        
-        let tName = "";
-        if (user.first_name) {
-          tName = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-        }
-        
-        let tImage = user.photo_url || "";
-
-        setTelegramUsername(tUsername);
-        setName(tName);
-        if (tImage) setImagePreview(tImage);
-        setIsTgLogin(true);
-
-        // Auto login bypass!
-        setIsLoading(true);
-        signIn("credentials", {
-          telegramUsername: tUsername,
-          password: "dummy_tg_auth",
-          isTgWebApp: "true",
-          name: tName,
-          image: tImage,
-          redirect: false,
-        }).then((res) => {
-          if (res?.ok) {
-            router.push("/");
-            router.refresh();
+    const checkTg = () => {
+      if (typeof window !== "undefined" && (window as any).Telegram?.WebApp) {
+        const tg = (window as any).Telegram.WebApp;
+        if (tg.initDataUnsafe?.user) {
+          const user = tg.initDataUnsafe.user;
+          let tUsername = "";
+          if (user.username) {
+            tUsername = '@' + user.username;
           } else {
-            setIsLoading(false);
-            setIsCheckingTg(false);
+            tUsername = '@id' + user.id;
           }
-        });
-        return; // Don't turn off checking state if we are bypassing
+          
+          let tName = "";
+          if (user.first_name) {
+            tName = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+          }
+          
+          let tImage = user.photo_url || "";
+
+          setTelegramUsername(tUsername);
+          setName(tName);
+          if (tImage) setImagePreview(tImage);
+          setIsTgLogin(true);
+
+          // Auto login bypass!
+          setIsLoading(true);
+          signIn("credentials", {
+            telegramUsername: tUsername,
+            password: "dummy_tg_auth",
+            isTgWebApp: "true",
+            name: tName,
+            image: tImage,
+            redirect: false,
+          }).then((res) => {
+            if (res?.ok) {
+              router.push("/");
+              router.refresh();
+            } else {
+              setIsLoading(false);
+              setIsCheckingTg(false);
+            }
+          });
+          return true; // found and started login
+        }
       }
+      return false;
+    };
+
+    if (!checkTg()) {
+      checkInterval = setInterval(() => {
+        if (checkTg()) {
+          clearInterval(checkInterval);
+          clearTimeout(fallbackTimeout);
+        }
+      }, 100);
+      
+      fallbackTimeout = setTimeout(() => {
+        clearInterval(checkInterval);
+        setIsCheckingTg(false);
+      }, 1500);
     }
-    
-    timeout = setTimeout(() => setIsCheckingTg(false), 200);
-    return () => clearTimeout(timeout);
+
+    return () => {
+      clearInterval(checkInterval);
+      clearTimeout(fallbackTimeout);
+    };
   }, [router]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
