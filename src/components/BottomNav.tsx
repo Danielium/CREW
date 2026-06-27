@@ -42,7 +42,8 @@ export default function BottomNav() {
 
   const navItems = [
     { name: "Карта", path: "/", icon: MapIcon },
-    { name: "Лента", path: "/feed", icon: Users },
+    { name: "Лента", path: "/feed", icon: Activity },
+    { name: "Клуб", path: "/club", icon: Users },
     { name: "Профиль", path: "/profile", icon: User },
   ];
 
