@@ -17,55 +17,48 @@ export function TelegramInit() {
     };
     document.addEventListener("touchmove", preventBounce, { passive: false });
 
-    if (typeof window === "undefined" || !(window as any).Telegram?.WebApp) {
-      return () => document.removeEventListener("touchmove", preventBounce);
-    }
+    // Initialize using the official SDK approach
+    const initTg = async () => {
+      try {
+        const { viewport, init, isTMA } = await import("@telegram-apps/sdk");
+        
+        if (await isTMA()) {
+          init(); // Initialize SDK
 
-    const tg = (window as any).Telegram.WebApp;
+          // Set colors and disable swipes via vanilla object as a safe fallback
+          const tg = (window as any).Telegram?.WebApp;
+          if (tg) {
+            tg.setHeaderColor("#000000");
+            tg.setBackgroundColor("#000000");
+            if (tg.disableVerticalSwipes) {
+              try { tg.disableVerticalSwipes(); } catch(e){}
+            }
+          }
 
-    // This exact order was confirmed working: ready -> expand -> requestFullscreen
-    tg.ready();
-    tg.expand();
+          // Step 1: Mount viewport
+          if (viewport.mount.isAvailable()) {
+            await viewport.mount();
+            // Step 2: Expand to full height first
+            viewport.expand(); 
+          }
+          
+          // Step 3: Wait a tiny bit for expand to settle before fullscreen
+          await new Promise(r => setTimeout(r, 100));
 
-    // Fullscreen IMMEDIATELY after expand — no other calls in between
-    const tryFullscreen = () => {
-      if (tg.requestFullscreen) {
-        try { tg.requestFullscreen(); } catch (e) {}
+          // Step 4: Request true Fullscreen (SDK handles the async logic)
+          if (viewport.requestFullscreen.isAvailable()) {
+            await viewport.requestFullscreen();
+          }
+        }
+      } catch (error) {
+        console.error("TG Init Error:", error);
       }
     };
 
-    // Try immediately
-    tryFullscreen();
-
-    // Everything else AFTER fullscreen has been requested
-    tg.setHeaderColor("#000000");
-    tg.setBackgroundColor("#000000");
-
-    if (tg.disableVerticalSwipes) {
-      try { tg.disableVerticalSwipes(); } catch (e) {}
-    }
-
-    // EXTREMELY AGGRESSIVE FULLSCREEN LOCK
-    // We attach to all possible user interactions. Once fullscreen is achieved, we don't spam it.
-    const forceFullscreenOnInteraction = () => {
-      if (tg.isFullscreen) return; // already in fullscreen
-      tryFullscreen();
-    };
-
-    document.addEventListener("click", forceFullscreenOnInteraction, { capture: true });
-    document.addEventListener("touchstart", forceFullscreenOnInteraction, { passive: true, capture: true });
-    document.addEventListener("touchend", forceFullscreenOnInteraction, { passive: true, capture: true });
-    document.addEventListener("scroll", forceFullscreenOnInteraction, { passive: true, capture: true });
-
-    tg.onEvent?.("viewport_changed", tryFullscreen);
-    tg.onEvent?.("fullscreen_changed", forceFullscreenOnInteraction);
+    initTg();
 
     return () => {
       document.removeEventListener("touchmove", preventBounce);
-      document.removeEventListener("click", forceFullscreenOnInteraction, { capture: true } as any);
-      document.removeEventListener("touchstart", forceFullscreenOnInteraction, { capture: true } as any);
-      document.removeEventListener("touchend", forceFullscreenOnInteraction, { capture: true } as any);
-      document.removeEventListener("scroll", forceFullscreenOnInteraction, { capture: true } as any);
     };
   }, []);
 
