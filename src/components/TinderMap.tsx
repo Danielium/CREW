@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, CircleMarker, useMapEvents } from "react-leaflet";
+import { useEffect, useState, useRef } from "react";
+import { MapContainer, TileLayer, Marker, CircleMarker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -46,6 +46,13 @@ function MapController({ onMapClick, forceCenter }: any) {
 
 function UserLocationMarker({ setInitialLocation, triggerLocate }: { setInitialLocation: (latlng: [number, number]) => void, triggerLocate?: number }) {
   const [position, setPosition] = useState<[number, number] | null>(null);
+  const map = useMap();
+  const flyRef = useRef(true);
+
+  // When triggerLocate changes (button pressed), we want to fly to the found location
+  useEffect(() => {
+    flyRef.current = true;
+  }, [triggerLocate]);
 
   const handleLocation = (lat: number | string, lng: number | string) => {
     const numLat = Number(lat);
@@ -55,6 +62,11 @@ function UserLocationMarker({ setInitialLocation, triggerLocate }: { setInitialL
       setInitialLocation([numLat, numLng]);
       // Cache for next session
       try { localStorage.setItem('lastKnownLocation', JSON.stringify([numLat, numLng])); } catch(e) {}
+
+      if (flyRef.current) {
+        map.flyTo([numLat, numLng], 14, { duration: 1 });
+        flyRef.current = false;
+      }
     }
   };
 
