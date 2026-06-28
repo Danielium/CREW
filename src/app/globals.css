@@ -48,9 +48,9 @@
 
 @layer utilities {
   .pt-safe {
-    padding-top: calc(var(--tg-content-safe-area-inset-top, var(--tg-safe-area-inset-top, 24px)) + 12px) !important;
+    padding-top: calc(max(var(--tg-content-safe-area-inset-top, var(--tg-safe-area-inset-top, 32px)), 32px) + 12px) !important;
   }
   .top-safe {
-    top: calc(var(--tg-content-safe-area-inset-top, var(--tg-safe-area-inset-top, 24px)) + 12px) !important;
+    top: calc(max(var(--tg-content-safe-area-inset-top, var(--tg-safe-area-inset-top, 32px)), 32px) + 12px) !important;
   }
 }
