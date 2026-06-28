@@ -19,6 +19,7 @@ export function TelegramBackButton() {
       pathname === "/map" || 
       pathname === "/feed" || 
       pathname === "/profile" || 
+      pathname === "/club" || 
       pathname === "/login" ||
       pathname === "/map/requests"; // Assuming requests might be a root-level tab view
 
