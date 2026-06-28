@@ -48,8 +48,8 @@
 
 /* Safe area padding utilities for Telegram Web Apps */
 .pt-safe {
-  padding-top: max(var(--tg-content-safe-area-inset-top, 40px), 48px) !important;
+  padding-top: max(var(--tg-content-safe-area-inset-top, 80px), 80px) !important;
 }
 .top-safe {
-  top: max(var(--tg-content-safe-area-inset-top, 40px), 48px) !important;
+  top: max(var(--tg-content-safe-area-inset-top, 80px), 80px) !important;
 }
