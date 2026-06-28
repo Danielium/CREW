@@ -70,7 +70,7 @@ export default function PublicProfilePage() {
   return (
     <div className="flex flex-col min-h-[100dvh] text-foreground relative z-10 animate-in fade-in duration-500 pb-24">
       {/* Header Bar */}
-      <div className="flex justify-between items-center px-4 py-4 sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+      <div className="flex justify-between items-center px-4 pb-4 pt-safe sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <h1 className="text-xl font-black uppercase tracking-widest">Профиль</h1>
         {/* Native back button used here */}
       </div>

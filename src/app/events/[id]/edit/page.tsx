@@ -136,7 +136,7 @@ export default function EditEventPage() {
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground pb-24 relative z-10 flex flex-col">
-      <div className="flex items-center gap-4 p-4 border-b border-border sticky top-0 bg-background/80 backdrop-blur-md z-20">
+      <div className="flex items-center gap-4 px-4 pb-4 pt-safe border-b border-border sticky top-0 bg-background/80 backdrop-blur-md z-20">
         <h1 className="text-xl font-black uppercase tracking-tight leading-none">Редактировать</h1>
       </div>
 

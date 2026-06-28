@@ -109,7 +109,7 @@ export default function ClubProfilePage() {
         {/* Native back button used here via TelegramBackButton */}
         
         {isFounder && (
-          <Link href={`/club/${id}/admin`} className="absolute top-6 right-4 px-4 h-10 rounded-full bg-primary text-black font-bold flex items-center justify-center z-20 text-xs uppercase tracking-wider">
+          <Link href={`/club/${id}/admin`} className="absolute top-safe right-4 px-4 h-10 rounded-full bg-primary text-black font-bold flex items-center justify-center z-20 text-xs uppercase tracking-wider">
             Управление
           </Link>
         )}

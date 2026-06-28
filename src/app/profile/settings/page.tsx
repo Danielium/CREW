@@ -56,7 +56,7 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col min-h-[100dvh] text-foreground bg-background z-50 relative pb-12">
       {/* Header */}
-      <div className="sticky top-0 bg-background/80 backdrop-blur-md z-10 px-4 py-4 flex items-center gap-4 border-b border-border">
+      <div className="sticky top-0 bg-background/80 backdrop-blur-md z-10 px-4 pb-4 pt-safe flex items-center gap-4 border-b border-border">
         {/* Native back button used here */}
         <h1 className="text-xl font-bold uppercase tracking-tight">Настройки</h1>
       </div>

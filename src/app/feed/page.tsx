@@ -316,7 +316,7 @@ export default function FeedTab() {
   return (
     <div className="flex flex-col min-h-[100dvh] text-foreground pb-24 relative z-10">
       {/* Header Sticky */}
-      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border px-4 pb-4 pt-8 flex justify-between items-center">
+      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border px-4 pb-4 pt-safe flex justify-between items-center">
         <h1 className="text-2xl font-black tracking-tight uppercase">ЛЕНТА</h1>
       </div>
 

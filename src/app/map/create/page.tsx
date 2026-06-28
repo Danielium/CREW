@@ -126,7 +126,7 @@ function CreateProposalInner() {
   return (
     <div className="flex flex-col min-h-[100dvh] bg-black text-foreground">
       {/* Header */}
-      <div className="absolute top-0 left-0 w-full p-4 flex items-center justify-between z-20 pointer-events-none">
+      <div className="absolute top-0 left-0 w-full px-4 pb-4 pt-safe flex items-center justify-between z-20 pointer-events-none">
         <div className="pointer-events-auto">
           {/* Native back button used */}
         </div>

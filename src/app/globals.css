@@ -45,3 +45,12 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+@layer utilities {
+  .pt-safe {
+    padding-top: calc(var(--tg-content-safe-area-inset-top, var(--tg-safe-area-inset-top, 24px)) + 12px) !important;
+  }
+  .top-safe {
+    top: calc(var(--tg-content-safe-area-inset-top, var(--tg-safe-area-inset-top, 24px)) + 12px) !important;
+  }
+}

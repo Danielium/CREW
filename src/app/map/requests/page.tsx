@@ -61,7 +61,7 @@ export default function RequestsInbox() {
   return (
     <div className="flex flex-col min-h-[100dvh] bg-black text-foreground">
       {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b border-border">
+      <div className="flex items-center gap-4 px-4 pb-4 pt-safe border-b border-border">
         <h1 className="text-2xl font-black uppercase tracking-tight">Отклики</h1>
       </div>
 

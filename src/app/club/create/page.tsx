@@ -71,7 +71,7 @@ export default function CreateClubPage() {
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground pb-12 relative z-10">
-      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-md pt-12 pb-4 px-4 flex items-center gap-4">
+      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-md pt-safe pb-4 px-4 flex items-center gap-4">
         <h1 className="text-2xl font-black uppercase tracking-tight">Создать Клуб</h1>
       </div>
 
