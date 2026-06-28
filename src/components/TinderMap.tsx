@@ -3,6 +3,8 @@ import { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, CircleMarker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { renderToString } from "react-dom/server";
+import ClubBadge from "./ClubBadge";
 
 // Fix Leaflet default icon path issues in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -196,18 +198,21 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
               logoConfig = JSON.parse(p.event.club.logoConfig);
             } catch(e) {}
             
-            // To avoid importing ReactDOMServer which can be heavy on client, we'll just build a CSS badge
-            const bg = (logoConfig as any).color1 || "#CCFF00";
+            // Create HTML using ClubBadge
+            const badgeHtml = renderToString(<ClubBadge {...logoConfig} size={32} shape="circle" />);
+            
             icon = new L.DivIcon({
               html: `
-                <div style="width: 36px; height: 36px; background-color: ${bg}; border-radius: 12px; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.5); overflow: hidden; position: relative;">
-                  <div style="position: absolute; bottom: -5px; right: -5px; width: 20px; height: 20px; background: rgba(0,0,0,0.2); border-radius: 50%;"></div>
-                  <span style="font-size: 16px; font-weight: 900; color: #111; letter-spacing: -1px; z-index: 1;">${p.event?.club?.name?.charAt(0).toUpperCase() || 'C'}</span>
+                <div style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; display: flex; items-center; justify-content: center; box-shadow: 0 6px 12px rgba(0,0,0,0.4); overflow: hidden; position: relative; background: #111;">
+                  <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; transform: scale(1.15);">
+                    ${badgeHtml}
+                  </div>
+                  <div style="position: absolute; bottom: -6px; right: -6px; width: 24px; height: 24px; background: rgba(0,0,0,0.15); border-radius: 50%; pointer-events: none;"></div>
                 </div>
               `,
               className: '',
-              iconSize: [36, 36],
-              iconAnchor: [18, 36],
+              iconSize: [40, 40],
+              iconAnchor: [20, 40],
             });
           }
 
