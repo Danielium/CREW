@@ -47,20 +47,89 @@ function MapController({ onMapClick, forceCenter }: any) {
 function UserLocationMarker({ setInitialLocation, triggerLocate }: { setInitialLocation: (latlng: [number, number]) => void, triggerLocate?: number }) {
   const [position, setPosition] = useState<[number, number] | null>(null);
 
+  const handleLocation = (lat: number | string, lng: number | string) => {
+    const numLat = Number(lat);
+    const numLng = Number(lng);
+    if (!isNaN(numLat) && !isNaN(numLng)) {
+      setPosition([numLat, numLng]);
+      setInitialLocation([numLat, numLng]);
+      // Cache for next session
+      try { localStorage.setItem('lastKnownLocation', JSON.stringify([numLat, numLng])); } catch(e) {}
+    }
+  };
+
   useEffect(() => {
     let watchId: number | null = null;
-    let capWatchId: string | null = null;
 
-    const handleLocation = (lat: number | string, lng: number | string) => {
-      const numLat = Number(lat);
-      const numLng = Number(lng);
-      if (!isNaN(numLat) && !isNaN(numLng)) {
-        setPosition([numLat, numLng]);
-        setInitialLocation([numLat, numLng]);
-      }
+    const startBrowserGeo = () => {
+      if (!navigator.geolocation) return;
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),
+        (err) => {
+          console.warn("Geo error:", err.code, err.message);
+          // If denied, set up a listener — when user enables it later we retry
+          if (err.code === 1 /* PERMISSION_DENIED */) {
+            // Poll permission state every 2s — when granted, retry
+            const permPoll = setInterval(async () => {
+              try {
+                if (navigator.permissions) {
+                  const perm = await navigator.permissions.query({ name: 'geolocation' });
+                  if (perm.state === 'granted') {
+                    clearInterval(permPoll);
+                    navigator.geolocation.getCurrentPosition(
+                      (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),
+                      () => {},
+                      { enableHighAccuracy: true, timeout: 8000 }
+                    );
+                  }
+                }
+              } catch (e) {}
+            }, 2000);
+            // Stop polling after 60s
+            setTimeout(() => clearInterval(permPoll), 60000);
+          }
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),
+        (err) => console.warn("watchPosition error:", err),
+        { enableHighAccuracy: true }
+      );
     };
 
     const startWatching = async () => {
+      // 1. Try Telegram LocationManager — it remembers permission across sessions
+      const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
+      if (tg?.LocationManager) {
+        tg.LocationManager.init(() => {
+          if (tg.LocationManager.isAccessGranted) {
+            tg.LocationManager.getLocation((data: any) => {
+              if (data) handleLocation(data.latitude, data.longitude);
+            });
+            // Also start browser geo for live tracking
+            startBrowserGeo();
+          } else if (tg.LocationManager.isLocationAvailable) {
+            // Request permission — TG will show dialog once, then remember
+            tg.LocationManager.getLocation((data: any) => {
+              if (data) {
+                handleLocation(data.latitude, data.longitude);
+                startBrowserGeo();
+              } else {
+                // User denied in TG — still try browser
+                startBrowserGeo();
+              }
+            });
+          } else {
+            startBrowserGeo();
+          }
+        });
+        return;
+      }
+
+      // 2. Try Capacitor (native app)
       try {
         const { Capacitor } = await import('@capacitor/core');
         if (Capacitor.isNativePlatform()) {
@@ -70,58 +139,20 @@ function UserLocationMarker({ setInitialLocation, triggerLocate }: { setInitialL
             await Geolocation.requestPermissions();
           }
           try {
-            const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 5000 });
+            const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 8000 });
             handleLocation(pos.coords.latitude, pos.coords.longitude);
           } catch (e) {
-            console.warn("Capacitor high accuracy error:", e);
-            try {
-              const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 5000 });
-              handleLocation(pos.coords.latitude, pos.coords.longitude);
-            } catch (fallbackErr) {
-              console.error("Capacitor low accuracy error:", fallbackErr);
-            }
+            console.warn("Capacitor geo error:", e);
           }
-
-          capWatchId = await Geolocation.watchPosition({ enableHighAccuracy: true }, (pos, err) => {
+          await Geolocation.watchPosition({ enableHighAccuracy: true }, (pos) => {
             if (pos) handleLocation(pos.coords.latitude, pos.coords.longitude);
           });
           return;
         }
-      } catch (e) {
-        console.error("Capacitor geolocation error:", e);
-      }
+      } catch (e) {}
 
-      // Fallbacks
-      const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
-      if (tg?.LocationManager) {
-        tg.LocationManager.init(() => {
-          tg.LocationManager.getLocation((data: any) => {
-            if (data) handleLocation(data.latitude, data.longitude);
-          });
-        });
-      }
-      
-      if (navigator.geolocation) {
-        // Force an immediate fetch to ensure marker renders quickly
-        navigator.geolocation.getCurrentPosition(
-          (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),
-          (err) => {
-            console.warn("High accuracy getCurrentPosition error:", err);
-            navigator.geolocation.getCurrentPosition(
-              (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),
-              (fallbackErr) => console.warn("Low accuracy fallback error:", fallbackErr),
-              { enableHighAccuracy: false, timeout: 5000 }
-            );
-          },
-          { enableHighAccuracy: true, timeout: 5000 }
-        );
-        
-        watchId = navigator.geolocation.watchPosition(
-          (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),
-          (err) => console.warn("watchPosition error:", err),
-          { enableHighAccuracy: true }
-        );
-      }
+      // 3. Plain browser geolocation
+      startBrowserGeo();
     };
 
     startWatching();
@@ -129,11 +160,6 @@ function UserLocationMarker({ setInitialLocation, triggerLocate }: { setInitialL
     return () => {
       if (watchId && navigator.geolocation) {
         navigator.geolocation.clearWatch(watchId);
-      }
-      if (capWatchId) {
-        import('@capacitor/geolocation').then(({ Geolocation }) => {
-          Geolocation.clearWatch({ id: capWatchId as string });
-        });
       }
     };
   }, [triggerLocate]);
