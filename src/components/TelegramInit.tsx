@@ -24,21 +24,35 @@ export function TelegramInit() {
       tg.setHeaderColor("#000000");
       tg.setBackgroundColor("#000000");
 
-      // Request fullscreen immediately and on a few retries
+      // Request fullscreen immediately (might fail if requires user gesture)
       goFullscreen();
       setTimeout(goFullscreen, 100);
       setTimeout(goFullscreen, 500);
-      setTimeout(goFullscreen, 1000);
 
-      // Re-request fullscreen if the state changes (e.g. user exits fullscreen)
+      // Re-request fullscreen if the state changes
       tg.onEvent("fullscreen_changed", () => {
         if (!tg.isFullscreen) goFullscreen();
       });
 
-      // Re-request fullscreen when viewport changes (menu button launch triggers resize)
+      // Re-request fullscreen when viewport changes
       tg.onEvent("viewport_changed", () => {
         goFullscreen();
       });
+
+      // Telegram API requires user interaction to enter fullscreen if not launched as fullscreen Mini App
+      const handleUserInteraction = () => {
+        if (!tg.isFullscreen) goFullscreen();
+        // We do not remove the listener because they might exit fullscreen and we want to allow them back in on next tap
+      };
+
+      document.addEventListener("click", handleUserInteraction);
+      document.addEventListener("touchstart", handleUserInteraction, { passive: true });
+
+      // Clean up on unmount
+      return () => {
+        document.removeEventListener("click", handleUserInteraction);
+        document.removeEventListener("touchstart", handleUserInteraction);
+      };
     }
 
     // Prevent native browser overscroll/bounce on the document level
