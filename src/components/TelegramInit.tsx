@@ -13,8 +13,8 @@ export function TelegramInit() {
         }
       };
 
+      // Remove tg.expand() as it might conflict with requestFullscreen
       tg.ready();
-      tg.expand();
 
       // Disable vertical swipe-to-close gesture
       if (tg.disableVerticalSwipes) {
