@@ -4,57 +4,6 @@ import { useEffect } from "react";
 
 export function TelegramInit() {
   useEffect(() => {
-    if (typeof window !== "undefined" && (window as any).Telegram?.WebApp) {
-      const tg = (window as any).Telegram.WebApp;
-
-      const goFullscreen = () => {
-        if (tg.requestFullscreen) {
-          try { tg.requestFullscreen(); } catch (e) {}
-        }
-      };
-
-      // Remove tg.expand() as it might conflict with requestFullscreen
-      tg.ready();
-
-      // Disable vertical swipe-to-close gesture
-      if (tg.disableVerticalSwipes) {
-        try { tg.disableVerticalSwipes(); } catch (e) {}
-      }
-
-      tg.setHeaderColor("#000000");
-      tg.setBackgroundColor("#000000");
-
-      // Request fullscreen immediately (might fail if requires user gesture)
-      goFullscreen();
-      setTimeout(goFullscreen, 100);
-      setTimeout(goFullscreen, 500);
-
-      // Re-request fullscreen if the state changes
-      tg.onEvent("fullscreen_changed", () => {
-        if (!tg.isFullscreen) goFullscreen();
-      });
-
-      // Re-request fullscreen when viewport changes
-      tg.onEvent("viewport_changed", () => {
-        goFullscreen();
-      });
-
-      // Telegram API requires user interaction to enter fullscreen if not launched as fullscreen Mini App
-      const handleUserInteraction = () => {
-        if (!tg.isFullscreen) goFullscreen();
-        // We do not remove the listener because they might exit fullscreen and we want to allow them back in on next tap
-      };
-
-      document.addEventListener("click", handleUserInteraction);
-      document.addEventListener("touchstart", handleUserInteraction, { passive: true });
-
-      // Clean up on unmount
-      return () => {
-        document.removeEventListener("click", handleUserInteraction);
-        document.removeEventListener("touchstart", handleUserInteraction);
-      };
-    }
-
     // Prevent native browser overscroll/bounce on the document level
     const preventBounce = (e: TouchEvent) => {
       let target = e.target as HTMLElement | null;
@@ -66,9 +15,62 @@ export function TelegramInit() {
       }
       e.preventDefault();
     };
-
     document.addEventListener("touchmove", preventBounce, { passive: false });
-    return () => document.removeEventListener("touchmove", preventBounce);
+
+    if (typeof window === "undefined" || !(window as any).Telegram?.WebApp) {
+      return () => document.removeEventListener("touchmove", preventBounce);
+    }
+
+    const tg = (window as any).Telegram.WebApp;
+
+    const goFullscreen = () => {
+      if (tg.requestFullscreen) {
+        try { tg.requestFullscreen(); } catch (e) {}
+      }
+    };
+
+    // Signal Telegram that the app is ready
+    tg.ready();
+
+    // Expand to full height (needed for older TG versions and as a prerequisite)
+    tg.expand();
+
+    // Disable vertical swipe-to-close gesture
+    if (tg.disableVerticalSwipes) {
+      try { tg.disableVerticalSwipes(); } catch (e) {}
+    }
+
+    tg.setHeaderColor("#000000");
+    tg.setBackgroundColor("#000000");
+
+    // Request fullscreen with multiple attempts at different intervals
+    // to handle different launch contexts (Mini App vs Menu Button)
+    goFullscreen();
+    setTimeout(goFullscreen, 50);
+    setTimeout(goFullscreen, 200);
+    setTimeout(goFullscreen, 600);
+    setTimeout(goFullscreen, 1500);
+
+    // Re-request fullscreen if user exits it
+    tg.onEvent("fullscreen_changed", () => {
+      if (!tg.isFullscreen) goFullscreen();
+    });
+
+    // Re-request fullscreen on viewport change (fires during Menu Button launch)
+    tg.onEvent("viewport_changed", () => {
+      goFullscreen();
+    });
+
+    // Also try on any touch — last resort for restricted contexts
+    const handleUserInteraction = () => {
+      if (!tg.isFullscreen) goFullscreen();
+    };
+    document.addEventListener("touchstart", handleUserInteraction, { passive: true });
+
+    return () => {
+      document.removeEventListener("touchmove", preventBounce);
+      document.removeEventListener("touchstart", handleUserInteraction);
+    };
   }, []);
 
   return null;
