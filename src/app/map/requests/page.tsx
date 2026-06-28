@@ -14,21 +14,6 @@ export default function RequestsInbox() {
 
   useEffect(() => {
     fetchData();
-
-    // Telegram BackButton
-    const tg = typeof window !== "undefined" ? (window as any).Telegram?.WebApp : null;
-    if (tg?.BackButton) {
-      tg.BackButton.show();
-      const onBack = () => {
-        router.back();
-      };
-      tg.BackButton.onClick(onBack);
-      
-      return () => {
-        tg.BackButton.offClick(onBack);
-        tg.BackButton.hide();
-      };
-    }
   }, []);
 
   const fetchData = async () => {

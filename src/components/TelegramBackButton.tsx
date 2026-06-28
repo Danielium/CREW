@@ -20,8 +20,7 @@ export function TelegramBackButton() {
       pathname === "/feed" || 
       pathname === "/profile" || 
       pathname === "/club" || 
-      pathname === "/login" ||
-      pathname === "/map/requests"; // Assuming requests might be a root-level tab view
+      pathname === "/login";
 
     if (isRootPage) {
       tg.BackButton.hide();
