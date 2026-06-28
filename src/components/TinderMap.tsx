@@ -188,16 +188,40 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
         
         <MapController onMapClick={onMapClick} forceCenter={forceCenter || initialCenter} />
 
-        {proposals.map(p => (
-          <Marker 
-            key={p.id} 
-            position={[p.lat, p.lng]} 
-            icon={crewIcon}
-            eventHandlers={{
-              click: () => onSelectProposal(p)
-            }}
-          />
-        ))}
+        {proposals.map(p => {
+          let icon = crewIcon;
+          if (p.type === "CLUB" && p.event?.club?.logoConfig) {
+            let logoConfig = {};
+            try {
+              logoConfig = JSON.parse(p.event.club.logoConfig);
+            } catch(e) {}
+            
+            // To avoid importing ReactDOMServer which can be heavy on client, we'll just build a CSS badge
+            const bg = (logoConfig as any).color1 || "#CCFF00";
+            icon = new L.DivIcon({
+              html: `
+                <div style="width: 36px; height: 36px; background-color: ${bg}; border-radius: 12px; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.5); overflow: hidden; position: relative;">
+                  <div style="position: absolute; bottom: -5px; right: -5px; width: 20px; height: 20px; background: rgba(0,0,0,0.2); border-radius: 50%;"></div>
+                  <span style="font-size: 16px; font-weight: 900; color: #111; letter-spacing: -1px; z-index: 1;">${p.event?.club?.name?.charAt(0).toUpperCase() || 'C'}</span>
+                </div>
+              `,
+              className: '',
+              iconSize: [36, 36],
+              iconAnchor: [18, 36],
+            });
+          }
+
+          return (
+            <Marker 
+              key={p.type === "CLUB" ? `club-${p.id}` : p.id} 
+              position={[p.lat, p.lng]} 
+              icon={icon}
+              eventHandlers={{
+                click: () => onSelectProposal(p)
+              }}
+            />
+          );
+        })}
 
         <UserLocationMarker setInitialLocation={handleSetInitialLocation} triggerLocate={triggerLocate} />
       </MapContainer>

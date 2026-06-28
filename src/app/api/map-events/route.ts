@@ -76,7 +76,61 @@ export async function GET(req: Request) {
       return false;
     });
 
-    return NextResponse.json({ proposals: visibleProposals });
+    const formattedProposals = visibleProposals.map(p => ({ type: "DUO", ...p }));
+
+    // Fetch club events
+    const clubEvents = await prisma.event.findMany({
+      where: {
+        clubId: { not: null },
+        routeData: { not: null },
+        date: { gt: new Date() },
+        OR: userId ? [
+          { club: { joinType: "OPEN" } },
+          { attendees: { some: { id: userId } } },
+          { club: { members: { some: { userId: userId, status: "ACTIVE" } } } }
+        ] : [
+          { club: { joinType: "OPEN" } }
+        ]
+      },
+      include: {
+        club: {
+          select: { id: true, name: true, logoConfig: true, joinType: true, members: { select: { userId: true, status: true } } }
+        },
+        attendees: {
+          select: { id: true, image: true, name: true }
+        }
+      }
+    });
+
+    const mappedClubEvents = clubEvents.map(event => {
+      let lat = 0;
+      let lng = 0;
+      try {
+        if (event.routeData) {
+          const route = JSON.parse(event.routeData);
+          if (route && route.length > 0) {
+            lat = route[0].lat;
+            lng = route[0].lng;
+          }
+        }
+      } catch (e) {}
+      
+      return {
+        type: "CLUB",
+        id: event.id,
+        lat,
+        lng,
+        startTime: event.date,
+        event: event,
+        isMember: userId ? (
+          event.club?.members?.some((m: any) => m.userId === userId && m.status === "ACTIVE") || false
+        ) : false
+      };
+    }).filter(e => e.lat !== 0 && e.lng !== 0);
+
+    const combinedProposals = [...formattedProposals, ...mappedClubEvents];
+
+    return NextResponse.json({ proposals: combinedProposals });
   } catch (error) {
     console.error("Map events fetch error", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

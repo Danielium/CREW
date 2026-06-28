@@ -25,6 +25,8 @@ function MapContent() {
   const [touchOffset, setTouchOffset] = useState(0);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [showClubJoinModal, setShowClubJoinModal] = useState(false);
+  const [isJoiningClub, setIsJoiningClub] = useState(false);
 
   useEffect(() => {
     const lat = searchParams.get('lat');
@@ -175,6 +177,56 @@ function MapContent() {
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const joinClubEvent = async () => {
+    if (!selectedProposal || selectedProposal.type !== "CLUB") return;
+    try {
+      const res = await fetch(`/api/events/${selectedProposal.event.id}/join`, { method: "POST" });
+      if (res.ok) {
+        fetchProposals();
+        closeSheet();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleClubEventAction = async () => {
+    if (!selectedProposal || selectedProposal.type !== "CLUB") return;
+    
+    if (!selectedProposal.isMember) {
+      setShowClubJoinModal(true);
+      return;
+    }
+    
+    await joinClubEvent();
+  };
+
+  const handleJoinClubAndEvent = async () => {
+    setIsJoiningClub(true);
+    try {
+      const res = await fetch(`/api/clubs/join`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clubId: selectedProposal.event.clubId, autoLeave: true })
+      });
+      if (res.ok) {
+        setShowClubJoinModal(false);
+        // Mark as member locally
+        setSelectedProposal({...selectedProposal, isMember: true});
+        await fetch(`/api/events/${selectedProposal.event.id}/join`, { method: "POST" });
+        fetchProposals();
+        closeSheet();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Ошибка при вступлении в клуб");
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsJoiningClub(false);
     }
   };
 
@@ -397,7 +449,56 @@ function MapContent() {
         onTouchEnd={handleTouchEnd}
       >
         <div className="w-12 h-1.5 bg-muted/50 rounded-full mx-auto mb-6 cursor-pointer" onClick={closeSheet} />
-        {selectedProposal && (
+        {selectedProposal && selectedProposal.type === "CLUB" ? (
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-black font-black text-xl overflow-hidden shadow-[0_0_15px_rgba(204,255,0,0.3)]">
+                {selectedProposal.event.club?.name?.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Клубная пробежка</span>
+                <span className="text-xl font-black uppercase tracking-tight">{selectedProposal.event.title}</span>
+                <span className="text-sm font-medium text-muted">{selectedProposal.event.club?.name}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <div className="bg-muted/30 rounded-2xl p-4 flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-muted">
+                  <Clock size={16} />
+                  <span className="text-xs uppercase font-bold tracking-wider">Старт</span>
+                </div>
+                <span className="font-bold text-lg">
+                  {new Date(selectedProposal.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                </span>
+                <span className="text-xs text-muted">
+                  {new Date(selectedProposal.startTime).toLocaleDateString()}
+                </span>
+              </div>
+              
+              <div className="bg-muted/30 rounded-2xl p-4 flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-muted">
+                  <Activity size={16} />
+                  <span className="text-xs uppercase font-bold tracking-wider">Дистанция</span>
+                </div>
+                <span className="font-bold text-lg">{selectedProposal.event.distance ? `${selectedProposal.event.distance} км` : "—"}</span>
+                <span className="text-xs text-muted">Темп: {selectedProposal.event.pace || "—"}</span>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              {selectedProposal.event.attendees?.some((a: any) => a.id === (session?.user as any)?.id) ? (
+                <div className="w-full py-4 text-center bg-muted/50 rounded-2xl font-bold uppercase tracking-wider text-sm">
+                  Вы участвуете! 🎉
+                </div>
+              ) : (
+                <button onClick={handleClubEventAction} className="w-full py-4 bg-primary text-black rounded-2xl font-black uppercase tracking-wider text-sm active:scale-95 transition-transform shadow-[0_0_20px_rgba(204,255,0,0.3)] flex justify-center items-center">
+                  ПРИСОЕДИНИТЬСЯ
+                </button>
+              )}
+            </div>
+          </div>
+        ) : selectedProposal && (
           <div className="flex flex-col gap-6">
             <h2 className="text-2xl font-black uppercase tracking-tight">Совместная пробежка</h2>
 
@@ -494,6 +595,36 @@ function MapContent() {
           </div>
         )}
       </div>
+
+      {/* Join Club Modal */}
+      {showClubJoinModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#1a1a1c] border border-border rounded-[32px] p-6 w-full max-w-sm flex flex-col gap-6">
+            <div className="flex flex-col gap-2 text-center items-center">
+              <div className="w-16 h-16 rounded-[20px] bg-primary flex items-center justify-center text-black mb-2">
+                <Users size={32} />
+              </div>
+              <h3 className="text-xl font-black uppercase tracking-tight">Вступление в клуб</h3>
+              <p className="text-sm text-muted">Вступи в клуб чтобы пойти на пробежку и километры засчитались в битве.</p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <button 
+                onClick={handleJoinClubAndEvent} 
+                disabled={isJoiningClub}
+                className="w-full py-4 bg-primary text-black rounded-2xl font-bold uppercase tracking-wider text-sm active:scale-95 transition-transform disabled:opacity-50"
+              >
+                {isJoiningClub ? "Вступаем..." : "Вступить и пойти"}
+              </button>
+              <button 
+                onClick={() => setShowClubJoinModal(false)}
+                className="w-full py-4 bg-muted text-foreground rounded-2xl font-bold uppercase tracking-wider text-sm active:scale-95 transition-transform"
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

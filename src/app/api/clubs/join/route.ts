@@ -11,17 +11,26 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const code = body.code?.trim();
+    const clubId = body.clubId;
+    const autoLeave = body.autoLeave;
 
-    if (!code) {
-      return NextResponse.json({ error: "Код не указан" }, { status: 400 });
+    if (!code && !clubId) {
+      return NextResponse.json({ error: "Код или ID клуба не указаны" }, { status: 400 });
     }
 
-    const club = await prisma.club.findUnique({
-      where: { inviteCode: code }
-    });
+    let club = null;
+    
+    if (code) {
+      club = await prisma.club.findUnique({ where: { inviteCode: code } });
+    } else if (clubId) {
+      club = await prisma.club.findUnique({ where: { id: clubId } });
+      if (club && club.joinType !== "OPEN") {
+        return NextResponse.json({ error: "Этот клуб не открыт для свободного вступления" }, { status: 403 });
+      }
+    }
 
     if (!club) {
-      return NextResponse.json({ error: "Клуб с таким кодом не найден" }, { status: 404 });
+      return NextResponse.json({ error: "Клуб не найден" }, { status: 404 });
     }
 
     const userId = (session.user as any).id;
@@ -41,7 +50,13 @@ export async function POST(request: Request) {
     });
 
     if (activeInOther) {
-      return NextResponse.json({ error: "Вы уже состоите в другом клубе. Сначала покиньте его." }, { status: 400 });
+      if (autoLeave) {
+        await prisma.clubMember.delete({
+          where: { id: activeInOther.id }
+        });
+      } else {
+        return NextResponse.json({ error: "Вы уже состоите в другом клубе. Сначала покиньте его." }, { status: 400 });
+      }
     }
 
     const member = await prisma.clubMember.create({
@@ -55,7 +70,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, clubId: club.id, clubName: club.name });
   } catch (error) {
-    console.error("Join by invite error:", error);
+    console.error("Join error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
