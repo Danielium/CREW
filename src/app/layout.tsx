@@ -5,6 +5,7 @@ import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import { AuthProvider } from "@/components/AuthProvider";
 import { TelegramInit } from "@/components/TelegramInit";
+import { TelegramBackButton } from "@/components/TelegramBackButton";
 import { MainScrollContainer } from "@/components/MainScrollContainer";
 
 const inter = Inter({
@@ -38,6 +39,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased bg-background text-foreground flex justify-center min-h-screen`}>
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="afterInteractive" />
         <TelegramInit />
+        <TelegramBackButton />
         <AuthProvider>
           <div 
             className="w-full max-w-[480px] bg-background relative shadow-2xl overflow-hidden flex flex-col mx-auto"
