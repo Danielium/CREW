@@ -6,26 +6,40 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     // Handle /start command
-    if (body.message && body.message.text === '/start') {
+    if (body.message && typeof body.message.text === 'string' && body.message.text.startsWith('/start')) {
       const chatId = body.message.chat.id;
-      const firstName = body.message.from.first_name || "Бегун";
+      const firstName = body.message.from?.first_name || "Бегун";
+      
+      console.log(`Received /start from ${firstName} (chatId: ${chatId})`);
       
       const welcomeText = `Привет, ${firstName}! 👋\n\nДобро пожаловать в CREW — приложение для бегунов и беговых клубов!\nЗдесь ты можешь находить компанию для пробежек, вступать в клубы и соревноваться с другими.\n\nЖми кнопку ниже, чтобы открыть приложение!`;
       
-      if (process.env.TELEGRAM_BOT_TOKEN) {
-        await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text: welcomeText,
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: "🏃 Открыть CREW", web_app: { url: "https://crew-gamma.vercel.app" } }]
-              ]
-            }
-          })
-        });
+      if (!process.env.TELEGRAM_BOT_TOKEN) {
+        console.error("TELEGRAM_BOT_TOKEN is not defined in environment variables!");
+      } else {
+        try {
+          const tgRes = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: welcomeText,
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: "🏃 Открыть CREW", web_app: { url: "https://crew-gamma.vercel.app" } }]
+                ]
+              }
+            })
+          });
+          
+          if (!tgRes.ok) {
+            console.error("Failed to send welcome message:", await tgRes.text());
+          } else {
+            console.log("Welcome message sent successfully!");
+          }
+        } catch (err) {
+          console.error("Error sending welcome message:", err);
+        }
       }
     }
 
