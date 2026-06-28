@@ -57,9 +57,7 @@ export default function SettingsPage() {
     <div className="flex flex-col min-h-[100dvh] text-foreground bg-background z-50 relative pb-12">
       {/* Header */}
       <div className="sticky top-0 bg-background/80 backdrop-blur-md z-10 px-4 py-4 flex items-center gap-4 border-b border-border">
-        <Link href="/profile" className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-foreground hover:bg-border transition-colors">
-          <ArrowLeft size={20} />
-        </Link>
+        {/* Native back button used here */}
         <h1 className="text-xl font-bold uppercase tracking-tight">Настройки</h1>
       </div>
 
