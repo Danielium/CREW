@@ -8,7 +8,7 @@ export function TelegramInit() {
       const tg = (window as any).Telegram.WebApp;
 
       const goFullscreen = () => {
-        if (tg.requestFullscreen && !tg.isFullscreen) {
+        if (tg.requestFullscreen) {
           try { tg.requestFullscreen(); } catch (e) {}
         }
       };
