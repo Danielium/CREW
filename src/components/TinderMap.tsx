@@ -45,7 +45,18 @@ function MapController({ onMapClick, forceCenter }: any) {
 }
 
 function UserLocationMarker({ setInitialLocation, triggerLocate }: { setInitialLocation: (latlng: [number, number]) => void, triggerLocate?: number }) {
-  const [position, setPosition] = useState<[number, number] | null>(null);
+  const [position, setPosition] = useState<[number, number] | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('lastKnownLocation');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.length === 2) return [parsed[0], parsed[1]];
+        }
+      } catch(e) {}
+    }
+    return null;
+  });
   const map = useMap();
   const flyRef = useRef(true);
 
@@ -116,28 +127,31 @@ function UserLocationMarker({ setInitialLocation, triggerLocate }: { setInitialL
       // 1. Try Telegram LocationManager — it remembers permission across sessions
       const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
       if (tg?.LocationManager) {
-        tg.LocationManager.init(() => {
+        const runTgGeo = () => {
           if (tg.LocationManager.isAccessGranted) {
             tg.LocationManager.getLocation((data: any) => {
               if (data) handleLocation(data.latitude, data.longitude);
             });
-            // Also start browser geo for live tracking
             startBrowserGeo();
           } else if (tg.LocationManager.isLocationAvailable) {
-            // Request permission — TG will show dialog once, then remember
             tg.LocationManager.getLocation((data: any) => {
               if (data) {
                 handleLocation(data.latitude, data.longitude);
                 startBrowserGeo();
               } else {
-                // User denied in TG — still try browser
                 startBrowserGeo();
               }
             });
           } else {
             startBrowserGeo();
           }
-        });
+        };
+
+        if (!tg.LocationManager.isInited) {
+          tg.LocationManager.init(() => runTgGeo());
+        } else {
+          runTgGeo();
+        }
         return;
       }
 
