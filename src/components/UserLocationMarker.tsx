@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useMap, CircleMarker } from "react-leaflet";
 
 export default function UserLocationMarker({ 
@@ -23,6 +23,7 @@ export default function UserLocationMarker({
     return null;
   });
   const map = useMap();
+  const hasFlownForTrigger = useRef(0);
 
   // On mount: just notify parent about cached location (no geo request)
   useEffect(() => {
@@ -42,7 +43,12 @@ export default function UserLocationMarker({
       setPosition(coords);
       if (onLocationFound) onLocationFound(coords);
       try { localStorage.setItem('lastKnownLocation', JSON.stringify(coords)); } catch(e) {}
-      map.flyTo(coords, 14, { duration: 1 });
+      
+      // Only fly once per triggerLocate button press
+      if (hasFlownForTrigger.current !== triggerLocate) {
+        hasFlownForTrigger.current = triggerLocate;
+        map.flyTo(coords, 14, { duration: 1 });
+      }
     };
 
     const requestBrowserGeo = () => {
