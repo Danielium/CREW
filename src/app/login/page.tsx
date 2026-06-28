@@ -35,67 +35,75 @@ export default function LoginPage() {
   useEffect(() => {
     let checkInterval: NodeJS.Timeout;
     let fallbackTimeout: NodeJS.Timeout;
+    let loginStarted = false;
 
-    const checkTg = () => {
-      if (typeof window !== "undefined" && (window as any).Telegram?.WebApp) {
-        const tg = (window as any).Telegram.WebApp;
-        if (tg.initDataUnsafe?.user) {
-          const user = tg.initDataUnsafe.user;
-          let tUsername = "";
-          if (user.username) {
-            tUsername = '@' + user.username;
-          } else {
-            tUsername = '@id' + user.id;
-          }
-          
-          let tName = "";
-          if (user.first_name) {
-            tName = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-          }
-          
-          let tImage = user.photo_url || "";
+    const doLogin = (tUsername: string, tName: string, tImage: string) => {
+      if (loginStarted) return;
+      loginStarted = true;
+      setTelegramUsername(tUsername);
+      setName(tName);
+      if (tImage) setImagePreview(tImage);
+      setIsTgLogin(true);
+      setIsLoading(true);
 
-          setTelegramUsername(tUsername);
-          setName(tName);
-          if (tImage) setImagePreview(tImage);
-          setIsTgLogin(true);
-
-          // Auto login bypass!
-          setIsLoading(true);
-          signIn("credentials", {
-            telegramUsername: tUsername,
-            password: "dummy_tg_auth",
-            isTgWebApp: "true",
-            name: tName,
-            image: tImage,
-            redirect: false,
-          }).then((res) => {
-            if (res?.ok) {
-              router.push("/");
-              router.refresh();
-            } else {
-              setIsLoading(false);
-              setIsCheckingTg(false);
-            }
-          });
-          return true; // found and started login
+      signIn("credentials", {
+        telegramUsername: tUsername,
+        password: "dummy_tg_auth",
+        isTgWebApp: "true",
+        name: tName,
+        image: tImage,
+        redirect: false,
+      }).then((res) => {
+        if (res?.ok) {
+          router.push("/");
+          router.refresh();
+        } else {
+          // signIn failed - go back to manual form
+          loginStarted = false;
+          setIsTgLogin(false);
+          setIsLoading(false);
+          setIsCheckingTg(false);
         }
-      }
-      return false;
+      });
     };
 
+    const checkTg = () => {
+      const tg = (window as any).Telegram?.WebApp;
+      if (!tg) return false;
+
+      // Call ready() to signal to Telegram the app is loaded
+      try { tg.ready(); } catch (e) {}
+
+      const user = tg.initDataUnsafe?.user;
+      if (!user) return false;
+
+      const tUsername = user.username ? '@' + user.username : '@id' + user.id;
+      const tName = user.first_name
+        ? user.first_name + (user.last_name ? ' ' + user.last_name : '')
+        : tUsername;
+      const tImage = user.photo_url || "";
+
+      console.log("[CREW] TG user detected:", tUsername, tName);
+      clearInterval(checkInterval);
+      clearTimeout(fallbackTimeout);
+      doLogin(tUsername, tName, tImage);
+      return true;
+    };
+
+    // Try immediately, then poll every 100ms for up to 3 seconds
     if (!checkTg()) {
       checkInterval = setInterval(() => {
-        if (checkTg()) {
-          clearInterval(checkInterval);
-          clearTimeout(fallbackTimeout);
-        }
+        checkTg();
       }, 100);
-      
+
       fallbackTimeout = setTimeout(() => {
         clearInterval(checkInterval);
-        setIsCheckingTg(false);
-      }, 1500);
+        // Check one final time before giving up
+        if (!checkTg()) {
+          console.log("[CREW] No TG data found, showing manual login");
+          setIsCheckingTg(false);
+        }
+      }, 3000);
     }
 
     return () => {

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import { AuthProvider } from "@/components/AuthProvider";
@@ -26,8 +27,6 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-import Script from "next/script";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -35,10 +34,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <head>
-        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
-      </head>
+      <head />
       <body className={`${inter.variable} font-sans antialiased bg-background text-foreground flex justify-center min-h-screen`}>
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="afterInteractive" />
         <TelegramInit />
         <AuthProvider>
           <div 
