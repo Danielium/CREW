@@ -14,6 +14,21 @@ export default function RequestsInbox() {
 
   useEffect(() => {
     fetchData();
+
+    // Telegram BackButton
+    const tg = typeof window !== "undefined" ? (window as any).Telegram?.WebApp : null;
+    if (tg?.BackButton) {
+      tg.BackButton.show();
+      const onBack = () => {
+        router.back();
+      };
+      tg.BackButton.onClick(onBack);
+      
+      return () => {
+        tg.BackButton.offClick(onBack);
+        tg.BackButton.hide();
+      };
+    }
   }, []);
 
   const fetchData = async () => {
@@ -62,9 +77,6 @@ export default function RequestsInbox() {
     <div className="flex flex-col min-h-[100dvh] bg-black text-foreground">
       {/* Header */}
       <div className="flex items-center gap-4 px-4 pb-4 pt-safe border-b border-border sticky top-0 bg-black/80 backdrop-blur-md z-20">
-        <button onClick={() => router.back()} className="p-2 -ml-2 rounded-full hover:bg-white/10 active:scale-95 transition-all">
-          <ArrowLeft size={24} className="text-white" />
-        </button>
         <h1 className="text-2xl font-black uppercase tracking-tight">Уведомления</h1>
       </div>
 
