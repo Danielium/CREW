@@ -339,7 +339,7 @@ function MapContent() {
       <TinderMap proposals={proposals} onSelectProposal={handleSelectProposal} onMapClick={handleMapClick} forceCenter={forceCenter} triggerLocate={triggerLocate} />
 
       {/* Top UI Overlay */}
-      <div className="absolute top-0 left-0 w-full p-6 pt-12 flex items-center pointer-events-none z-10 gap-3">
+      <div className="absolute top-0 left-0 w-full px-6 pb-6 pt-safe flex items-center pointer-events-none z-10 gap-3">
         {/* Search Input always visible */}
         <form onSubmit={handleSearch} className="flex-1 pointer-events-auto relative">
           <input 

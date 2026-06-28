@@ -144,7 +144,7 @@ export default function ProfileTab() {
   }
 
   return (
-    <div className="flex flex-col min-h-[100dvh] text-foreground pt-12 pb-24 relative z-10">
+    <div className="flex flex-col min-h-[100dvh] text-foreground pt-safe pb-24 relative z-10">
       {/* Header & Avatar */}
       <div className="px-4 mb-6 relative">
         <div className="absolute top-0 right-4 flex gap-3 z-30">

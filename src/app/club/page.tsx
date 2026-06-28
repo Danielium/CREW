@@ -51,7 +51,7 @@ export default function ClubTab() {
   }
 
   return (
-    <div className="flex flex-col min-h-[100dvh] text-foreground pb-24 pt-12 relative z-10">
+    <div className="flex flex-col min-h-[100dvh] text-foreground pb-24 pt-safe relative z-10">
       {/* Header */}
       <div className="flex justify-between items-center px-4 pb-4">
         <div className="flex items-center gap-3">
