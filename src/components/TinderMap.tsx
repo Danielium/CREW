@@ -58,95 +58,58 @@ function UserLocationMarker({ setInitialLocation, triggerLocate }: { setInitialL
     return null;
   });
   const map = useMap();
-  const flyRef = useRef(true);
 
-  // When triggerLocate changes (button pressed), we want to fly to the found location
+  // On mount: just notify parent about cached location (no geo request)
   useEffect(() => {
-    flyRef.current = true;
-  }, [triggerLocate]);
-
-  const handleLocation = (lat: number | string, lng: number | string) => {
-    const numLat = Number(lat);
-    const numLng = Number(lng);
-    if (!isNaN(numLat) && !isNaN(numLng)) {
-      setPosition([numLat, numLng]);
-      setInitialLocation([numLat, numLng]);
-      // Cache for next session
-      try { localStorage.setItem('lastKnownLocation', JSON.stringify([numLat, numLng])); } catch(e) {}
-
-      if (flyRef.current) {
-        map.flyTo([numLat, numLng], 14, { duration: 1 });
-        flyRef.current = false;
-      }
+    if (position) {
+      setInitialLocation(position);
     }
-  };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // On button press (triggerLocate > 0): request geo
   useEffect(() => {
+    if (!triggerLocate) return; // don't run on initial mount (triggerLocate = 0)
+
     let watchId: number | null = null;
 
-    const startBrowserGeo = () => {
+    const saveAndShow = (lat: number, lng: number) => {
+      const coords: [number, number] = [lat, lng];
+      setPosition(coords);
+      setInitialLocation(coords);
+      try { localStorage.setItem('lastKnownLocation', JSON.stringify(coords)); } catch(e) {}
+      map.flyTo(coords, 14, { duration: 1 });
+    };
+
+    const requestBrowserGeo = () => {
       if (!navigator.geolocation) return;
-
       navigator.geolocation.getCurrentPosition(
-        (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),
-        (err) => {
-          console.warn("Geo error:", err.code, err.message);
-          // If denied, set up a listener — when user enables it later we retry
-          if (err.code === 1 /* PERMISSION_DENIED */) {
-            // Poll permission state every 2s — when granted, retry
-            const permPoll = setInterval(async () => {
-              try {
-                if (navigator.permissions) {
-                  const perm = await navigator.permissions.query({ name: 'geolocation' });
-                  if (perm.state === 'granted') {
-                    clearInterval(permPoll);
-                    navigator.geolocation.getCurrentPosition(
-                      (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),
-                      () => {},
-                      { enableHighAccuracy: true, timeout: 8000 }
-                    );
-                  }
-                }
-              } catch (e) {}
-            }, 2000);
-            // Stop polling after 60s
-            setTimeout(() => clearInterval(permPoll), 60000);
-          }
-        },
-        { enableHighAccuracy: true, timeout: 8000 }
+        (pos) => saveAndShow(pos.coords.latitude, pos.coords.longitude),
+        (err) => console.warn("Geo error:", err.code),
+        { enableHighAccuracy: true, timeout: 10000 }
       );
-
+      // Start watching for live updates (won't prompt again if permission already granted)
       watchId = navigator.geolocation.watchPosition(
-        (pos) => handleLocation(pos.coords.latitude, pos.coords.longitude),
-        (err) => console.warn("watchPosition error:", err),
+        (pos) => saveAndShow(pos.coords.latitude, pos.coords.longitude),
+        () => {},
         { enableHighAccuracy: true }
       );
     };
 
-    const startWatching = async () => {
-      // 1. Try Telegram LocationManager — it remembers permission across sessions
+    const doLocate = async () => {
+      // 1. Telegram LocationManager
       const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
       if (tg?.LocationManager) {
         const runTgGeo = () => {
-          if (tg.LocationManager.isAccessGranted) {
-            tg.LocationManager.getLocation((data: any) => {
-              if (data) handleLocation(data.latitude, data.longitude);
-            });
-            startBrowserGeo();
-          } else if (tg.LocationManager.isLocationAvailable) {
-            tg.LocationManager.getLocation((data: any) => {
-              if (data) {
-                handleLocation(data.latitude, data.longitude);
-                startBrowserGeo();
-              } else {
-                startBrowserGeo();
-              }
-            });
-          } else {
-            startBrowserGeo();
-          }
+          tg.LocationManager.getLocation((data: any) => {
+            if (data) {
+              saveAndShow(data.latitude, data.longitude);
+              // After TG gave us location, start browser watch for live updates
+              requestBrowserGeo();
+            } else {
+              requestBrowserGeo();
+            }
+          });
         };
-
         if (!tg.LocationManager.isInited) {
           tg.LocationManager.init(() => runTgGeo());
         } else {
@@ -155,33 +118,11 @@ function UserLocationMarker({ setInitialLocation, triggerLocate }: { setInitialL
         return;
       }
 
-      // 2. Try Capacitor (native app)
-      try {
-        const { Capacitor } = await import('@capacitor/core');
-        if (Capacitor.isNativePlatform()) {
-          const { Geolocation } = await import('@capacitor/geolocation');
-          const perm = await Geolocation.checkPermissions();
-          if (perm.location !== 'granted') {
-            await Geolocation.requestPermissions();
-          }
-          try {
-            const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 8000 });
-            handleLocation(pos.coords.latitude, pos.coords.longitude);
-          } catch (e) {
-            console.warn("Capacitor geo error:", e);
-          }
-          await Geolocation.watchPosition({ enableHighAccuracy: true }, (pos) => {
-            if (pos) handleLocation(pos.coords.latitude, pos.coords.longitude);
-          });
-          return;
-        }
-      } catch (e) {}
-
-      // 3. Plain browser geolocation
-      startBrowserGeo();
+      // 2. Browser geolocation (might prompt first time, silent after)
+      requestBrowserGeo();
     };
 
-    startWatching();
+    doLocate();
 
     return () => {
       if (watchId && navigator.geolocation) {
