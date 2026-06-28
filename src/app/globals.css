@@ -15,9 +15,15 @@
     --muted: #A0A0A0;
   }
 
-  body {
+  html, body {
     color: var(--foreground);
     background-color: var(--background);
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    position: fixed;
+    width: 100%;
   }
 }
 
