@@ -203,8 +203,8 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
             
             icon = new L.DivIcon({
               html: `
-                <div style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; display: flex; items-center; justify-content: center; box-shadow: 0 6px 12px rgba(0,0,0,0.4); overflow: hidden; position: relative; background: #111;">
-                  <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; transform: scale(1.15);">
+                <div style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 12px rgba(0,0,0,0.4); overflow: hidden; position: relative; background: #111;">
+                  <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; transform: scale(1.15);">
                     ${badgeHtml}
                   </div>
                   <div style="position: absolute; bottom: -6px; right: -6px; width: 24px; height: 24px; background: rgba(0,0,0,0.15); border-radius: 50%; pointer-events: none;"></div>
