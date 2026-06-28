@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 export function TelegramInit() {
   useEffect(() => {
-    // Prevent native browser overscroll/bounce on the document level
+    // Prevent native browser overscroll/bounce
     const preventBounce = (e: TouchEvent) => {
       let target = e.target as HTMLElement | null;
       while (target && target !== document.body) {
@@ -23,53 +23,49 @@ export function TelegramInit() {
 
     const tg = (window as any).Telegram.WebApp;
 
-    const goFullscreen = () => {
+    // This exact order was confirmed working: ready -> expand -> requestFullscreen
+    tg.ready();
+    tg.expand();
+
+    // Fullscreen IMMEDIATELY after expand — no other calls in between
+    const tryFullscreen = () => {
       if (tg.requestFullscreen) {
         try { tg.requestFullscreen(); } catch (e) {}
       }
     };
 
-    // Signal Telegram that the app is ready
-    tg.ready();
+    // Try immediately
+    tryFullscreen();
 
-    // Expand to full height (needed for older TG versions and as a prerequisite)
-    tg.expand();
+    // Everything else AFTER fullscreen has been requested
+    tg.setHeaderColor("#000000");
+    tg.setBackgroundColor("#000000");
 
-    // Disable vertical swipe-to-close gesture
     if (tg.disableVerticalSwipes) {
       try { tg.disableVerticalSwipes(); } catch (e) {}
     }
 
-    tg.setHeaderColor("#000000");
-    tg.setBackgroundColor("#000000");
-
-    // Request fullscreen with multiple attempts at different intervals
-    // to handle different launch contexts (Mini App vs Menu Button)
-    goFullscreen();
-    setTimeout(goFullscreen, 50);
-    setTimeout(goFullscreen, 200);
-    setTimeout(goFullscreen, 600);
-    setTimeout(goFullscreen, 1500);
-
-    // Re-request fullscreen if user exits it
-    tg.onEvent("fullscreen_changed", () => {
-      if (!tg.isFullscreen) goFullscreen();
-    });
-
-    // Re-request fullscreen on viewport change (fires during Menu Button launch)
-    tg.onEvent("viewport_changed", () => {
-      goFullscreen();
-    });
-
-    // Also try on any touch — last resort for restricted contexts
-    const handleUserInteraction = () => {
-      if (!tg.isFullscreen) goFullscreen();
+    // EXTREMELY AGGRESSIVE FULLSCREEN LOCK
+    // We attach to all possible user interactions. Once fullscreen is achieved, we don't spam it.
+    const forceFullscreenOnInteraction = () => {
+      if (tg.isFullscreen) return; // already in fullscreen
+      tryFullscreen();
     };
-    document.addEventListener("touchstart", handleUserInteraction, { passive: true });
+
+    document.addEventListener("click", forceFullscreenOnInteraction, { capture: true });
+    document.addEventListener("touchstart", forceFullscreenOnInteraction, { passive: true, capture: true });
+    document.addEventListener("touchend", forceFullscreenOnInteraction, { passive: true, capture: true });
+    document.addEventListener("scroll", forceFullscreenOnInteraction, { passive: true, capture: true });
+
+    tg.onEvent?.("viewport_changed", tryFullscreen);
+    tg.onEvent?.("fullscreen_changed", forceFullscreenOnInteraction);
 
     return () => {
       document.removeEventListener("touchmove", preventBounce);
-      document.removeEventListener("touchstart", handleUserInteraction);
+      document.removeEventListener("click", forceFullscreenOnInteraction, { capture: true } as any);
+      document.removeEventListener("touchstart", forceFullscreenOnInteraction, { capture: true } as any);
+      document.removeEventListener("touchend", forceFullscreenOnInteraction, { capture: true } as any);
+      document.removeEventListener("scroll", forceFullscreenOnInteraction, { capture: true } as any);
     };
   }, []);
 
