@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap } from 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Search, MapPin, Loader2, LocateFixed } from "lucide-react";
+import UserLocationMarker from "./UserLocationMarker";
 
 // Fix default icons in leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -21,21 +22,10 @@ interface MapRouteBuilderProps {
 
 function MapController({ 
   searchQuery, 
-  doLocate, 
-  onLocateDone 
 }: { 
   searchQuery: string | null; 
-  doLocate: boolean; 
-  onLocateDone: () => void; 
 }) {
   const map = useMap();
-  
-  if (doLocate) {
-    map.locate().on("locationfound", function (e) {
-      map.flyTo(e.latlng, map.getZoom());
-      onLocateDone();
-    });
-  }
 
   if (searchQuery) {
     fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`)
@@ -71,7 +61,7 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange }:
   const [distance, setDistance] = useState("0.00");
   const [search, setSearch] = useState("");
   const [activeSearch, setActiveSearch] = useState<string | null>(null);
-  const [doLocate, setDoLocate] = useState(false);
+  const [triggerLocate, setTriggerLocate] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   
   const mapRef = useRef<L.Map | null>(null);
@@ -175,7 +165,7 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange }:
   };
 
   const handleLocate = () => {
-    setDoLocate(true);
+    setTriggerLocate(prev => prev + 1);
   };
 
   // Default center (Moscow)
@@ -240,9 +230,9 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange }:
           
           <MapController 
             searchQuery={activeSearch} 
-            doLocate={doLocate} 
-            onLocateDone={() => setDoLocate(false)} 
           />
+          
+          <UserLocationMarker triggerLocate={triggerLocate} />
           
           <RouteEvents 
             onMapClick={handleMapClick} 
