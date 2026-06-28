@@ -72,9 +72,6 @@ export default function CreateClubPage() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground pb-12 relative z-10">
       <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-md pt-12 pb-4 px-4 flex items-center gap-4">
-        <Link href="/" className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:bg-border transition-colors">
-          <ChevronLeft size={20} />
-        </Link>
         <h1 className="text-2xl font-black uppercase tracking-tight">Создать Клуб</h1>
       </div>
 

@@ -62,9 +62,6 @@ export default function RequestsInbox() {
     <div className="flex flex-col min-h-[100dvh] bg-black text-foreground">
       {/* Header */}
       <div className="flex items-center gap-4 p-4 border-b border-border">
-        <button onClick={() => router.back()} className="p-2 bg-card rounded-full active:scale-95">
-          <ArrowLeft size={24} />
-        </button>
         <h1 className="text-2xl font-black uppercase tracking-tight">Отклики</h1>
       </div>
 

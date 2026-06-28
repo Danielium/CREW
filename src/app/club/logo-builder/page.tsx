@@ -64,12 +64,7 @@ export default function LogoBuilder() {
       
       {/* Header */}
       <div className="flex justify-between items-center px-4 pt-12 pb-4 bg-card border-b border-border">
-        <button 
-          onClick={() => window.history.back()}
-          className="p-2 rounded-full hover:bg-border transition-colors"
-        >
-          <ArrowLeft size={24} />
-        </button>
+        <div></div>
         <h1 className="text-xl font-bold">Эмблема клуба</h1>
         <button 
           onClick={handleSave}

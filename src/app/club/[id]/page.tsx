@@ -106,9 +106,7 @@ export default function ClubProfilePage() {
       
       {/* HEADER BANNER */}
       <div className="h-64 bg-card relative flex flex-col justify-end p-6 border-b border-border">
-        <Link href="/" className="absolute top-6 left-4 w-10 h-10 rounded-full bg-background/50 backdrop-blur-md flex items-center justify-center hover:bg-background/80 transition-colors z-20">
-          <ChevronLeft size={20} />
-        </Link>
+        {/* Native back button used here via TelegramBackButton */}
         
         {isFounder && (
           <Link href={`/club/${id}/admin`} className="absolute top-6 right-4 px-4 h-10 rounded-full bg-primary text-black font-bold flex items-center justify-center z-20 text-xs uppercase tracking-wider">

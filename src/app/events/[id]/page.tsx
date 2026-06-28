@@ -82,12 +82,7 @@ export default function EventDetailsPage() {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
         <div className="absolute inset-x-0 bottom-[-2px] h-[4px] bg-background"></div>
-        <button 
-          onClick={() => router.back()}
-          className="absolute top-6 left-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white z-10"
-        >
-          <ArrowLeft size={20} />
-        </button>
+        {/* Native back button used here */}
         
         <div className="absolute bottom-0 left-0 w-full p-6">
           <h1 className="text-3xl font-black uppercase tracking-tight leading-none mb-2 text-white">{event.title}</h1>

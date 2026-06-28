@@ -72,9 +72,7 @@ export default function PublicProfilePage() {
       {/* Header Bar */}
       <div className="flex justify-between items-center px-4 py-4 sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <h1 className="text-xl font-black uppercase tracking-widest">Профиль</h1>
-        <button onClick={() => router.back()} className="w-10 h-10 shrink-0 flex items-center justify-center rounded-full bg-card border border-border text-muted hover:text-foreground transition-colors active:scale-95">
-          <ArrowLeft size={20} />
-        </button>
+        {/* Native back button used here */}
       </div>
 
       {/* Main Profile Info */}

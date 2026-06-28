@@ -126,10 +126,10 @@ function CreateProposalInner() {
   return (
     <div className="flex flex-col min-h-[100dvh] bg-black text-foreground">
       {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b border-border z-10 relative bg-black">
-        <button onClick={() => router.back()} className="p-2 bg-card rounded-full active:scale-95">
-          <ArrowLeft size={24} />
-        </button>
+      <div className="absolute top-0 left-0 w-full p-4 flex items-center justify-between z-20 pointer-events-none">
+        <div className="pointer-events-auto">
+          {/* Native back button used */}
+        </div>
         <h1 className="text-2xl font-black uppercase tracking-tight">Новый забег</h1>
       </div>
 

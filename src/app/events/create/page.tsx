@@ -98,9 +98,6 @@ export default function CreateEventPage() {
   return (
     <div className="min-h-[100dvh] bg-background text-foreground pb-24 relative z-10 flex flex-col">
       <div className="flex items-center gap-4 p-4 border-b border-border sticky top-0 bg-background/80 backdrop-blur-md z-20">
-        <Link href="/" className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:bg-border transition-colors">
-          <ChevronLeft size={20} />
-        </Link>
         <h1 className="text-xl font-black uppercase tracking-tight leading-none">Новое событие</h1>
       </div>
 
