@@ -196,8 +196,8 @@ export default function CreateEventPage() {
         </div>
 
         <MapRouteBuilder 
-          onDistanceChange={(dist) => setForm({...form, distance: dist})} 
-          onRouteDataChange={(route) => setForm({...form, routeData: route})} 
+          onDistanceChange={(dist) => setForm(prev => ({...prev, distance: dist}))} 
+          onRouteDataChange={(route) => setForm(prev => ({...prev, routeData: route}))} 
         />
 
         <div className="flex flex-col gap-2">

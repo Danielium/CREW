@@ -3,8 +3,12 @@ import { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, CircleMarker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { renderToString } from "react-dom/server";
-import ClubBadge from "./ClubBadge";
+import { renderToStaticMarkup } from "react-dom/server";
+import { Zap, Flame, Skull, Sword, Shield, Mountain, Anchor, Crown, Star, Heart, Activity, Target, Trophy, Ghost, Crosshair, HelpCircle } from "lucide-react";
+
+const ICON_MAP: Record<string, any> = {
+  Zap, Flame, Skull, Sword, Shield, Mountain, Anchor, Crown, Star, Heart, Activity, Target, Trophy, Ghost, Crosshair
+};
 
 // Fix Leaflet default icon path issues in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -193,20 +197,20 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
         {proposals.map(p => {
           let icon = crewIcon;
           if (p.type === "CLUB" && p.event?.club?.logoConfig) {
-            let logoConfig = {};
+            let logoConfig: any = {};
             try {
               logoConfig = JSON.parse(p.event.club.logoConfig);
             } catch(e) {}
             
-            // Create HTML using ClubBadge
-            const badgeHtml = renderToString(<ClubBadge {...logoConfig} size={32} shape="circle" />);
+            // Render just the Lucide icon to string
+            const IconComp = ICON_MAP[logoConfig.iconName] || HelpCircle;
+            const iconHtml = renderToStaticMarkup(<IconComp size={22} color={logoConfig.iconColor || "#000000"} strokeWidth={2.5} />);
+            const bg = logoConfig.color1 || "#CCFF00";
             
             icon = new L.DivIcon({
               html: `
-                <div style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 12px rgba(0,0,0,0.4); overflow: hidden; position: relative; background: #111;">
-                  <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; transform: scale(1.15);">
-                    ${badgeHtml}
-                  </div>
+                <div style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 12px rgba(0,0,0,0.4); overflow: hidden; position: relative; background: ${bg};">
+                  ${iconHtml}
                   <div style="position: absolute; bottom: -6px; right: -6px; width: 24px; height: 24px; background: rgba(0,0,0,0.15); border-radius: 50%; pointer-events: none;"></div>
                 </div>
               `,
