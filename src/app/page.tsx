@@ -363,7 +363,7 @@ function MapContent() {
       </div>
 
       {/* Hint Tooltip */}
-      <div className={`absolute top-28 left-1/2 -translate-x-1/2 w-11/12 max-w-sm pointer-events-none z-10 transition-all duration-700 ease-in-out ${showHint ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+      <div className={`absolute top-safe mt-20 left-1/2 -translate-x-1/2 w-11/12 max-w-sm pointer-events-none z-10 transition-all duration-700 ease-in-out ${showHint ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
         <div className="bg-black/60 backdrop-blur-md text-white/90 text-sm text-center py-3 px-4 rounded-2xl shadow-xl border border-white/10 flex items-center justify-center gap-2">
           <MapPin size={18} className="flex-shrink-0 text-primary" />
           <span className="leading-tight">Нажми в любое место на карте, чтобы назначить пробежку и собрать людей</span>
