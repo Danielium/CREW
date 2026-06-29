@@ -167,16 +167,12 @@ function MapContent() {
       });
       if (res.ok) {
         fetchProposals();
-        // Wait a bit so the user can see the "Запрос отправлен" text on the button
-        await new Promise(resolve => setTimeout(resolve, 800));
-        closeSheet();
       } else {
-        // If it failed (e.g. already requested), we can also just close it
-        await new Promise(resolve => setTimeout(resolve, 800));
-        closeSheet();
+        throw new Error("Failed to join");
       }
     } catch (e) {
       console.error(e);
+      throw e;
     }
   };
 
@@ -186,7 +182,6 @@ function MapContent() {
       const res = await fetch(`/api/events/${selectedProposal.event.id}/join`, { method: "POST" });
       if (res.ok) {
         fetchProposals();
-        closeSheet();
       } else {
         throw new Error("Failed to join");
       }
@@ -241,7 +236,6 @@ function MapContent() {
       });
       if (res.ok) {
         fetchProposals();
-        closeSheet();
       }
     } catch (e) {
       console.error(e);
@@ -578,7 +572,7 @@ function MapContent() {
                          selectedProposal.requests[0].status === "ACCEPTED" ? "Вы участвуете! 🎉" : 
                          "Заявка отклонена"}
                       </div>
-                      <button onClick={handleCancelRequest} className="w-full py-3 text-center bg-red-500/10 text-red-500 rounded-2xl font-bold uppercase tracking-wider text-sm active:scale-95 transition-transform">
+                      <button onClick={handleCancelRequest} className="w-full mt-2 text-center text-red-500/80 text-xs font-bold uppercase tracking-widest active:scale-95 transition-transform">
                         Отменить участие
                       </button>
                     </div>
