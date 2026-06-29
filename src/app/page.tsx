@@ -481,7 +481,7 @@ function MapContent() {
                   <Activity size={16} />
                   <span className="text-xs uppercase font-bold tracking-wider">Темп</span>
                 </div>
-                <span className="font-bold text-lg">{selectedProposal.event.pace ? selectedProposal.event.pace.replace(/[\[\]"']/g, '') : "—"}</span>
+                <span className="font-bold text-lg">{selectedProposal.event.pace ? selectedProposal.event.pace.replace(/[\[\]"']/g, '').replace(/,/g, ' - ') : "—"}</span>
                 <span className="text-xs text-muted">Дистанция: {selectedProposal.event.distance ? `${selectedProposal.event.distance} км` : "—"}</span>
               </div>
             </div>
@@ -492,9 +492,7 @@ function MapContent() {
                   Вы участвуете! 🎉
                 </div>
               ) : (
-                <button onClick={handleClubEventAction} className="w-full py-4 bg-primary text-black rounded-2xl font-black uppercase tracking-wider text-sm active:scale-95 transition-transform shadow-[0_0_20px_rgba(204,255,0,0.3)] flex justify-center items-center">
-                  ПРИСОЕДИНИТЬСЯ
-                </button>
+                <SwipeButton onConfirm={handleClubEventAction} text="Присоединиться" successText="Вы участвуете!" />
               )}
             </div>
           </div>
@@ -550,7 +548,7 @@ function MapContent() {
                       <Activity size={16} />
                       <span className="text-xs uppercase font-bold tracking-wider">Темп</span>
                     </div>
-                    <span className="font-bold text-lg">{selectedProposal.pace ? selectedProposal.pace.replace(/[\[\]"']/g, '') : "Любой"}</span>
+                    <span className="font-bold text-lg">{selectedProposal.pace ? selectedProposal.pace.replace(/[\[\]"']/g, '').replace(/,/g, ' - ') : "Любой"}</span>
                     <span className="text-xs text-muted">мин/км</span>
                   </div>
                 </div>
