@@ -181,24 +181,27 @@ function MapContent() {
   };
 
   const joinClubEvent = async () => {
-    if (!selectedProposal || selectedProposal.type !== "CLUB") return;
+    if (!selectedProposal || selectedProposal.type !== "CLUB") throw new Error();
     try {
       const res = await fetch(`/api/events/${selectedProposal.event.id}/join`, { method: "POST" });
       if (res.ok) {
         fetchProposals();
         closeSheet();
+      } else {
+        throw new Error("Failed to join");
       }
     } catch (e) {
       console.error(e);
+      throw e;
     }
   };
 
   const handleClubEventAction = async () => {
-    if (!selectedProposal || selectedProposal.type !== "CLUB") return;
+    if (!selectedProposal || selectedProposal.type !== "CLUB") throw new Error();
     
     if (!selectedProposal.isMember) {
       setShowClubJoinModal(true);
-      return;
+      throw new Error("Needs to join club");
     }
     
     await joinClubEvent();
