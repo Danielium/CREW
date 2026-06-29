@@ -24,7 +24,15 @@ export default function ProfileTab() {
   const [croppedFile, setCroppedFile] = useState<File | null>(null);
 
   // Stats and Filters
+  const now = new Date();
   const [timeRange, setTimeRange] = useState<"W" | "M" | "Y" | "ALL">("M");
+  
+  const [selectedWeekOffset, setSelectedWeekOffset] = useState<number>(0);
+  const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth());
+  const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear());
+  
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showAllRuns, setShowAllRuns] = useState(false);
 
   const [isTgEnv, setIsTgEnv] = useState(false);
 
@@ -71,24 +79,32 @@ export default function ProfileTab() {
   };
 
   // --- Filtering & Stats Calculation ---
-  const now = new Date();
+  const getFilterBounds = () => {
+    let start = new Date(0);
+    let end = new Date();
+    
+    if (timeRange === "W") {
+      const currentDay = now.getDay() === 0 ? 7 : now.getDay(); 
+      const startOfCurrentWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - currentDay + 1);
+      start = new Date(startOfCurrentWeek.getTime() - selectedWeekOffset * 7 * 24 * 60 * 60 * 1000);
+      end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000 - 1);
+    } else if (timeRange === "M") {
+      start = new Date(selectedYear, selectedMonth, 1);
+      end = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59, 999);
+    } else if (timeRange === "Y") {
+      start = new Date(selectedYear, 0, 1);
+      end = new Date(selectedYear, 11, 31, 23, 59, 59, 999);
+    }
+    return { start, end };
+  };
+  
+  const { start: filterStart, end: filterEnd } = getFilterBounds();
+
   const filteredRuns = userData?.runs?.filter((r: any) => {
     if (r.status !== "COMPLETED") return false;
     const runDate = new Date(r.startTime);
-    
-    if (timeRange === "W") {
-      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      return runDate >= oneWeekAgo;
-    }
-    if (timeRange === "M") {
-      const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      return runDate >= oneMonthAgo;
-    }
-    if (timeRange === "Y") {
-      const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-      return runDate >= oneYearAgo;
-    }
-    return true; // ALL
+    if (timeRange === "ALL") return true;
+    return runDate >= filterStart && runDate <= filterEnd;
   }) || [];
 
   const filteredDistance = filteredRuns.reduce((acc: number, r: any) => acc + (r.distance || 0), 0);
@@ -96,9 +112,18 @@ export default function ProfileTab() {
   const filteredPace = filteredDistance > 0 ? (filteredTime / 60) / filteredDistance : 0;
   
   const getDateLabel = () => {
-    if (timeRange === "W") return "За последние 7 дней";
-    if (timeRange === "M") return now.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }).toLowerCase();
-    if (timeRange === "Y") return `${now.getFullYear()} г.`;
+    if (timeRange === "W") {
+      if (selectedWeekOffset === 0) return "Эта неделя";
+      if (selectedWeekOffset === 1) return "Прошлая неделя";
+      const startStr = filterStart.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+      const endStr = filterEnd.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+      return `${startStr} - ${endStr}`;
+    }
+    if (timeRange === "M") {
+      const d = new Date(selectedYear, selectedMonth, 1);
+      return d.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }).toLowerCase();
+    }
+    if (timeRange === "Y") return `${selectedYear} г.`;
     return "За всё время";
   };
 
@@ -121,40 +146,41 @@ export default function ProfileTab() {
   const generateChartData = () => {
     let buckets: { label: string, value: number }[] = [];
     if (timeRange === "W") {
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(filterStart.getTime() + i * 24 * 60 * 60 * 1000);
         buckets.push({ label: d.getDate().toString(), value: 0 });
       }
       filteredRuns.forEach((r: any) => {
         const d = new Date(r.startTime);
-        const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 3600 * 24));
+        const diffDays = Math.floor((d.getTime() - filterStart.getTime()) / (1000 * 3600 * 24));
         if (diffDays >= 0 && diffDays < 7) {
-          buckets[6 - diffDays].value += r.distance || 0;
+          buckets[diffDays].value += r.distance || 0;
         }
       });
     } else if (timeRange === "M") {
-      for (let i = 29; i >= 0; i--) {
-        const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-        buckets.push({ label: (i % 7 === 0) ? d.getDate().toString() : "", value: 0 });
+      const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+      for (let i = 0; i < daysInMonth; i++) {
+        const d = new Date(selectedYear, selectedMonth, i + 1);
+        buckets.push({ label: (i % 7 === 0 || i === daysInMonth - 1) ? d.getDate().toString() : "", value: 0 });
       }
       filteredRuns.forEach((r: any) => {
         const d = new Date(r.startTime);
-        const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 3600 * 24));
-        if (diffDays >= 0 && diffDays < 30) {
-          buckets[29 - diffDays].value += r.distance || 0;
+        const dayIdx = d.getDate() - 1;
+        if (dayIdx >= 0 && dayIdx < daysInMonth) {
+          buckets[dayIdx].value += r.distance || 0;
         }
       });
     } else if (timeRange === "Y" || timeRange === "ALL") {
-      for (let i = 11; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const yearToUse = timeRange === "Y" ? selectedYear : now.getFullYear();
+      for (let i = 0; i < 12; i++) {
+        const d = new Date(yearToUse, i, 1);
         const monthLabel = d.toLocaleString('ru-RU', { month: 'short' }).replace('.', '');
         buckets.push({ label: monthLabel, value: 0 });
       }
       filteredRuns.forEach((r: any) => {
         const d = new Date(r.startTime);
-        const diffMonths = (now.getFullYear() - d.getFullYear()) * 12 + now.getMonth() - d.getMonth();
-        if (diffMonths >= 0 && diffMonths < 12) {
-          buckets[11 - diffMonths].value += r.distance || 0;
+        if (timeRange === "ALL" || d.getFullYear() === yearToUse) {
+          buckets[d.getMonth()].value += r.distance || 0;
         }
       });
     }
@@ -299,9 +325,13 @@ export default function ProfileTab() {
 
         {/* Stats Summary */}
         <div className="flex flex-col mb-4">
-          <div className="flex items-center gap-1 mb-1">
+          <button 
+            className="flex items-center gap-1 mb-1 w-fit hover:opacity-70 transition-opacity"
+            onClick={() => setShowDatePicker(true)}
+          >
             <span className="text-sm font-medium">{getDateLabel()}</span>
-          </div>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
           
           <h2 className="text-[80px] leading-[0.8] font-black italic tracking-tighter -ml-1">
             {filteredDistance.toFixed(2).replace('.', ',')}
@@ -366,36 +396,46 @@ export default function ProfileTab() {
           <h3 className="font-bold text-lg mb-6 text-foreground">Последние действия</h3>
           <div className="flex flex-col gap-4 max-h-[500px] overflow-y-auto pb-4" style={{ scrollbarWidth: 'none' }}>
             {filteredRuns.length > 0 ? (
-              filteredRuns.map((run: any) => (
-                <div key={run.id} className="bg-card border border-border rounded-[24px] p-5 shadow-sm shrink-0">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary overflow-hidden shrink-0">
-                      <Sunrise size={24} />
+              <>
+                {(showAllRuns ? filteredRuns : filteredRuns.slice(0, 2)).map((run: any) => (
+                  <div key={run.id} className="bg-card border border-border rounded-[24px] p-5 shadow-sm shrink-0">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary overflow-hidden shrink-0">
+                        <Sunrise size={24} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm text-foreground">
+                          {new Date(run.startTime).toLocaleDateString("ru-RU", { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                        </p>
+                        <p className="text-sm text-muted mt-0.5">{run.event ? run.event.title : "Свободная пробежка"}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-sm text-foreground">
-                        {new Date(run.startTime).toLocaleDateString("ru-RU", { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                      </p>
-                      <p className="text-sm text-muted mt-0.5">{run.event ? run.event.title : "Свободная пробежка"}</p>
+                    
+                    <div className="grid grid-cols-3 gap-2 w-full">
+                      <div className="flex flex-col">
+                        <span className="text-xl font-black">{run.distance.toFixed(2).replace('.', ',')}</span>
+                        <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">КМ</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xl font-black">{formatPace(run.avgPace)}</span>
+                        <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Средн. темп</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xl font-black">{formatTime(run.durationSec)}</span>
+                        <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Время</span>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="grid grid-cols-3 gap-2 w-full">
-                    <div className="flex flex-col">
-                      <span className="text-xl font-black">{run.distance.toFixed(2).replace('.', ',')}</span>
-                      <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">КМ</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xl font-black">{formatPace(run.avgPace)}</span>
-                      <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Средн. темп</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xl font-black">{formatTime(run.durationSec)}</span>
-                      <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Время</span>
-                    </div>
-                  </div>
-                </div>
-              ))
+                ))}
+                {!showAllRuns && filteredRuns.length > 2 && (
+                  <button 
+                    onClick={() => setShowAllRuns(true)}
+                    className="w-full py-4 rounded-full border border-border text-sm font-bold mt-2 hover:bg-border/50 transition-colors"
+                  >
+                    Все действия
+                  </button>
+                )}
+              </>
             ) : (
               <div className="text-center text-muted text-sm py-10 bg-card rounded-[24px] border border-border">
                 За выбранный период пробежек нет.
@@ -404,6 +444,109 @@ export default function ProfileTab() {
           </div>
         </div>
       </div>
+      
+      {/* DATE PICKER MODAL */}
+      {showDatePicker && (
+        <div className="fixed inset-0 z-[100] flex justify-center pointer-events-none">
+          <div className="w-full max-w-[480px] h-full relative pointer-events-none flex flex-col justify-end">
+            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm pointer-events-auto" onClick={() => setShowDatePicker(false)}></div>
+            <div className="w-full bg-card border-t border-border rounded-t-[32px] p-6 pb-12 pointer-events-auto relative z-10 animate-in slide-in-from-bottom-full duration-300 shadow-2xl">
+              
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold">Выберите период</h2>
+                <button onClick={() => setShowDatePicker(false)} className="w-8 h-8 bg-background rounded-full flex items-center justify-center text-foreground hover:bg-border transition-colors">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div 
+                className="h-48 relative flex overflow-hidden mb-4"
+                style={{ WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)' }}
+              >
+                {/* Visual selection highlight line */}
+                <div className="absolute top-1/2 left-0 right-0 h-10 -translate-y-1/2 border-y border-border pointer-events-none"></div>
+
+                {timeRange === "W" && (
+                  <div className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-4 text-center" style={{ scrollbarWidth: 'none' }}>
+                    {[0, 1, 2, 3, 4, 5, 6].map(offset => (
+                      <div 
+                        key={offset} 
+                        className="h-10 flex items-center justify-center snap-center cursor-pointer"
+                        onClick={() => setSelectedWeekOffset(offset)}
+                      >
+                        <span className={`text-lg transition-colors ${selectedWeekOffset === offset ? 'font-bold text-foreground' : 'text-muted'}`}>
+                          {offset === 0 ? "Эта неделя" : offset === 1 ? "Прошлая неделя" : `${offset} нед. назад`}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {timeRange === "M" && (
+                  <>
+                    <div className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-2 text-center" style={{ scrollbarWidth: 'none' }}>
+                      {Array.from({length: 12}).map((_, i) => (
+                        <div 
+                          key={i} 
+                          className="h-10 flex items-center justify-center snap-center cursor-pointer"
+                          onClick={() => setSelectedMonth(i)}
+                        >
+                          <span className={`text-lg transition-colors capitalize ${selectedMonth === i ? 'font-bold text-foreground' : 'text-muted'}`}>
+                            {new Date(2020, i, 1).toLocaleString('ru', { month: 'long' })}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-2 text-center" style={{ scrollbarWidth: 'none' }}>
+                      {[now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2].map(year => (
+                        <div 
+                          key={year} 
+                          className="h-10 flex items-center justify-center snap-center cursor-pointer"
+                          onClick={() => setSelectedYear(year)}
+                        >
+                          <span className={`text-lg transition-colors ${selectedYear === year ? 'font-bold text-foreground' : 'text-muted'}`}>
+                            {year}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {timeRange === "Y" && (
+                  <div className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-4 text-center" style={{ scrollbarWidth: 'none' }}>
+                    {[now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4].map(year => (
+                      <div 
+                        key={year} 
+                        className="h-10 flex items-center justify-center snap-center cursor-pointer"
+                        onClick={() => setSelectedYear(year)}
+                      >
+                        <span className={`text-lg transition-colors ${selectedYear === year ? 'font-bold text-foreground' : 'text-muted'}`}>
+                          {year}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {timeRange === "ALL" && (
+                  <div className="flex-1 flex items-center justify-center text-muted h-full">
+                    Для периода "Все" выбор дат недоступен
+                  </div>
+                )}
+              </div>
+              
+              <button 
+                onClick={() => setShowDatePicker(false)}
+                className="w-full mt-2 py-4 rounded-full bg-foreground text-background font-bold text-lg hover:opacity-90 transition-opacity"
+              >
+                Выбрать
+              </button>
+
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* EDIT PROFILE MODAL */}
       {showEditModal && (
