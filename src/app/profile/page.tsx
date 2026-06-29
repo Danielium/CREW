@@ -23,6 +23,9 @@ export default function ProfileTab() {
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [croppedFile, setCroppedFile] = useState<File | null>(null);
 
+  // Stats and Filters
+  const [timeRange, setTimeRange] = useState<"W" | "M" | "Y" | "ALL">("M");
+
   const [isTgEnv, setIsTgEnv] = useState(false);
 
   useEffect(() => {
@@ -67,7 +70,100 @@ export default function ProfileTab() {
     }
   };
 
-  const totalKm = userData?.totalDistance || 0;
+  // --- Filtering & Stats Calculation ---
+  const now = new Date();
+  const filteredRuns = userData?.runs?.filter((r: any) => {
+    if (r.status !== "COMPLETED") return false;
+    const runDate = new Date(r.startTime);
+    
+    if (timeRange === "W") {
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      return runDate >= oneWeekAgo;
+    }
+    if (timeRange === "M") {
+      const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      return runDate >= oneMonthAgo;
+    }
+    if (timeRange === "Y") {
+      const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+      return runDate >= oneYearAgo;
+    }
+    return true; // ALL
+  }) || [];
+
+  const filteredDistance = filteredRuns.reduce((acc: number, r: any) => acc + (r.distance || 0), 0);
+  const filteredTime = filteredRuns.reduce((acc: number, r: any) => acc + (r.durationSec || 0), 0);
+  const filteredPace = filteredDistance > 0 ? (filteredTime / 60) / filteredDistance : 0;
+  
+  const getDateLabel = () => {
+    if (timeRange === "W") return "За последние 7 дней";
+    if (timeRange === "M") return now.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }).toLowerCase();
+    if (timeRange === "Y") return `${now.getFullYear()} г.`;
+    return "За всё время";
+  };
+
+  const formatPace = (pace: number) => {
+    if (!pace || pace === 0) return "--";
+    const mins = Math.floor(pace);
+    const secs = Math.round((pace % 1) * 60);
+    return `${mins}'${secs.toString().padStart(2, '0')}"`;
+  };
+
+  const formatTime = (secs: number) => {
+    if (!secs) return "0:00";
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = Math.round(secs % 60);
+    if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const generateChartData = () => {
+    let buckets: { label: string, value: number }[] = [];
+    if (timeRange === "W") {
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+        buckets.push({ label: d.getDate().toString(), value: 0 });
+      }
+      filteredRuns.forEach((r: any) => {
+        const d = new Date(r.startTime);
+        const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 3600 * 24));
+        if (diffDays >= 0 && diffDays < 7) {
+          buckets[6 - diffDays].value += r.distance || 0;
+        }
+      });
+    } else if (timeRange === "M") {
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+        buckets.push({ label: (i % 7 === 0) ? d.getDate().toString() : "", value: 0 });
+      }
+      filteredRuns.forEach((r: any) => {
+        const d = new Date(r.startTime);
+        const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 3600 * 24));
+        if (diffDays >= 0 && diffDays < 30) {
+          buckets[29 - diffDays].value += r.distance || 0;
+        }
+      });
+    } else if (timeRange === "Y" || timeRange === "ALL") {
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthLabel = d.toLocaleString('ru-RU', { month: 'short' }).replace('.', '');
+        buckets.push({ label: monthLabel, value: 0 });
+      }
+      filteredRuns.forEach((r: any) => {
+        const d = new Date(r.startTime);
+        const diffMonths = (now.getFullYear() - d.getFullYear()) * 12 + now.getMonth() - d.getMonth();
+        if (diffMonths >= 0 && diffMonths < 12) {
+          buckets[11 - diffMonths].value += r.distance || 0;
+        }
+      });
+    }
+    const maxVal = Math.max(...buckets.map(b => b.value), 1); 
+    return { buckets, maxVal };
+  };
+
+  const { buckets: chartBuckets, maxVal: chartMax } = generateChartData();
+  // --- End Filtering ---
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
@@ -178,59 +274,131 @@ export default function ProfileTab() {
       </div>
 
       <div className="flex flex-col gap-6 px-4">
+        
+        {/* Segmented Control */}
+        <div className="flex bg-card border border-border rounded-full p-1 mt-2 mx-auto w-full max-w-[320px]">
+          {[
+            { id: "W", label: "Н" },
+            { id: "M", label: "М" },
+            { id: "Y", label: "Г" },
+            { id: "ALL", label: "Все" }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setTimeRange(tab.id as any)}
+              className={`flex-1 py-2 text-sm font-bold rounded-full transition-colors ${
+                timeRange === tab.id 
+                  ? "bg-primary text-black" 
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {/* Stats Summary */}
-        <div className="flex flex-col items-center mb-6 mt-4">
-          <h2 className="text-[64px] leading-none font-black tracking-tighter">
-            {totalKm.toFixed(2).replace('.', ',')}
-          </h2>
-          <p className="text-sm text-muted font-bold tracking-widest uppercase mt-1">Километров</p>
+        <div className="flex flex-col mb-4">
+          <div className="flex items-center gap-1 mb-1">
+            <span className="text-sm font-medium">{getDateLabel()}</span>
+          </div>
           
-          <div className="flex w-full justify-center mt-8 border-t border-border pt-6 px-10">
-            <div className="flex flex-col items-center">
-              <span className="text-3xl font-black">{userData?.runs?.filter((r: any) => r.status === "COMPLETED").length || 0}</span>
+          <h2 className="text-[80px] leading-[0.8] font-black italic tracking-tighter -ml-1">
+            {filteredDistance.toFixed(2).replace('.', ',')}
+          </h2>
+          <p className="text-xs text-muted font-bold tracking-widest uppercase mt-3 mb-6">Километров</p>
+          
+          <div className="grid grid-cols-3 gap-2 w-full">
+            <div className="flex flex-col">
+              <span className="text-2xl font-black">{filteredRuns.length}</span>
               <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Пробежек</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-2xl font-black">{formatPace(filteredPace)}</span>
+              <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Средн. темп</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-2xl font-black">{formatTime(filteredTime)}</span>
+              <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Время</span>
             </div>
           </div>
         </div>
 
+        {/* Bar Chart */}
+        <div className="relative h-40 w-full mt-4 flex items-end justify-between gap-1 pt-4 pb-6">
+          {/* Y Axis Grid Lines */}
+          <div className="absolute inset-0 flex flex-col justify-between pb-6 pointer-events-none z-0">
+            <div className="w-full h-[1px] bg-border/40"></div>
+            <div className="w-full h-[1px] bg-border/40"></div>
+            <div className="w-full h-[1px] bg-border/40"></div>
+            <div className="w-full h-[1px] bg-border/40 flex items-center justify-end"><span className="text-[10px] text-muted translate-x-4">0 км</span></div>
+          </div>
+          
+          {/* Y Axis Max Label */}
+          <div className="absolute top-0 right-0 -translate-y-2 text-[10px] text-muted z-0">
+            {Math.ceil(chartMax)}
+          </div>
+
+          {/* Bars & X Axis */}
+          {chartBuckets.map((bucket, i) => {
+            const h = (bucket.value / chartMax) * 100;
+            return (
+              <div key={i} className="flex-1 flex flex-col justify-end items-center h-full relative z-10 group">
+                {bucket.value > 0 && (
+                  <div 
+                    className="w-[80%] max-w-[8px] bg-primary rounded-t-sm transition-all duration-500 ease-out" 
+                    style={{ height: `${h}%` }}
+                  />
+                )}
+                {/* X Axis Label */}
+                {bucket.label && (
+                  <div className="absolute -bottom-6 text-[10px] text-muted truncate text-center w-[200%]">
+                    {bucket.label}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
         {/* Recent Runs List */}
-        <div className="mb-24">
-          <h3 className="font-bold uppercase text-sm tracking-wider mb-4 px-2">Последние действия</h3>
-          <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pb-4 px-2" style={{ scrollbarWidth: 'none' }}>
-            {userData?.runs?.filter((r: any) => r.status === "COMPLETED").length > 0 ? (
-              userData.runs.filter((r: any) => r.status === "COMPLETED").map((run: any) => (
+        <div className="mb-24 mt-8">
+          <h3 className="font-bold text-lg mb-6 text-foreground">Последние действия</h3>
+          <div className="flex flex-col gap-4 max-h-[500px] overflow-y-auto pb-4" style={{ scrollbarWidth: 'none' }}>
+            {filteredRuns.length > 0 ? (
+              filteredRuns.map((run: any) => (
                 <div key={run.id} className="bg-card border border-border rounded-[24px] p-5 shadow-sm shrink-0">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                      <Sunrise size={20} />
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary overflow-hidden shrink-0">
+                      <Sunrise size={24} />
                     </div>
                     <div>
-                      <p className="font-bold text-sm">
+                      <p className="font-medium text-sm text-foreground">
                         {new Date(run.startTime).toLocaleDateString("ru-RU", { day: '2-digit', month: '2-digit', year: 'numeric' })}
                       </p>
-                      <p className="text-xs text-muted">Пробежка</p>
+                      <p className="text-sm text-muted mt-0.5">{run.event ? run.event.title : "Свободная пробежка"}</p>
                     </div>
                   </div>
                   
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <p className="text-xl font-black">{run.distance.toFixed(2).replace('.', ',')}</p>
-                      <p className="text-[10px] text-muted uppercase font-bold tracking-wider mt-0.5">КМ</p>
+                  <div className="grid grid-cols-3 gap-2 w-full">
+                    <div className="flex flex-col">
+                      <span className="text-xl font-black">{run.distance.toFixed(2).replace('.', ',')}</span>
+                      <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">КМ</span>
                     </div>
-                    <div>
-                      <p className="text-xl font-black">{run.avgPace ? `${Math.floor(run.avgPace)}'${Math.round((run.avgPace % 1) * 60).toString().padStart(2, '0')}"` : "--"}</p>
-                      <p className="text-[10px] text-muted uppercase font-bold tracking-wider mt-0.5">Ср. темп</p>
+                    <div className="flex flex-col">
+                      <span className="text-xl font-black">{formatPace(run.avgPace)}</span>
+                      <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Средн. темп</span>
                     </div>
-                    <div>
-                      <p className="text-xl font-black">{Math.floor(run.durationSec / 60)}:{String(run.durationSec % 60).padStart(2, '0')}</p>
-                      <p className="text-[10px] text-muted uppercase font-bold tracking-wider mt-0.5">Время</p>
+                    <div className="flex flex-col">
+                      <span className="text-xl font-black">{formatTime(run.durationSec)}</span>
+                      <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Время</span>
                     </div>
                   </div>
                 </div>
               ))
             ) : (
               <div className="text-center text-muted text-sm py-10 bg-card rounded-[24px] border border-border">
-                У вас пока нет сохраненных пробежек.
+                За выбранный период пробежек нет.
               </div>
             )}
           </div>
