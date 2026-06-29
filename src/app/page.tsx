@@ -570,6 +570,7 @@ function MapContent() {
                     </div>
                   ) : (selectedProposal.requests && selectedProposal.requests.length > 0) ? (
                     <SwipeButton 
+                      key="cancel"
                       variant="cancel" 
                       onConfirm={handleCancelRequest} 
                       text={selectedProposal.requests[0].status === "ACCEPTED" ? "Отменить участие" : "Отменить запрос"} 
@@ -585,7 +586,7 @@ function MapContent() {
                       </button>
                     </div>
                   ) : (
-                    <SwipeButton onConfirm={handleSwipeJoin} successText="Запрос ожидает ответа" />
+                    <SwipeButton key="join" onConfirm={handleSwipeJoin} successText="Запрос ожидает ответа" />
                   )}
                 </div>
               </>
