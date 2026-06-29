@@ -165,16 +165,15 @@ export default function SettingsPage() {
               className="absolute inset-0 bg-gradient-to-t from-black/80 to-black/40 pointer-events-auto" 
               onClick={() => setShowPrivacyModal(false)}
             ></div>
-            <div className="w-full bg-card border-t border-border rounded-t-[32px] p-6 pb-12 pointer-events-auto relative z-10 animate-in slide-in-from-bottom-full duration-300 shadow-2xl">
+            <div className="w-full bg-card border-t border-border rounded-t-[32px] p-6 pb-32 pointer-events-auto relative z-10 animate-in slide-in-from-bottom-full duration-300 shadow-2xl">
               
-              <div className="flex justify-between items-center mb-6">
+              {/* Drag Handle */}
+              <div className="flex justify-center mb-4">
+                <div className="w-12 h-1.5 bg-border rounded-full"></div>
+              </div>
+
+              <div className="mb-6">
                 <h2 className="text-2xl font-black uppercase tracking-tight">Приватность</h2>
-                <button 
-                  onClick={() => setShowPrivacyModal(false)} 
-                  className="w-10 h-10 bg-background border border-border rounded-full flex items-center justify-center text-foreground hover:bg-border transition-colors cursor-pointer"
-                >
-                  <X size={20} />
-                </button>
               </div>
 
               <div className="flex flex-col gap-3">
