@@ -15,6 +15,8 @@ export default function SettingsPage() {
   
   const [privacy, setPrivacy] = useState("CLUB");
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [touchStartY, setTouchStartY] = useState(0);
+  const [touchOffset, setTouchOffset] = useState(0);
 
   const [isTgEnv, setIsTgEnv] = useState(false);
 
@@ -44,6 +46,34 @@ export default function SettingsPage() {
   const handleSavePrivacy = (value: string) => {
     setPrivacy(value);
     localStorage.setItem("profilePrivacy", value);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartY(e.touches[0].clientY);
+    setTouchOffset(0);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY === 0) return;
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - touchStartY;
+    
+    if (diff > 0) {
+      setTouchOffset(diff);
+    }
+    
+    if (diff > 120) {
+      setShowPrivacyModal(false);
+      setTouchStartY(0);
+      setTouchOffset(0);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchOffset <= 120) {
+      setTouchOffset(0);
+    }
+    setTouchStartY(0);
   };
 
   const PRIVACY_LABELS: Record<string, string> = {
@@ -164,7 +194,16 @@ export default function SettingsPage() {
               className="absolute inset-0 bg-gradient-to-t from-black/80 to-black/40 pointer-events-auto" 
               onClick={() => setShowPrivacyModal(false)}
             ></div>
-            <div className="w-full bg-card border-t border-border rounded-t-[32px] p-6 pb-32 pointer-events-auto relative z-10 animate-in slide-in-from-bottom-full duration-300 shadow-2xl">
+            <div 
+              className="w-full bg-card border-t border-border rounded-t-[32px] p-6 pb-32 pointer-events-auto relative z-10 animate-in slide-in-from-bottom-full duration-300 shadow-2xl"
+              style={{ 
+                transform: `translateY(${touchOffset}px)`, 
+                transition: touchStartY === 0 ? 'transform 0.3s ease-out' : 'none' 
+              }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               
               {/* Drag Handle */}
               <div className="flex justify-center mb-4">
