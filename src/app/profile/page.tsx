@@ -34,6 +34,37 @@ export default function ProfileTab() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showAllRuns, setShowAllRuns] = useState(false);
 
+  // Drag to close modal logic
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchOffset, setTouchOffset] = useState(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const currentTouch = e.touches[0].clientY;
+    const diff = currentTouch - touchStart;
+    if (diff > 0) {
+      setTouchOffset(diff);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchOffset > 100) {
+      setShowDatePicker(false);
+    }
+    setTouchOffset(0);
+    setTouchStart(null);
+  };
+
+  useEffect(() => {
+    if (!showDatePicker) {
+      setTouchOffset(0);
+    }
+  }, [showDatePicker]);
+
   const [isTgEnv, setIsTgEnv] = useState(false);
 
   useEffect(() => {
@@ -448,15 +479,19 @@ export default function ProfileTab() {
       {/* DATE PICKER MODAL */}
       {showDatePicker && (
         <div className="fixed inset-0 z-[100] flex justify-center pointer-events-none">
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm pointer-events-auto" onClick={() => setShowDatePicker(false)}></div>
           <div className="w-full max-w-[480px] h-full relative pointer-events-none flex flex-col justify-end">
-            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm pointer-events-auto" onClick={() => setShowDatePicker(false)}></div>
-            <div className="w-full bg-card border-t border-border rounded-t-[32px] p-6 pb-12 pointer-events-auto relative z-10 animate-in slide-in-from-bottom-full duration-300 shadow-2xl">
+            <div 
+              className={`w-full bg-card border-t border-border rounded-t-[32px] p-6 pb-12 pointer-events-auto relative z-10 ${touchOffset > 0 ? 'transition-none' : 'animate-in slide-in-from-bottom-full duration-300'} shadow-2xl`}
+              style={{ transform: `translateY(${touchOffset}px)` }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div className="w-12 h-1.5 bg-border rounded-full mx-auto mb-6 cursor-pointer" onClick={() => setShowDatePicker(false)} />
               
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold">Выберите период</h2>
-                <button onClick={() => setShowDatePicker(false)} className="w-8 h-8 bg-background rounded-full flex items-center justify-center text-foreground hover:bg-border transition-colors">
-                  <X size={18} />
-                </button>
               </div>
 
               <div 
@@ -467,12 +502,17 @@ export default function ProfileTab() {
                 <div className="absolute top-1/2 left-0 right-0 h-10 -translate-y-1/2 border-y border-border pointer-events-none"></div>
 
                 {timeRange === "W" && (
-                  <div className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-4 text-center" style={{ scrollbarWidth: 'none' }}>
+                  <div 
+                    className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-4 text-center" 
+                    style={{ scrollbarWidth: 'none' }}
+                    ref={el => { if (el && el.getAttribute('data-init') !== 'true') { el.scrollTop = selectedWeekOffset * 40; el.setAttribute('data-init', 'true'); } }}
+                    onScroll={e => setSelectedWeekOffset(Math.round(e.currentTarget.scrollTop / 40))}
+                  >
                     {[0, 1, 2, 3, 4, 5, 6].map(offset => (
                       <div 
                         key={offset} 
                         className="h-10 flex items-center justify-center snap-center cursor-pointer"
-                        onClick={() => setSelectedWeekOffset(offset)}
+                        onClick={(e) => e.currentTarget.parentElement?.scrollTo({top: offset * 40, behavior: 'smooth'})}
                       >
                         <span className={`text-lg transition-colors ${selectedWeekOffset === offset ? 'font-bold text-foreground' : 'text-muted'}`}>
                           {offset === 0 ? "Эта неделя" : offset === 1 ? "Прошлая неделя" : `${offset} нед. назад`}
@@ -484,12 +524,17 @@ export default function ProfileTab() {
 
                 {timeRange === "M" && (
                   <>
-                    <div className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-2 text-center" style={{ scrollbarWidth: 'none' }}>
+                    <div 
+                      className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-2 text-center" 
+                      style={{ scrollbarWidth: 'none' }}
+                      ref={el => { if (el && el.getAttribute('data-init') !== 'true') { el.scrollTop = selectedMonth * 40; el.setAttribute('data-init', 'true'); } }}
+                      onScroll={e => setSelectedMonth(Math.round(e.currentTarget.scrollTop / 40))}
+                    >
                       {Array.from({length: 12}).map((_, i) => (
                         <div 
                           key={i} 
                           className="h-10 flex items-center justify-center snap-center cursor-pointer"
-                          onClick={() => setSelectedMonth(i)}
+                          onClick={(e) => e.currentTarget.parentElement?.scrollTo({top: i * 40, behavior: 'smooth'})}
                         >
                           <span className={`text-lg transition-colors capitalize ${selectedMonth === i ? 'font-bold text-foreground' : 'text-muted'}`}>
                             {new Date(2020, i, 1).toLocaleString('ru', { month: 'long' })}
@@ -497,12 +542,28 @@ export default function ProfileTab() {
                         </div>
                       ))}
                     </div>
-                    <div className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-2 text-center" style={{ scrollbarWidth: 'none' }}>
-                      {[now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2].map(year => (
+                    <div 
+                      className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-2 text-center" 
+                      style={{ scrollbarWidth: 'none' }}
+                      ref={el => { 
+                        if (el && el.getAttribute('data-init') !== 'true') { 
+                          const arr = [now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2];
+                          const idx = arr.indexOf(selectedYear);
+                          if (idx >= 0) el.scrollTop = idx * 40; 
+                          el.setAttribute('data-init', 'true'); 
+                        } 
+                      }}
+                      onScroll={e => {
+                        const arr = [now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2];
+                        const idx = Math.round(e.currentTarget.scrollTop / 40);
+                        if (arr[idx]) setSelectedYear(arr[idx]);
+                      }}
+                    >
+                      {[now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2].map((year, i) => (
                         <div 
                           key={year} 
                           className="h-10 flex items-center justify-center snap-center cursor-pointer"
-                          onClick={() => setSelectedYear(year)}
+                          onClick={(e) => e.currentTarget.parentElement?.scrollTo({top: i * 40, behavior: 'smooth'})}
                         >
                           <span className={`text-lg transition-colors ${selectedYear === year ? 'font-bold text-foreground' : 'text-muted'}`}>
                             {year}
@@ -514,12 +575,28 @@ export default function ProfileTab() {
                 )}
 
                 {timeRange === "Y" && (
-                  <div className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-4 text-center" style={{ scrollbarWidth: 'none' }}>
-                    {[now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4].map(year => (
+                  <div 
+                    className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-4 text-center" 
+                    style={{ scrollbarWidth: 'none' }}
+                    ref={el => { 
+                      if (el && el.getAttribute('data-init') !== 'true') { 
+                        const arr = [now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4];
+                        const idx = arr.indexOf(selectedYear);
+                        if (idx >= 0) el.scrollTop = idx * 40; 
+                        el.setAttribute('data-init', 'true'); 
+                      } 
+                    }}
+                    onScroll={e => {
+                      const arr = [now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4];
+                      const idx = Math.round(e.currentTarget.scrollTop / 40);
+                      if (arr[idx]) setSelectedYear(arr[idx]);
+                    }}
+                  >
+                    {[now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4].map((year, i) => (
                       <div 
                         key={year} 
                         className="h-10 flex items-center justify-center snap-center cursor-pointer"
-                        onClick={() => setSelectedYear(year)}
+                        onClick={(e) => e.currentTarget.parentElement?.scrollTo({top: i * 40, behavior: 'smooth'})}
                       >
                         <span className={`text-lg transition-colors ${selectedYear === year ? 'font-bold text-foreground' : 'text-muted'}`}>
                           {year}
