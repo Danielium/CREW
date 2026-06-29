@@ -491,7 +491,7 @@ function MapContent() {
 
             <div className="mt-4">
               {selectedProposal.event.attendees?.some((a: any) => a.id === (session?.user as any)?.id) ? (
-                <div className="w-full py-4 text-center bg-muted/50 rounded-2xl font-bold uppercase tracking-wider text-sm">
+                <div className="w-full h-16 flex items-center justify-center bg-primary text-black rounded-full font-black uppercase tracking-wider text-sm">
                   Вы участвуете! 🎉
                 </div>
               ) : (
@@ -569,7 +569,11 @@ function MapContent() {
                 <div className="mt-2">
                   {selectedProposal.requests && selectedProposal.requests.length > 0 ? (
                     <div className="flex flex-col gap-2">
-                      <div className="w-full py-4 text-center bg-muted/50 rounded-2xl font-bold uppercase tracking-wider text-sm">
+                      <div className={`w-full h-16 flex items-center justify-center rounded-full font-black uppercase tracking-wider text-sm ${
+                         selectedProposal.requests[0].status === "ACCEPTED" 
+                           ? "bg-primary text-black" 
+                           : "bg-card border border-border text-foreground"
+                      }`}>
                         {selectedProposal.requests[0].status === "PENDING" ? "Запрос ожидает ответа" : 
                          selectedProposal.requests[0].status === "ACCEPTED" ? "Вы участвуете! 🎉" : 
                          "Заявка отклонена"}
