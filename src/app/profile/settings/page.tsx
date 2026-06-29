@@ -175,6 +175,30 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Integrations */}
+        <div className="flex flex-col gap-2">
+          <h3 className="text-[10px] font-bold text-muted uppercase tracking-wider pl-1">Интеграции</h3>
+          <div className="bg-card border border-border rounded-[24px] overflow-hidden divide-y divide-border">
+            
+            <div className="flex items-center justify-between p-4 opacity-50 pointer-events-none">
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 bg-[#FC4C02] rounded flex items-center justify-center text-white text-[10px] font-bold">S</div>
+                <p className="font-bold">Strava</p>
+              </div>
+              <span className="text-xs font-bold text-muted uppercase">Скоро</span>
+            </div>
+
+            <div className="flex items-center justify-between p-4 opacity-50 pointer-events-none">
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 bg-white rounded flex items-center justify-center text-black text-[10px] font-bold">A</div>
+                <p className="font-bold">Apple Health</p>
+              </div>
+              <span className="text-xs font-bold text-muted uppercase">Скоро</span>
+            </div>
+
+          </div>
+        </div>
+
         {/* Danger Zone */}
         {!isTgEnv && (
           <div className="mt-8">

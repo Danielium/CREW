@@ -479,10 +479,10 @@ function MapContent() {
               <div className="bg-muted/30 rounded-2xl p-4 flex flex-col gap-1">
                 <div className="flex items-center gap-2 text-muted">
                   <Activity size={16} />
-                  <span className="text-xs uppercase font-bold tracking-wider">Дистанция</span>
+                  <span className="text-xs uppercase font-bold tracking-wider">Темп</span>
                 </div>
-                <span className="font-bold text-lg">{selectedProposal.event.distance ? `${selectedProposal.event.distance} км` : "—"}</span>
-                <span className="text-xs text-muted">Темп: {selectedProposal.event.pace || "—"}</span>
+                <span className="font-bold text-lg">{selectedProposal.event.pace ? selectedProposal.event.pace.replace(/[\[\]"']/g, '') : "—"}</span>
+                <span className="text-xs text-muted">Дистанция: {selectedProposal.event.distance ? `${selectedProposal.event.distance} км` : "—"}</span>
               </div>
             </div>
 
@@ -550,7 +550,7 @@ function MapContent() {
                       <Activity size={16} />
                       <span className="text-xs uppercase font-bold tracking-wider">Темп</span>
                     </div>
-                    <span className="font-bold text-lg">{selectedProposal.pace || "Любой"}</span>
+                    <span className="font-bold text-lg">{selectedProposal.pace ? selectedProposal.pace.replace(/[\[\]"']/g, '') : "Любой"}</span>
                     <span className="text-xs text-muted">мин/км</span>
                   </div>
                 </div>

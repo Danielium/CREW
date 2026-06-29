@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Settings, Star, Trophy, Users, Edit3, Lock, Sunrise, LogOut, LogIn, X, Loader2, Camera, Check } from "lucide-react";
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { TROPHIES } from "@/lib/trophies";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
 
 
@@ -69,11 +68,6 @@ export default function ProfileTab() {
   };
 
   const totalKm = userData?.totalDistance || 0;
-
-  const userTrophies = TROPHIES.map(t => ({
-    ...t,
-    unlocked: t.condition(totalKm)
-  }));
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
@@ -184,49 +178,61 @@ export default function ProfileTab() {
       </div>
 
       <div className="flex flex-col gap-6 px-4">
-        {/* Trophy Cabinet */}
-        <div className="mb-24">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold uppercase text-sm tracking-wider">Мои трофеи</h3>
-            <span className="bg-primary text-black text-xs font-bold px-2 py-1 rounded-lg">{userTrophies.filter(t => t.unlocked).length} / {userTrophies.length}</span>
-          </div>
+        {/* Stats Summary */}
+        <div className="flex flex-col items-center mb-6 mt-4">
+          <h2 className="text-[64px] leading-none font-black tracking-tighter">
+            {totalKm.toFixed(2).replace('.', ',')}
+          </h2>
+          <p className="text-sm text-muted font-bold tracking-widest uppercase mt-1">Километров</p>
           
-          <div className="grid grid-cols-3 gap-3">
-            {userTrophies.map((trophy) => (
-              <div 
-                key={trophy.id} 
-                className={`relative flex flex-col items-center justify-center p-3 rounded-[20px] border ${
-                  trophy.unlocked 
-                    ? "bg-card border-border shadow-[0_4px_12px_rgba(0,0,0,0.5)]" 
-                    : "bg-background border-border opacity-50 grayscale"
-                } aspect-square text-center`}
-              >
-                {!trophy.unlocked && (
-                  <div className="absolute inset-0 bg-card/70 rounded-[20px] flex items-center justify-center z-20 backdrop-blur-[1px]">
-                    <Lock size={20} className="text-[#555]" />
-                  </div>
-                )}
-                
-                <div className={`mb-2 ${trophy.unlocked ? "drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" : ""}`}>
-                  {trophy.icon}
-                </div>
-                <h4 className="font-bold text-[10px] leading-tight mb-1 z-10">{trophy.name}</h4>
-                <p className="text-[8px] text-muted leading-tight z-10">{trophy.desc}</p>
-              </div>
-            ))}
+          <div className="flex w-full justify-center mt-8 border-t border-border pt-6 px-10">
+            <div className="flex flex-col items-center">
+              <span className="text-3xl font-black">{userData?.runs?.filter((r: any) => r.status === "COMPLETED").length || 0}</span>
+              <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Пробежек</span>
+            </div>
           </div>
         </div>
 
-        {/* Integrations Placeholder */}
+        {/* Recent Runs List */}
         <div className="mb-24">
-          <h3 className="font-bold uppercase text-sm tracking-wider mb-4">Интеграции</h3>
-          <div className="bg-card border border-border rounded-[24px] p-5">
-            <p className="text-sm text-muted mb-4 leading-relaxed">
-              Поскольку мы убрали встроенный трекер бега, здесь скоро появятся настройки подключения внешних сервисов (Strava, Apple Health, Garmin и др.) для автоматической синхронизации твоей статистики.
-            </p>
-            <button disabled className="w-full bg-background border border-border text-foreground font-bold uppercase text-sm py-3 rounded-full opacity-50 cursor-not-allowed">
-              Подключить Strava (скоро)
-            </button>
+          <h3 className="font-bold uppercase text-sm tracking-wider mb-4 px-2">Последние действия</h3>
+          <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pb-4 px-2" style={{ scrollbarWidth: 'none' }}>
+            {userData?.runs?.filter((r: any) => r.status === "COMPLETED").length > 0 ? (
+              userData.runs.filter((r: any) => r.status === "COMPLETED").map((run: any) => (
+                <div key={run.id} className="bg-card border border-border rounded-[24px] p-5 shadow-sm shrink-0">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                      <Sunrise size={20} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">
+                        {new Date(run.startTime).toLocaleDateString("ru-RU", { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                      </p>
+                      <p className="text-xs text-muted">Пробежка</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-xl font-black">{run.distance.toFixed(2).replace('.', ',')}</p>
+                      <p className="text-[10px] text-muted uppercase font-bold tracking-wider mt-0.5">КМ</p>
+                    </div>
+                    <div>
+                      <p className="text-xl font-black">{run.avgPace ? `${Math.floor(run.avgPace)}'${Math.round((run.avgPace % 1) * 60).toString().padStart(2, '0')}"` : "--"}</p>
+                      <p className="text-[10px] text-muted uppercase font-bold tracking-wider mt-0.5">Ср. темп</p>
+                    </div>
+                    <div>
+                      <p className="text-xl font-black">{Math.floor(run.durationSec / 60)}:{String(run.durationSec % 60).padStart(2, '0')}</p>
+                      <p className="text-[10px] text-muted uppercase font-bold tracking-wider mt-0.5">Время</p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-muted text-sm py-10 bg-card rounded-[24px] border border-border">
+                У вас пока нет сохраненных пробежек.
+              </div>
+            )}
           </div>
         </div>
       </div>
