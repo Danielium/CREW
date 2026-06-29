@@ -586,7 +586,7 @@ function MapContent() {
                       </button>
                     </div>
                   ) : (
-                    <SwipeButton onConfirm={handleSwipeJoin} />
+                    <SwipeButton onConfirm={handleSwipeJoin} successText="Запрос ожидает ответа" />
                   )}
                 </div>
               </>
