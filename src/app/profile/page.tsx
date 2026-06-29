@@ -491,7 +491,7 @@ export default function ProfileTab() {
                       ref={el => { if (el && el.getAttribute('data-init') !== 'true') { el.scrollTop = selectedMonth * 40; el.setAttribute('data-init', 'true'); } }}
                       onScroll={e => setSelectedMonth(Math.round(e.currentTarget.scrollTop / 40))}
                     >
-                      {Array.from({length: 12}).map((_, i) => (
+                      {(selectedYear === now.getFullYear() ? Array.from({length: now.getMonth() + 1}) : Array.from({length: 12})).map((_, i) => (
                         <div 
                           key={i} 
                           className="h-10 flex items-center justify-center snap-center cursor-pointer"
@@ -508,19 +508,19 @@ export default function ProfileTab() {
                       style={{ scrollbarWidth: 'none' }}
                       ref={el => { 
                         if (el && el.getAttribute('data-init') !== 'true') { 
-                          const arr = [now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2];
+                          const arr = [now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2];
                           const idx = arr.indexOf(selectedYear);
                           if (idx >= 0) el.scrollTop = idx * 40; 
                           el.setAttribute('data-init', 'true'); 
                         } 
                       }}
                       onScroll={e => {
-                        const arr = [now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2];
+                        const arr = [now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2];
                         const idx = Math.round(e.currentTarget.scrollTop / 40);
                         if (arr[idx]) setSelectedYear(arr[idx]);
                       }}
                     >
-                      {[now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2].map((year, i) => (
+                      {[now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2].map((year, i) => (
                         <div 
                           key={year} 
                           className="h-10 flex items-center justify-center snap-center cursor-pointer"
@@ -541,19 +541,19 @@ export default function ProfileTab() {
                     style={{ scrollbarWidth: 'none' }}
                     ref={el => { 
                       if (el && el.getAttribute('data-init') !== 'true') { 
-                        const arr = [now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4];
+                        const arr = [now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4];
                         const idx = arr.indexOf(selectedYear);
                         if (idx >= 0) el.scrollTop = idx * 40; 
                         el.setAttribute('data-init', 'true'); 
                       } 
                     }}
                     onScroll={e => {
-                      const arr = [now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4];
+                      const arr = [now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4];
                       const idx = Math.round(e.currentTarget.scrollTop / 40);
                       if (arr[idx]) setSelectedYear(arr[idx]);
                     }}
                   >
-                    {[now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4].map((year, i) => (
+                    {[now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4].map((year, i) => (
                       <div 
                         key={year} 
                         className="h-10 flex items-center justify-center snap-center cursor-pointer"
