@@ -34,37 +34,6 @@ export default function ProfileTab() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showAllRuns, setShowAllRuns] = useState(false);
 
-  // Drag to close modal logic
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchOffset, setTouchOffset] = useState(0);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.touches[0].clientY);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStart === null) return;
-    const currentTouch = e.touches[0].clientY;
-    const diff = currentTouch - touchStart;
-    if (diff > 0) {
-      setTouchOffset(diff);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (touchOffset > 100) {
-      setShowDatePicker(false);
-    }
-    setTouchOffset(0);
-    setTouchStart(null);
-  };
-
-  useEffect(() => {
-    if (!showDatePicker) {
-      setTouchOffset(0);
-    }
-  }, [showDatePicker]);
-
   const [isTgEnv, setIsTgEnv] = useState(false);
 
   useEffect(() => {
@@ -482,11 +451,7 @@ export default function ProfileTab() {
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm pointer-events-auto" onClick={() => setShowDatePicker(false)}></div>
           <div className="w-full max-w-[480px] h-full relative pointer-events-none flex flex-col justify-end">
             <div 
-              className={`w-full bg-card border-t border-border rounded-t-[32px] p-6 pb-12 pointer-events-auto relative z-10 ${touchOffset > 0 ? 'transition-none' : 'animate-in slide-in-from-bottom-full duration-300'} shadow-2xl`}
-              style={{ transform: `translateY(${touchOffset}px)` }}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
+              className={`w-full bg-card border-t border-border rounded-t-[32px] p-6 pb-12 pointer-events-auto relative z-10 animate-in slide-in-from-bottom-full duration-300 shadow-2xl`}
             >
               {/* No header or drag handle as requested */}
 
