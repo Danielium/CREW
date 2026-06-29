@@ -7,8 +7,15 @@ import { usePathname } from "next/navigation";
 export default function BottomNav() {
   const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(true);
+  const [isHiddenForce, setIsHiddenForce] = useState(false);
 
   useEffect(() => {
+    const hide = () => setIsHiddenForce(true);
+    const show = () => setIsHiddenForce(false);
+    
+    window.addEventListener("hideNav", hide);
+    window.addEventListener("showNav", show);
+    
     let lastScrollY = 0;
     let accumulatedScrollUp = 0;
 
@@ -34,6 +41,8 @@ export default function BottomNav() {
     }
     
     return () => {
+      window.removeEventListener("hideNav", hide);
+      window.removeEventListener("showNav", show);
       if (container) {
         container.removeEventListener("scroll", handleScroll);
       }
@@ -53,7 +62,7 @@ export default function BottomNav() {
 
   return (
     <div 
-      className={`absolute left-4 right-4 z-50 transition-transform duration-300 ease-in-out ${isVisible ? "translate-y-0" : "translate-y-32"}`}
+      className={`absolute left-4 right-4 z-50 transition-transform duration-300 ease-in-out ${(isVisible && !isHiddenForce) ? "translate-y-0" : "translate-y-32"}`}
       style={{ bottom: "calc(1.5rem + var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px)))" }}
     >
       <div className="bg-card/70 backdrop-blur-3xl rounded-[32px] px-2 py-2 flex justify-between items-center shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] border border-border">
