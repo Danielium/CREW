@@ -492,7 +492,7 @@ function MapContent() {
                   Вы участвуете! 🎉
                 </div>
               ) : (
-                <SwipeButton onConfirm={handleClubEventAction} text="Присоединиться" successText="Вы участвуете!" />
+                <SwipeButton onConfirm={handleClubEventAction} successText="Вы участвуете!" />
               )}
             </div>
           </div>
