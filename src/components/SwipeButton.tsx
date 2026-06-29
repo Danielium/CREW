@@ -1,19 +1,21 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
 import { triggerHaptic } from '@/lib/haptics';
 
 interface SwipeButtonProps {
   onConfirm: () => Promise<void> | void;
   text?: string;
   successText?: string;
+  variant?: "default" | "cancel";
 }
 
 export function SwipeButton({ 
   onConfirm, 
   text = "Побежали?", 
-  successText = "Запрос отправлен!" 
+  successText = "Запрос отправлен!",
+  variant = "default"
 }: SwipeButtonProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -39,14 +41,14 @@ export function SwipeButton({
   const handlePointerDown = (e: React.PointerEvent) => {
     if (isSuccess) return;
     setIsDragging(true);
-    setStartX(e.clientX - currentX);
+    setStartX(variant === "cancel" ? e.clientX + currentX : e.clientX - currentX);
     triggerHaptic('light');
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging || isSuccess) return;
     
-    let newX = e.clientX - startX;
+    let newX = variant === "cancel" ? startX - e.clientX : e.clientX - startX;
     if (newX < 0) newX = 0;
     if (newX >= maxSwipe) {
       newX = maxSwipe;
@@ -84,24 +86,28 @@ export function SwipeButton({
   return (
     <div 
       ref={containerRef}
-      className={`relative w-full h-16 rounded-full overflow-hidden flex items-center select-none touch-none transition-colors duration-300 ${isSuccess ? 'bg-primary text-black' : 'bg-card border border-border'}`}
+      className={`relative w-full h-16 rounded-full overflow-hidden flex items-center select-none touch-none transition-colors duration-300 ${
+        isSuccess 
+          ? (variant === "cancel" ? 'bg-red-500/20 text-red-500 border border-red-500/50' : 'bg-primary text-black') 
+          : (variant === "cancel" ? 'bg-red-500/10 border border-red-500/30' : 'bg-card border border-border')
+      }`}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
     >
       {/* Background Text */}
-      <div className="absolute inset-0 flex items-center justify-center font-black uppercase tracking-wider text-sm pointer-events-none z-0">
+      <div className={`absolute inset-0 flex items-center justify-center font-black uppercase tracking-wider text-sm pointer-events-none z-0 ${variant === "cancel" && !isSuccess ? "text-red-500/80 pr-8" : variant === "cancel" ? "text-red-500" : ""}`}>
         {isSuccess ? (
           successText
         ) : (
-          <span className="text-muted/60 pl-8">{text}</span>
+          <span className={variant === "cancel" ? "" : "text-muted/60 pl-8"}>{text}</span>
         )}
       </div>
 
       {/* Swipe Progress Fill */}
       {!isSuccess && (
         <div 
-          className="absolute top-0 left-0 bottom-0 bg-primary/20 transition-all z-0 rounded-full"
+          className={`absolute top-0 bottom-0 transition-all z-0 rounded-full ${variant === "cancel" ? "right-0 bg-red-500/20" : "left-0 bg-primary/20"}`}
           style={{ width: `${currentX + 64}px` }} // 64 is approx thumb width
         />
       )}
@@ -110,15 +116,24 @@ export function SwipeButton({
       {!isSuccess && (
         <div 
           ref={thumbRef}
-          className="absolute left-1 top-1 bottom-1 w-14 bg-primary rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing z-10 shadow-lg"
+          className={`absolute ${variant === "cancel" ? "right-1 bg-red-500 text-white" : "left-1 bg-primary text-black"} top-1 bottom-1 w-14 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing z-10 shadow-lg`}
           style={{ 
-            transform: `translateX(${currentX}px)`,
+            transform: `translateX(${variant === "cancel" ? -currentX : currentX}px)`,
             transition: isDragging ? 'none' : 'transform 0.3s ease-out'
           }}
           onPointerDown={handlePointerDown}
         >
-          <ChevronRight className="text-black" size={24} />
-          <ChevronRight className="text-black -ml-4 opacity-50" size={24} />
+          {variant === "cancel" ? (
+            <>
+              <ChevronLeft size={24} />
+              <ChevronLeft className="-ml-4 opacity-50" size={24} />
+            </>
+          ) : (
+            <>
+              <ChevronRight size={24} />
+              <ChevronRight className="-ml-4 opacity-50" size={24} />
+            </>
+          )}
         </div>
       )}
     </div>

@@ -49,6 +49,7 @@ function MapContent() {
   const [editDate, setEditDate] = useState("");
   const [editTime, setEditTime] = useState("");
   const [editPace, setEditPace] = useState("");
+  const [justJoinedMap, setJustJoinedMap] = useState<Record<string, boolean>>({});
   const [editLimit, setEditLimit] = useState("");
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 
@@ -71,7 +72,8 @@ function MapContent() {
     setTimeout(() => {
       setSelectedProposal(null);
       setIsEditingProposal(false);
-    }, 500);
+      setJustJoinedMap({}); // Clear local joined state
+    }, 300); // Wait for animation
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -166,6 +168,7 @@ function MapContent() {
         body: JSON.stringify({ proposalId })
       });
       if (res.ok) {
+        setJustJoinedMap(prev => ({ ...prev, [proposalId]: true }));
         fetchProposals();
       } else {
         throw new Error("Failed to join");
@@ -561,21 +564,17 @@ function MapContent() {
                 </div>
 
                 <div className="mt-2">
-                  {selectedProposal.requests && selectedProposal.requests.length > 0 ? (
-                    <div className="flex flex-col gap-2">
-                      <div className={`w-full h-16 flex items-center justify-center rounded-full font-black uppercase tracking-wider text-sm ${
-                         selectedProposal.requests[0].status === "ACCEPTED" 
-                           ? "bg-primary text-black" 
-                           : "bg-card border border-border text-foreground"
-                      }`}>
-                        {selectedProposal.requests[0].status === "PENDING" ? "Запрос ожидает ответа" : 
-                         selectedProposal.requests[0].status === "ACCEPTED" ? "Вы участвуете! 🎉" : 
-                         "Заявка отклонена"}
-                      </div>
-                      <button onClick={handleCancelRequest} className="w-full mt-2 text-center text-red-500/80 text-xs font-bold uppercase tracking-widest active:scale-95 transition-transform">
-                        Отменить участие
-                      </button>
+                  {justJoinedMap[selectedProposal.id] ? (
+                    <div className="w-full h-16 flex items-center justify-center rounded-full bg-primary text-black font-black uppercase tracking-wider text-sm pointer-events-none">
+                      Запрос ожидает ответа
                     </div>
+                  ) : (selectedProposal.requests && selectedProposal.requests.length > 0) ? (
+                    <SwipeButton 
+                      variant="cancel" 
+                      onConfirm={handleCancelRequest} 
+                      text={selectedProposal.requests[0].status === "ACCEPTED" ? "Отменить участие" : "Отменить запрос"} 
+                      successText="Отменено" 
+                    />
                   ) : selectedProposal.creator?.id === (session?.user as any)?.id ? (
                     <div className="grid grid-cols-2 gap-4">
                       <button onClick={handleDeleteProposal} className="py-4 bg-red-500/10 text-red-500 rounded-2xl font-bold uppercase tracking-wider active:scale-95 transition-transform text-sm">
