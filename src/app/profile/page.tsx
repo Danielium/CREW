@@ -82,12 +82,12 @@ export default function ProfileTab() {
   }, [session]);
 
   useEffect(() => {
-    if (showEditModal) {
+    if (showEditModal || showDatePicker) {
       window.dispatchEvent(new Event("hideNav"));
     } else {
       window.dispatchEvent(new Event("showNav"));
     }
-  }, [showEditModal]);
+  }, [showEditModal, showDatePicker]);
 
   const fetchUserData = async () => {
     try {
@@ -488,11 +488,7 @@ export default function ProfileTab() {
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
-              <div className="w-12 h-1.5 bg-border rounded-full mx-auto mb-6 cursor-pointer" onClick={() => setShowDatePicker(false)} />
-              
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold">Выберите период</h2>
-              </div>
+              {/* No header or drag handle as requested */}
 
               <div 
                 className="h-48 relative flex overflow-hidden mb-4"
