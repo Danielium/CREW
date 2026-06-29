@@ -44,7 +44,6 @@ export default function SettingsPage() {
   const handleSavePrivacy = (value: string) => {
     setPrivacy(value);
     localStorage.setItem("profilePrivacy", value);
-    setShowPrivacyModal(false);
   };
 
   const PRIVACY_LABELS: Record<string, string> = {
@@ -185,7 +184,7 @@ export default function SettingsPage() {
                   <button
                     key={option.id}
                     onClick={() => handleSavePrivacy(option.id)}
-                    className={`flex items-start gap-3 p-4 rounded-2xl border transition-all text-left ${
+                    className={`flex items-start gap-3 p-4 rounded-2xl border transition-all text-left min-h-[96px] ${
                       privacy === option.id 
                         ? "bg-primary/10 border-primary" 
                         : "bg-background border-border hover:border-muted cursor-pointer"
