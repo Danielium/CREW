@@ -187,67 +187,66 @@ export default function SettingsPage() {
       </div>
 
       {/* Privacy Select Modal */}
-      {showPrivacyModal && (
-        <div className="fixed inset-0 z-[100] flex justify-center pointer-events-none">
-          <div className="w-full max-w-[480px] h-full relative pointer-events-none flex flex-col justify-end">
-            <div 
-              className="absolute inset-0 bg-gradient-to-t from-black/80 to-black/40 pointer-events-auto" 
-              onClick={() => setShowPrivacyModal(false)}
-            ></div>
-            <div 
-              className="w-full bg-card border-t border-border rounded-t-[32px] p-6 pb-32 pointer-events-auto relative z-10 animate-in slide-in-from-bottom-full duration-300 shadow-2xl"
-              style={{ 
-                transform: `translateY(${touchOffset}px)`, 
-                transition: touchStartY === 0 ? 'transform 0.3s ease-out' : 'none' 
-              }}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
-              
-              {/* Drag Handle */}
-              <div className="flex justify-center mb-4">
-                <div className="w-12 h-1.5 bg-border rounded-full"></div>
-              </div>
-
-              <div className="mb-6">
-                <h2 className="text-2xl font-black uppercase tracking-tight">Приватность</h2>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                {[
-                  { id: "PUBLIC", title: "Все", desc: "Любой пользователь может видеть вашу статистику и историю пробежек." },
-                  { id: "CLUB", title: "Только клуб", desc: "Ваши пробежки видны только участникам вашего бегового клуба." },
-                  { id: "PRIVATE", title: "Только я", desc: "Ваша статистика полностью приватна и видна только вам." },
-                ].map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => handleSavePrivacy(option.id)}
-                    className={`flex items-start gap-3 p-4 rounded-2xl border transition-all text-left min-h-[96px] ${
-                      privacy === option.id 
-                        ? "bg-primary/10 border-primary" 
-                        : "bg-background border-border hover:border-muted cursor-pointer"
-                    }`}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className={`font-bold text-sm uppercase ${privacy === option.id ? "text-primary" : "text-foreground"}`}>
-                          {option.title}
-                        </span>
-                        {privacy === option.id && (
-                          <div className="w-2 h-2 rounded-full bg-primary" />
-                        )}
-                      </div>
-                      <p className="text-xs text-muted mt-1 leading-relaxed">{option.desc}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
+      <div 
+        className={`fixed inset-0 z-[100] flex justify-center ${showPrivacyModal ? 'pointer-events-auto' : 'pointer-events-none'}`}
+      >
+        <div className="w-full max-w-[480px] h-full relative pointer-events-none flex flex-col justify-end overflow-hidden">
+          <div 
+            className={`absolute inset-0 bg-gradient-to-t from-black/80 to-black/40 transition-opacity duration-500 ${showPrivacyModal ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} 
+            onClick={() => setShowPrivacyModal(false)}
+          ></div>
+          <div 
+            className={`w-full bg-card border-t border-border rounded-t-[32px] p-6 pb-32 relative z-10 shadow-2xl ${touchOffset > 0 ? 'transition-none' : 'transition-transform duration-500 ease-in-out'} ${showPrivacyModal ? 'pointer-events-auto' : 'pointer-events-none'}`}
+            style={{ 
+              transform: showPrivacyModal ? `translateY(${touchOffset}px)` : 'translateY(100%)'
+            }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            
+            {/* Drag Handle */}
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-1.5 bg-border rounded-full"></div>
             </div>
+
+            <div className="mb-6">
+              <h2 className="text-2xl font-black uppercase tracking-tight">Приватность</h2>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {[
+                { id: "PUBLIC", title: "Все", desc: "Любой пользователь может видеть вашу статистику и историю пробежек." },
+                { id: "CLUB", title: "Только клуб", desc: "Ваши пробежки видны только участникам вашего бегового клуба." },
+                { id: "PRIVATE", title: "Только я", desc: "Ваша статистика полностью приватна и видна только вам." },
+              ].map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => handleSavePrivacy(option.id)}
+                  className={`flex items-start gap-3 p-4 rounded-2xl border transition-all text-left min-h-[96px] ${
+                    privacy === option.id 
+                      ? "bg-primary/10 border-primary" 
+                      : "bg-background border-border hover:border-muted cursor-pointer"
+                  }`}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className={`font-bold text-sm uppercase ${privacy === option.id ? "text-primary" : "text-foreground"}`}>
+                        {option.title}
+                      </span>
+                      {privacy === option.id && (
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                      )}
+                    </div>
+                    <p className="text-xs text-muted mt-1 leading-relaxed">{option.desc}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+
           </div>
         </div>
-      )}
+      </div>
 
     </div>
   );
