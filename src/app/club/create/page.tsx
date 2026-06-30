@@ -12,6 +12,15 @@ const AVAILABLE_TAGS = [
   "Track", "Trail", "Morning Crew", "Night Owls", "Beer Runners"
 ];
 
+const DEFAULT_LOGO = {
+  shape: "triangle",
+  pattern: "solid",
+  color1: "#CCFF00",
+  color2: "#111111",
+  iconName: "Zap",
+  iconColor: "#111111"
+};
+
 export default function CreateClubPage() {
   const router = useRouter();
   const { data: session } = useSession();
@@ -20,7 +29,7 @@ export default function CreateClubPage() {
   const [joinType, setJoinType] = useState("OPEN");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [logoConfig, setLogoConfig] = useState<any>(null);
+  const [logoConfig, setLogoConfig] = useState<any>(DEFAULT_LOGO);
 
   useEffect(() => {
     const savedLogo = localStorage.getItem("clubLogoConfig");
