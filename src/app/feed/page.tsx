@@ -55,11 +55,12 @@ const compressImage = async (file: File): Promise<string> => {
     reader.readAsDataURL(file);
   });
 };
+let cachedFeedPosts: Post[] | null = null;
 
 export default function FeedTab() {
   const { data: session } = useSession();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [posts, setPosts] = useState<Post[]>(cachedFeedPosts || []);
+  const [isLoading, setIsLoading] = useState(!cachedFeedPosts);
   
   // Post Creation State
   const [newPostContent, setNewPostContent] = useState("");
@@ -100,6 +101,7 @@ export default function FeedTab() {
       const data = await res.json();
       if (data.posts) {
         setPosts(data.posts);
+        cachedFeedPosts = data.posts;
       }
     } catch (e) {
       console.error(e);
@@ -107,6 +109,12 @@ export default function FeedTab() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (posts.length > 0) {
+      cachedFeedPosts = posts;
+    }
+  }, [posts]);
 
   const handleImageAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

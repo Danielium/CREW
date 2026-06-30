@@ -8,10 +8,12 @@ import { ImageCropperModal } from "@/components/ImageCropperModal";
 
 
 
+let cachedProfileData: any = null;
+
 export default function ProfileTab() {
   const { data: session, update: updateSession } = useSession();
-  const [userData, setUserData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [userData, setUserData] = useState<any>(cachedProfileData);
+  const [isLoading, setIsLoading] = useState(!cachedProfileData);
   
   // Edit Profile Modal State
   const [showEditModal, setShowEditModal] = useState(false);
@@ -64,6 +66,7 @@ export default function ProfileTab() {
       const data = await res.json();
       if (data.user) {
         setUserData(data.user);
+        cachedProfileData = data.user;
         setEditName(data.user.name || "");
         setEditAvatar(data.user.image || "");
         setEditIsPrivate(data.user.isPrivate || false);
