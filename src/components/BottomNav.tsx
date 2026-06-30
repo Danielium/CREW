@@ -68,28 +68,24 @@ export default function BottomNav() {
       style={{ bottom: "calc(1.5rem + var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px)))" }}
     >
       <div className="bg-card/70 backdrop-blur-3xl rounded-[32px] px-2 py-2 flex justify-between items-center shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] border border-border relative">
-        
-        {/* Sliding Pill Animation */}
-        {activeIndex !== -1 && (
-          <div className="absolute top-2 left-2 right-2 bottom-0 z-0 pointer-events-none flex">
-            <div 
-              className="w-1/4 h-8 flex justify-center transition-transform duration-300 ease-out"
-              style={{ transform: `translateX(${activeIndex * 100}%)` }}
-            >
-              <div className="w-16 h-full bg-primary/20 rounded-full" />
-            </div>
-          </div>
-        )}
-
         {navItems.map((item) => {
           const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path));
           const Icon = item.icon;
           return (
-            <Link key={item.name} href={item.path} className="flex flex-col items-center justify-center flex-1 relative z-10 pb-1">
-              <div className={`h-8 flex items-center justify-center transition-colors ${isActive ? 'text-primary' : 'text-muted hover:text-foreground'}`}>
-                <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+            <Link key={item.name} href={item.path} className="flex flex-col items-center justify-center flex-1 relative z-10 pb-1 group">
+              <div className="relative w-16 h-8 flex items-center justify-center">
+                {/* Growing Pill Background */}
+                <div 
+                  className={`absolute top-0 bottom-0 left-1/2 -translate-x-1/2 bg-primary/20 rounded-full transition-all duration-300 ease-out ${
+                    isActive ? 'w-full opacity-100 scale-100' : 'w-0 opacity-0 scale-50'
+                  }`} 
+                />
+                {/* Icon */}
+                <div className={`relative z-10 transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted group-hover:text-foreground'}`}>
+                  <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                </div>
               </div>
-              <span className={`text-[10px] mt-0.5 font-medium transition-colors ${isActive ? 'text-primary' : 'text-muted'}`}>
+              <span className={`text-[10px] mt-0.5 font-medium transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted'}`}>
                 {item.name}
               </span>
             </Link>
