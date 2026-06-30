@@ -341,11 +341,12 @@ export default function ProfileTab() {
         {/* Stats Summary */}
         <div className="flex flex-col mb-4">
           <button 
-            className="flex items-center gap-1 mb-1 w-fit hover:opacity-70 transition-opacity py-3 pr-6 -ml-3 pl-3"
-            onClick={() => setShowDatePicker(true)}
+            className={`flex items-center gap-1 mb-1 w-fit py-3 pr-6 -ml-3 pl-3 ${timeRange !== "ALL" ? "hover:opacity-70 transition-opacity cursor-pointer" : "cursor-default"}`}
+            onClick={() => timeRange !== "ALL" && setShowDatePicker(true)}
+            disabled={timeRange === "ALL"}
           >
             <span className="text-sm font-medium">{getDateLabel()}</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            {timeRange !== "ALL" && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>}
           </button>
           
           <h2 className="text-[80px] leading-[0.8] font-black italic tracking-tighter -ml-1">
