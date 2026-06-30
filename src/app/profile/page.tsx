@@ -161,7 +161,8 @@ export default function ProfileTab() {
       const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
       for (let i = 0; i < daysInMonth; i++) {
         const d = new Date(selectedYear, selectedMonth, i + 1);
-        buckets.push({ label: (i % 7 === 0 || i === daysInMonth - 1) ? d.getDate().toString() : "", value: 0 });
+        const isLabel = i === 0 || i === 9 || i === 19 || i === daysInMonth - 1;
+        buckets.push({ label: isLabel ? d.getDate().toString() : "", value: 0 });
       }
       filteredRuns.forEach((r: any) => {
         const d = new Date(r.startTime);
