@@ -72,20 +72,18 @@ export default function BottomNav() {
           const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path));
           const Icon = item.icon;
           return (
-            <Link key={item.name} href={item.path} className="flex flex-col items-center justify-center flex-1 relative z-10 pb-1 group">
-              <div className="relative w-16 h-8 flex items-center justify-center">
-                {/* Growing Pill Background */}
-                <div 
-                  className={`absolute top-0 bottom-0 left-1/2 -translate-x-1/2 bg-primary/20 rounded-full transition-all duration-300 ease-out ${
-                    isActive ? 'w-full opacity-100 scale-100' : 'w-0 opacity-0 scale-50'
-                  }`} 
-                />
-                {/* Icon */}
-                <div className={`relative z-10 transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted group-hover:text-foreground'}`}>
-                  <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-                </div>
+            <Link key={item.name} href={item.path} className="flex flex-col items-center justify-center flex-1 relative z-10 py-1.5 group">
+              {/* Growing Pill Background */}
+              <div 
+                className={`absolute inset-y-0 left-1/2 -translate-x-1/2 bg-primary/20 rounded-2xl transition-all duration-300 ease-out z-0 ${
+                  isActive ? 'w-[85%] opacity-100 scale-100' : 'w-0 opacity-0 scale-50'
+                }`} 
+              />
+              {/* Icon */}
+              <div className={`relative z-10 transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted group-hover:text-foreground'}`}>
+                <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
               </div>
-              <span className={`text-[10px] mt-0.5 font-medium transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted'}`}>
+              <span className={`relative z-10 text-[10px] mt-0.5 font-medium transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted'}`}>
                 {item.name}
               </span>
             </Link>
