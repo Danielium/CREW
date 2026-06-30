@@ -2,7 +2,7 @@
 import { ArrowLeft, Bell, Globe, Shield, LogOut, ChevronRight, X } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
@@ -19,6 +19,10 @@ export default function SettingsPage() {
   const [touchOffset, setTouchOffset] = useState(0);
 
   const [isTgEnv, setIsTgEnv] = useState(false);
+  
+  const { data: session } = useSession();
+  const [isStravaConnected, setIsStravaConnected] = useState(false);
+  const [isLoadingIntegrations, setIsLoadingIntegrations] = useState(true);
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -30,6 +34,24 @@ export default function SettingsPage() {
       setIsTgEnv(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (session?.user) {
+      fetch(`/api/users/${(session.user as any).id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.user?.accounts) {
+            const hasStrava = data.user.accounts.some((acc: any) => acc.provider === 'strava');
+            setIsStravaConnected(hasStrava);
+          }
+          setIsLoadingIntegrations(false);
+        })
+        .catch(err => {
+          console.error("Failed to fetch user integrations", err);
+          setIsLoadingIntegrations(false);
+        });
+    }
+  }, [session]);
 
   useEffect(() => {
     if (showPrivacyModal) {
@@ -180,13 +202,34 @@ export default function SettingsPage() {
           <h3 className="text-[10px] font-bold text-muted uppercase tracking-wider pl-1">Интеграции</h3>
           <div className="bg-card border border-border rounded-[24px] overflow-hidden divide-y divide-border">
             
-            <div className="flex items-center justify-between p-4 opacity-50 pointer-events-none">
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 bg-[#FC4C02] rounded flex items-center justify-center text-white text-[10px] font-bold">S</div>
-                <p className="font-bold">Strava</p>
+            {isLoadingIntegrations ? (
+              <div className="flex items-center justify-between p-4 opacity-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 bg-[#FC4C02] rounded flex items-center justify-center text-white text-[10px] font-bold">S</div>
+                  <p className="font-bold">Strava</p>
+                </div>
+                <span className="text-xs font-bold text-muted">Загрузка...</span>
               </div>
-              <span className="text-xs font-bold text-muted uppercase">Скоро</span>
-            </div>
+            ) : isStravaConnected ? (
+              <div className="flex items-center justify-between p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 bg-[#FC4C02] rounded flex items-center justify-center text-white text-[10px] font-bold">S</div>
+                  <p className="font-bold">Strava</p>
+                </div>
+                <span className="text-xs font-bold text-primary uppercase">Подключено</span>
+              </div>
+            ) : (
+              <Link href="/api/strava/connect" className="flex items-center justify-between p-4 hover:bg-border/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 bg-[#FC4C02] rounded flex items-center justify-center text-white text-[10px] font-bold">S</div>
+                  <p className="font-bold">Strava</p>
+                </div>
+                <div className="flex items-center gap-1 text-primary">
+                  <span className="text-xs font-bold uppercase">Подключить</span>
+                  <ChevronRight size={14} />
+                </div>
+              </Link>
+            )}
 
             <div className="flex items-center justify-between p-4 opacity-50 pointer-events-none">
               <div className="flex items-center gap-3">

@@ -18,6 +18,7 @@ export async function GET(
         runs: {
           orderBy: { startTime: 'desc' }
         },
+        accounts: true,
       }
     });
 
@@ -37,6 +38,13 @@ export async function GET(
           isPrivate: true
         } 
       });
+    }
+
+    if (!isOwner) {
+      delete (user as any).accounts;
+    } else if (user.accounts) {
+      // Strip sensitive tokens
+      (user as any).accounts = user.accounts.map(acc => ({ provider: acc.provider }));
     }
 
     // Return full data
