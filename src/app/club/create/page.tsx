@@ -105,16 +105,16 @@ export default function CreateClubPage() {
               onChange={(e) => setName(e.target.value)}
               maxLength={20}
               className="w-full bg-card border border-border rounded-2xl px-4 py-4 text-foreground text-lg focus:outline-none focus:border-primary transition-colors font-black uppercase tracking-wide"
-              placeholder="GHOST RUNNERS"
+              placeholder="БЕГОВЫЕ ТИГРЫ"
             />
           </div>
           <div>
-            <label className="text-[10px] font-bold text-muted uppercase tracking-wider mb-2 block">Манифест (описание)</label>
+            <label className="text-[10px] font-bold text-muted uppercase tracking-wider mb-2 block">Описание клуба</label>
             <textarea 
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
               className="w-full bg-card border border-border rounded-2xl px-4 py-3 text-foreground focus:outline-none focus:border-primary transition-colors text-sm min-h-[100px] resize-none"
-              placeholder="Мы бегаем по ночам и не смотрим на темп."
+              placeholder="Собираемся по выходным и бегаем в кайф."
             />
           </div>
         </div>

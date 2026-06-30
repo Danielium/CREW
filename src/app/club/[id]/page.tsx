@@ -147,8 +147,8 @@ export default function ClubProfilePage() {
         
         {/* About */}
         <div>
-          <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-2">Манифест</h3>
-          <p className="text-sm leading-relaxed">{club.description || "Без описания"}</p>
+          <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-2">Описание</h3>
+          <p className="text-sm leading-relaxed whitespace-pre-wrap">{club.description || "Без описания"}</p>
         </div>
 
         {/* Join CTA for Non-members */}
@@ -210,7 +210,7 @@ export default function ClubProfilePage() {
         {isActiveMember && (
           <div>
             <div className="flex justify-between items-end mb-4">
-              <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Ростер Клуба</h3>
+              <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Участники</h3>
             </div>
             
             <div className="flex flex-col gap-2">
