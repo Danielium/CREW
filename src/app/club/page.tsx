@@ -49,7 +49,7 @@ export default function ClubTab() {
   
   const tabs = inClub ? ["События", "Атлеты", "Клубы"] : ["Клубы"];
 
-  if (isLoadingUser || status === "loading") {
+  if (isLoadingUser) {
     return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-primary" size={40} /></div>;
   }
 
