@@ -6,11 +6,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PinShowModal from "@/components/PinShowModal";
 import PinEntryModal from "@/components/PinEntryModal";
+import { globalCache } from "@/lib/cache";
 
 export default function FeedEvents({ userData }: { userData: any }) {
   const router = useRouter();
-  const [events, setEvents] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [events, setEvents] = useState<any[]>(globalCache.events || []);
+  const [isLoading, setIsLoading] = useState(!globalCache.events);
   const [showPinForEvent, setShowPinForEvent] = useState<string | null>(null);
   const [pinEntryEvent, setPinEntryEvent] = useState<string | null>(null);
 
@@ -18,7 +19,10 @@ export default function FeedEvents({ userData }: { userData: any }) {
     fetch('/api/events', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
-        if (data.events) setEvents(data.events);
+        if (data.events) {
+          setEvents(data.events);
+          globalCache.events = data.events;
+        }
         setIsLoading(false);
       });
   }, []);

@@ -20,23 +20,40 @@ export function SplashLoader({ children }: { children: React.ReactNode }) {
     if (status === "authenticated" && session?.user) {
       const loadAll = async () => {
         try {
-          const [feedRes, userRes, clubsRes] = await Promise.all([
+          const [feedRes, userRes, clubsRes, eventsRes] = await Promise.all([
             fetch('/api/feed', { cache: 'no-store' }),
             fetch(`/api/users?userId=${(session.user as any).id}`),
-            fetch('/api/clubs', { cache: 'no-store' })
+            fetch('/api/clubs', { cache: 'no-store' }),
+            fetch('/api/events', { cache: 'no-store' })
           ]);
           
           if (feedRes.ok) {
             const feedData = await feedRes.json();
             globalCache.feedPosts = feedData.posts;
           }
+          let loadedUser = null;
           if (userRes.ok) {
             const userData = await userRes.json();
             globalCache.userData = userData.user;
+            loadedUser = userData.user;
           }
           if (clubsRes.ok) {
             const clubsData = await clubsRes.json();
             globalCache.clubs = clubsData.clubs;
+          }
+          if (eventsRes.ok) {
+            const eventsData = await eventsRes.json();
+            globalCache.events = eventsData.events;
+          }
+
+          // Fetch leaderboard if user is in a club
+          if (loadedUser?.clubMembers?.length > 0) {
+            const clubId = loadedUser.clubMembers[0].clubId;
+            const lbRes = await fetch(`/api/leaderboard?clubId=${clubId}`, { cache: 'no-store' });
+            if (lbRes.ok) {
+              const lbData = await lbRes.json();
+              globalCache.leaderboard[clubId] = lbData.users;
+            }
           }
         } catch (e) {
           console.error("Failed to load initial data", e);

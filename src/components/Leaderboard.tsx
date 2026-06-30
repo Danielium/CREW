@@ -5,16 +5,22 @@ import { Loader2, User } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
+import { globalCache } from "@/lib/cache";
+
 export default function Leaderboard({ clubId }: { clubId?: string }) {
   const { data: session } = useSession();
-  const [users, setUsers] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const cacheKey = clubId || 'global';
+  const [users, setUsers] = useState<any[]>(globalCache.leaderboard[cacheKey] || []);
+  const [isLoading, setIsLoading] = useState(!globalCache.leaderboard[cacheKey]);
 
   useEffect(() => {
     fetch(`/api/leaderboard${clubId ? `?clubId=${clubId}` : ''}`, { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
-        if (data.users) setUsers(data.users);
+        if (data.users) {
+          setUsers(data.users);
+          globalCache.leaderboard[cacheKey] = data.users;
+        }
         setIsLoading(false);
       });
   }, [clubId]);
