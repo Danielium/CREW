@@ -24,7 +24,8 @@ export default function EditEventPage() {
     date: "",
     time: "",
     distance: "",
-    image: ""
+    image: "",
+    routeData: null as string | null
   });
   const [paceFrom, setPaceFrom] = useState("");
   const [paceTo, setPaceTo] = useState("");
@@ -55,7 +56,8 @@ export default function EditEventPage() {
             date: dateStr,
             time: timeStr,
             distance: ev.distance ? ev.distance.toString() : "",
-            image: ev.image || ""
+            image: ev.image || "",
+            routeData: ev.routeData || null
           });
           if (paces.length > 0) {
             paces.sort();
@@ -112,7 +114,8 @@ export default function EditEventPage() {
           date: dateTime,
           distance: form.distance,
           pace: paces,
-          image: uploadedImageUrl
+          image: uploadedImageUrl,
+          routeData: form.routeData
         })
       });
 
@@ -243,6 +246,7 @@ export default function EditEventPage() {
                setForm({...form, distance: dist});
              }
           }} 
+          onRouteDataChange={(route) => setForm(prev => ({...prev, routeData: route}))} 
         />
 
         <div className="flex flex-col gap-2">
