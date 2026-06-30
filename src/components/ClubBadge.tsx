@@ -88,7 +88,7 @@ export default function ClubBadge({
 
   // Adjust icon size and position specifically for triangle so it doesn't spill out
   const iconSize = shape === "triangle" ? size * 0.4 : size * 0.55;
-  const iconMarginTop = shape === "triangle" ? size * 0.15 : 0;
+  const iconMarginTop = shape === "triangle" ? size * 0.25 : 0;
 
   return (
     <div 
