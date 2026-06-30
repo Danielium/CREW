@@ -302,30 +302,44 @@ export default function ProfileTab() {
       <div className="flex flex-col gap-6 px-4">
         
         {/* Segmented Control */}
-        <div className="flex bg-card border border-border rounded-full p-1 mt-2 mx-auto w-full max-w-[320px]">
-          {[
-            { id: "W", label: "Н" },
-            { id: "M", label: "М" },
-            { id: "Y", label: "Г" },
-            { id: "ALL", label: "Все" }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setTimeRange(tab.id as any);
-                if (typeof window !== 'undefined') {
-                  (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');
-                }
+        <div className="bg-card border border-border rounded-full p-1 mt-2 mx-auto w-full max-w-[320px] relative">
+          <div className="flex relative w-full h-full">
+            {/* Animated Pill */}
+            <div 
+              className="absolute top-0 bottom-0 w-1/4 bg-primary rounded-full transition-transform duration-300 ease-out z-0 shadow-sm"
+              style={{
+                transform: `translateX(${
+                  timeRange === "W" ? "0%" :
+                  timeRange === "M" ? "100%" :
+                  timeRange === "Y" ? "200%" :
+                  "300%"
+                })`
               }}
-              className={`flex-1 py-2 text-sm font-bold rounded-full transition-colors ${
-                timeRange === tab.id 
-                  ? "bg-primary text-black" 
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+            />
+            {[
+              { id: "W", label: "Н" },
+              { id: "M", label: "М" },
+              { id: "Y", label: "Г" },
+              { id: "ALL", label: "Все" }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setTimeRange(tab.id as any);
+                  if (typeof window !== 'undefined') {
+                    (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');
+                  }
+                }}
+                className={`flex-1 py-2 text-sm font-bold rounded-full transition-colors relative z-10 ${
+                  timeRange === tab.id 
+                    ? "text-black" 
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Stats Summary */}
