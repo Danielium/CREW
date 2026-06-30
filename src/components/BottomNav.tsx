@@ -64,26 +64,28 @@ export default function BottomNav() {
 
   return (
     <div 
-      className={`absolute left-4 right-4 z-50 transition-transform duration-300 ease-in-out ${(isVisible && !isHiddenForce) ? "translate-y-0" : "translate-y-32"}`}
-      style={{ bottom: "calc(1.5rem + var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px)))" }}
+      className={`absolute left-4 right-4 z-50 bottom-6 transition-transform duration-300 ease-in-out ${(isVisible && !isHiddenForce) ? "translate-y-0" : "translate-y-[150%]"}`}
+      style={{ marginBottom: "var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px))" }}
     >
-      <div className="bg-card/70 backdrop-blur-3xl rounded-[32px] px-2 py-2 flex justify-between items-center shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] border border-border relative">
+      <div className="bg-card/70 backdrop-blur-3xl rounded-[32px] px-2 pt-2 pb-2.5 flex justify-between items-center shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] border border-border relative">
         {navItems.map((item) => {
           const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path));
           const Icon = item.icon;
           return (
-            <Link key={item.name} href={item.path} className="flex flex-col items-center justify-center flex-1 relative z-10 py-1.5 group">
-              {/* Growing Pill Background */}
-              <div 
-                className={`absolute inset-y-0 left-1/2 -translate-x-1/2 bg-primary/20 rounded-2xl transition-all duration-300 ease-out z-0 ${
-                  isActive ? 'w-[85%] opacity-100 scale-100' : 'w-0 opacity-0 scale-50'
-                }`} 
-              />
-              {/* Icon */}
-              <div className={`relative z-10 transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted group-hover:text-foreground'}`}>
-                <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+            <Link key={item.name} href={item.path} className="flex flex-col items-center justify-center flex-1 relative z-10 group">
+              <div className="relative w-16 h-8 flex items-center justify-center">
+                {/* Growing Pill Background */}
+                <div 
+                  className={`absolute inset-0 bg-primary/20 rounded-full transition-all duration-300 ease-out ${
+                    isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
+                  }`} 
+                />
+                {/* Icon */}
+                <div className={`relative z-10 transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted group-hover:text-foreground'}`}>
+                  <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                </div>
               </div>
-              <span className={`relative z-10 text-[10px] mt-0.5 font-medium transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted'}`}>
+              <span className={`text-[10px] mt-1 font-medium transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted'}`}>
                 {item.name}
               </span>
             </Link>
