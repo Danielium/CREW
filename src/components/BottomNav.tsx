@@ -73,19 +73,17 @@ export default function BottomNav() {
           const Icon = item.icon;
           return (
             <Link key={item.name} href={item.path} className="flex flex-col items-center justify-center flex-1 relative z-10 py-1 group">
-              <div className="relative w-[60px] h-7 flex items-center justify-center mb-1">
-                {/* Growing Pill Background */}
-                <div 
-                  className={`absolute inset-0 bg-primary/20 rounded-full transition-all duration-300 ease-out ${
-                    isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
-                  }`} 
-                />
-                {/* Icon */}
-                <div className={`relative z-10 transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted group-hover:text-foreground'}`}>
-                  <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-                </div>
+              {/* Growing Pill Background */}
+              <div 
+                className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary/20 rounded-full transition-all duration-300 ease-out z-0 ${
+                  isActive ? 'w-[76px] h-[42px] opacity-100 scale-100' : 'w-0 h-0 opacity-0 scale-50'
+                }`} 
+              />
+              {/* Icon */}
+              <div className={`relative z-10 flex items-center justify-center mb-1 transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted group-hover:text-foreground'}`}>
+                <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
               </div>
-              <span className={`text-[10px] font-medium leading-none transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted'}`}>
+              <span className={`relative z-10 text-[10px] font-medium leading-none transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted'}`}>
                 {item.name}
               </span>
             </Link>
