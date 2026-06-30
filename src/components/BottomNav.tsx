@@ -64,7 +64,7 @@ export default function BottomNav() {
 
   return (
     <div 
-      className={`fixed left-4 right-4 z-[100] transition-transform duration-300 ease-in-out ${(isVisible && !isHiddenForce) ? "translate-y-0" : "translate-y-[200%]"}`}
+      className={`absolute left-8 right-8 z-[100] transition-transform duration-300 ease-in-out ${(isVisible && !isHiddenForce) ? "translate-y-0" : "translate-y-[200%]"}`}
       style={{ bottom: "calc(1.5rem + var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px)))" }}
     >
       <div className="bg-card/70 backdrop-blur-3xl rounded-full px-2 py-1.5 flex justify-between items-center shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] border border-border">
