@@ -76,9 +76,9 @@ export function SplashLoader({ children }: { children: React.ReactNode }) {
           alt="CREW Logo" 
           className="w-28 h-28 animate-pulse drop-shadow-[0_0_40px_rgba(204,255,0,0.3)] object-contain" 
         />
-        <div className="mt-8 flex flex-col items-center gap-2">
-          <h1 className="text-xl font-black tracking-[0.2em] uppercase animate-pulse text-foreground">CREW</h1>
-          <p className="text-muted text-[10px] font-bold tracking-[0.3em] uppercase animate-pulse opacity-50">Загрузка...</p>
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <img src="/crew_text.png" alt="CREW" className="h-6 object-contain animate-pulse" />
+          <img src="/loading_text.png" alt="Загрузка..." className="h-3 object-contain animate-pulse opacity-50" />
         </div>
       </div>
     );
