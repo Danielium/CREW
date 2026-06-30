@@ -12,7 +12,7 @@ export function MainScrollContainer({ children }: { children: ReactNode }) {
   return (
     <div 
       id="main-scroll-container" 
-      className={`flex-1 overflow-y-auto no-scrollbar relative z-10 ${hideBottomNav ? "" : "pb-24"}`}
+      className={`flex-1 overflow-y-auto overflow-x-hidden no-scrollbar relative z-10 ${hideBottomNav ? "" : "pb-24"}`}
     >
       {children}
     </div>
