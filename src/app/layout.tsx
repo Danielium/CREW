@@ -7,6 +7,7 @@ import { AuthProvider } from "@/components/AuthProvider";
 import { TelegramInit } from "@/components/TelegramInit";
 import { TelegramBackButton } from "@/components/TelegramBackButton";
 import { MainScrollContainer } from "@/components/MainScrollContainer";
+import { SplashLoader } from "@/components/SplashLoader";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -48,10 +49,12 @@ export default function RootLayout({
               paddingBottom: "var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px))"
             }}
           >
-            <MainScrollContainer>
-              {children}
-            </MainScrollContainer>
-            <BottomNav />
+            <SplashLoader>
+              <MainScrollContainer>
+                {children}
+              </MainScrollContainer>
+              <BottomNav />
+            </SplashLoader>
           </div>
         </AuthProvider>
       </body>

@@ -7,13 +7,12 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
 
 
-
-let cachedProfileData: any = null;
+import { globalCache } from "@/lib/cache";
 
 export default function ProfileTab() {
   const { data: session, update: updateSession } = useSession();
-  const [userData, setUserData] = useState<any>(cachedProfileData);
-  const [isLoading, setIsLoading] = useState(!cachedProfileData);
+  const [userData, setUserData] = useState<any>(globalCache.userData);
+  const [isLoading, setIsLoading] = useState(!globalCache.userData);
   
   // Edit Profile Modal State
   const [showEditModal, setShowEditModal] = useState(false);
@@ -66,7 +65,7 @@ export default function ProfileTab() {
       const data = await res.json();
       if (data.user) {
         setUserData(data.user);
-        cachedProfileData = data.user;
+        globalCache.userData = data.user;
         setEditName(data.user.name || "");
         setEditAvatar(data.user.image || "");
         setEditIsPrivate(data.user.isPrivate || false);

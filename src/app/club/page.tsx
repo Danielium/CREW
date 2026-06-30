@@ -8,14 +8,13 @@ import { useSession } from "next-auth/react";
 import FeedEvents from "@/components/FeedEvents";
 import GlobalClubs from "@/components/GlobalClubs";
 import Leaderboard from "@/components/Leaderboard";
-
-let cachedUserData: any = null;
+import { globalCache } from "@/lib/cache";
 
 export default function ClubTab() {
   const { data: session, status } = useSession();
-  const [activeTab, setActiveTab] = useState(cachedUserData?.clubMembers?.length > 0 ? "События" : "Клубы");
-  const [userData, setUserData] = useState<any>(cachedUserData);
-  const [isLoadingUser, setIsLoadingUser] = useState(!cachedUserData);
+  const [activeTab, setActiveTab] = useState(globalCache.userData?.clubMembers?.length > 0 ? "События" : "Клубы");
+  const [userData, setUserData] = useState<any>(globalCache.userData);
+  const [isLoadingUser, setIsLoadingUser] = useState(!globalCache.userData);
 
   useEffect(() => {
     if (status === "loading") return; // Wait for session to initialize
@@ -32,7 +31,7 @@ export default function ClubTab() {
         .then(data => {
           if (data.user) {
             setUserData(data.user);
-            cachedUserData = data.user;
+            globalCache.userData = data.user;
           }
           if (data?.user?.clubMembers && data.user.clubMembers.length > 0) {
             setActiveTab("События");

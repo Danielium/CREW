@@ -55,12 +55,12 @@ const compressImage = async (file: File): Promise<string> => {
     reader.readAsDataURL(file);
   });
 };
-let cachedFeedPosts: Post[] | null = null;
+import { globalCache } from "@/lib/cache";
 
 export default function FeedTab() {
   const { data: session } = useSession();
-  const [posts, setPosts] = useState<Post[]>(cachedFeedPosts || []);
-  const [isLoading, setIsLoading] = useState(!cachedFeedPosts);
+  const [posts, setPosts] = useState<Post[]>(globalCache.feedPosts || []);
+  const [isLoading, setIsLoading] = useState(!globalCache.feedPosts);
   
   // Post Creation State
   const [newPostContent, setNewPostContent] = useState("");
@@ -101,7 +101,7 @@ export default function FeedTab() {
       const data = await res.json();
       if (data.posts) {
         setPosts(data.posts);
-        cachedFeedPosts = data.posts;
+        globalCache.feedPosts = data.posts;
       }
     } catch (e) {
       console.error(e);
@@ -112,7 +112,7 @@ export default function FeedTab() {
 
   useEffect(() => {
     if (posts.length > 0) {
-      cachedFeedPosts = posts;
+      globalCache.feedPosts = posts;
     }
   }, [posts]);
 
