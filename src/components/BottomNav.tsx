@@ -56,6 +56,8 @@ export default function BottomNav() {
     { name: "Профиль", path: "/profile", icon: User },
   ];
 
+  const activeIndex = navItems.findIndex(item => pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path)));
+
   if (pathname === '/login' || pathname.startsWith('/club/logo-builder') || pathname.startsWith('/map/create') || pathname.startsWith('/map/requests') || pathname.startsWith('/events/')) {
     return null;
   }
@@ -65,16 +67,29 @@ export default function BottomNav() {
       className={`absolute left-4 right-4 z-50 transition-transform duration-300 ease-in-out ${(isVisible && !isHiddenForce) ? "translate-y-0" : "translate-y-32"}`}
       style={{ bottom: "calc(1.5rem + var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px)))" }}
     >
-      <div className="bg-card/70 backdrop-blur-3xl rounded-[32px] px-2 py-2 flex justify-between items-center shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] border border-border">
+      <div className="bg-card/70 backdrop-blur-3xl rounded-[32px] px-2 py-2 flex justify-between items-center shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] border border-border relative">
+        
+        {/* Sliding Pill Animation */}
+        {activeIndex !== -1 && (
+          <div className="absolute top-2 left-2 right-2 bottom-0 z-0 pointer-events-none flex">
+            <div 
+              className="w-1/4 h-8 flex justify-center transition-transform duration-300 ease-out"
+              style={{ transform: `translateX(${activeIndex * 100}%)` }}
+            >
+              <div className="w-16 h-full bg-primary/20 rounded-full" />
+            </div>
+          </div>
+        )}
+
         {navItems.map((item) => {
-          const isActive = pathname === item.path;
+          const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path));
           const Icon = item.icon;
           return (
-            <Link key={item.name} href={item.path} className="flex flex-col items-center justify-center flex-1">
-              <div className={`p-2 rounded-full transition-colors ${isActive ? 'bg-primary text-black' : 'text-muted hover:text-foreground'}`}>
+            <Link key={item.name} href={item.path} className="flex flex-col items-center justify-center flex-1 relative z-10 pb-1">
+              <div className={`h-8 flex items-center justify-center transition-colors ${isActive ? 'text-primary' : 'text-muted hover:text-foreground'}`}>
                 <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
               </div>
-              <span className={`text-[10px] mt-1 font-medium ${isActive ? 'text-foreground' : 'text-muted'}`}>
+              <span className={`text-[10px] mt-0.5 font-medium transition-colors ${isActive ? 'text-primary' : 'text-muted'}`}>
                 {item.name}
               </span>
             </Link>
