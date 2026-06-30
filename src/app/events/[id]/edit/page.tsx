@@ -240,6 +240,7 @@ export default function EditEventPage() {
         </div>
 
         <MapRouteBuilder 
+          initialRouteData={form.routeData}
           onDistanceChange={(dist) => {
              // Only update if it's an actual distance calculated by map or if form is empty
              if (dist !== "0.00" || form.distance === "") {

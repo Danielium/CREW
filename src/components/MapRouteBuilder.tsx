@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -18,6 +18,7 @@ L.Icon.Default.mergeOptions({
 interface MapRouteBuilderProps {
   onDistanceChange: (distance: string) => void;
   onRouteDataChange?: (routeData: string) => void;
+  initialRouteData?: string | null;
 }
 
 function MapController({ 
@@ -54,7 +55,7 @@ function RouteEvents({
   return null;
 }
 
-export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange }: MapRouteBuilderProps) {
+export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, initialRouteData }: MapRouteBuilderProps) {
   const [waypoints, setWaypoints] = useState<L.LatLng[]>([]);
   const [segments, setSegments] = useState<L.LatLng[][]>([]);
   const [isRouting, setIsRouting] = useState(false);
@@ -65,6 +66,24 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange }:
   const [isSearching, setIsSearching] = useState(false);
   
   const mapRef = useRef<L.Map | null>(null);
+
+  useEffect(() => {
+    if (initialRouteData && initialRouteData !== "[]") {
+      try {
+        const parsed = JSON.parse(initialRouteData);
+        if (parsed && parsed.length > 0) {
+          const latLngs = parsed.map((p: any) => L.latLng(p.lat, p.lng));
+          // If we have just points without actual waypoints, we can just treat the first and last as waypoints,
+          // and the whole array as one segment.
+          setWaypoints([latLngs[0], latLngs[latLngs.length - 1]]);
+          setSegments([latLngs]);
+          // Note: map distance calculation will happen on the first manual action or we can trigger it
+        }
+      } catch (e) {
+        console.error("Failed to parse initialRouteData", e);
+      }
+    }
+  }, []);
 
   const updateDistanceAndRoute = (wps: L.LatLng[], segs: L.LatLng[][], map: L.Map | null = mapRef.current) => {
     if (!map) return;
