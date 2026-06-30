@@ -311,7 +311,12 @@ export default function ProfileTab() {
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setTimeRange(tab.id as any)}
+              onClick={() => {
+                setTimeRange(tab.id as any);
+                if (typeof window !== 'undefined') {
+                  (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');
+                }
+              }}
               className={`flex-1 py-2 text-sm font-bold rounded-full transition-colors ${
                 timeRange === tab.id 
                   ? "bg-primary text-black" 
@@ -467,7 +472,13 @@ export default function ProfileTab() {
                     className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-4 text-center" 
                     style={{ scrollbarWidth: 'none' }}
                     ref={el => { if (el && el.getAttribute('data-init') !== 'true') { el.scrollTop = selectedWeekOffset * 40; el.setAttribute('data-init', 'true'); } }}
-                    onScroll={e => setSelectedWeekOffset(Math.round(e.currentTarget.scrollTop / 40))}
+                    onScroll={e => {
+                      const newOffset = Math.round(e.currentTarget.scrollTop / 40);
+                      if (newOffset !== selectedWeekOffset) {
+                        if (typeof window !== 'undefined') (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged();
+                        setSelectedWeekOffset(newOffset);
+                      }
+                    }}
                   >
                     {[0, 1, 2, 3, 4, 5, 6].map(offset => (
                       <div 
@@ -489,7 +500,13 @@ export default function ProfileTab() {
                       className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-2 text-center" 
                       style={{ scrollbarWidth: 'none' }}
                       ref={el => { if (el && el.getAttribute('data-init') !== 'true') { el.scrollTop = selectedMonth * 40; el.setAttribute('data-init', 'true'); } }}
-                      onScroll={e => setSelectedMonth(Math.round(e.currentTarget.scrollTop / 40))}
+                      onScroll={e => {
+                        const newMonth = Math.round(e.currentTarget.scrollTop / 40);
+                        if (newMonth !== selectedMonth) {
+                          if (typeof window !== 'undefined') (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged();
+                          setSelectedMonth(newMonth);
+                        }
+                      }}
                     >
                       {(selectedYear === now.getFullYear() ? Array.from({length: now.getMonth() + 1}) : Array.from({length: 12})).map((_, i) => (
                         <div 
@@ -517,7 +534,10 @@ export default function ProfileTab() {
                       onScroll={e => {
                         const arr = [now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2];
                         const idx = Math.round(e.currentTarget.scrollTop / 40);
-                        if (arr[idx]) setSelectedYear(arr[idx]);
+                        if (arr[idx] !== undefined && arr[idx] !== selectedYear) {
+                          if (typeof window !== 'undefined') (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged();
+                          setSelectedYear(arr[idx]);
+                        }
                       }}
                     >
                       {[now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2].map((year, i) => (
@@ -550,7 +570,10 @@ export default function ProfileTab() {
                     onScroll={e => {
                       const arr = [now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4];
                       const idx = Math.round(e.currentTarget.scrollTop / 40);
-                      if (arr[idx]) setSelectedYear(arr[idx]);
+                      if (arr[idx] !== undefined && arr[idx] !== selectedYear) {
+                        if (typeof window !== 'undefined') (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged();
+                        setSelectedYear(arr[idx]);
+                      }
                     }}
                   >
                     {[now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4].map((year, i) => (
