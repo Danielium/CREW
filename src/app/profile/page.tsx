@@ -341,7 +341,7 @@ export default function ProfileTab() {
         {/* Stats Summary */}
         <div className="flex flex-col mb-4">
           <button 
-            className="flex items-center gap-1 mb-1 w-fit hover:opacity-70 transition-opacity"
+            className="flex items-center gap-1 mb-1 w-fit hover:opacity-70 transition-opacity py-3 pr-6 -ml-3 pl-3"
             onClick={() => setShowDatePicker(true)}
           >
             <span className="text-sm font-medium">{getDateLabel()}</span>
