@@ -36,9 +36,9 @@ const ICON_MAP: Record<string, any> = {
 const ICONS = Object.keys(ICON_MAP);
 
 export default function LogoBuilder() {
-  const [shape, setShape] = useState<ShapeType>("triangle");
+  const [shape, setShape] = useState<ShapeType>("circle");
   const [pattern, setPattern] = useState<PatternType>("solid");
-  const [color1, setColor1] = useState(COLORS[0]);
+  const [color1, setColor1] = useState(COLORS[5]);
   const [color2, setColor2] = useState(COLORS[6]);
   const [icon, setIcon] = useState("Zap");
   const [iconColor, setIconColor] = useState(COLORS[6]);

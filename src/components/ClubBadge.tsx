@@ -22,9 +22,9 @@ const ICON_MAP: Record<string, any> = {
 
 export default function ClubBadge({
   size = 64,
-  shape = "square",
+  shape = "circle",
   pattern = "solid",
-  color1 = "#CCFF00",
+  color1 = "#FFFFFF",
   color2 = "#111111",
   iconName = "Zap",
   iconColor = "#000000",
@@ -86,6 +86,10 @@ export default function ClubBadge({
 
   const fill = pattern === "solid" ? color1 : `url(#pattern-${pattern})`;
 
+  // Adjust icon size and position specifically for triangle so it doesn't spill out
+  const iconSize = shape === "triangle" ? size * 0.4 : size * 0.55;
+  const iconMarginTop = shape === "triangle" ? size * 0.15 : 0;
+
   return (
     <div 
       className={`relative flex items-center justify-center ${className}`}
@@ -96,9 +100,9 @@ export default function ClubBadge({
         <rect x="0" y="0" width="100" height="100" fill={fill} />
       </svg>
       
-      <div className="absolute inset-0 flex items-center justify-center drop-shadow-md">
+      <div className="absolute inset-0 flex items-center justify-center drop-shadow-md" style={{ marginTop: iconMarginTop }}>
         <IconComponent 
-          size={size * 0.55} 
+          size={iconSize} 
           color={iconColor} 
           strokeWidth={2.5} 
         />

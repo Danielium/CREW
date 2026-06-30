@@ -13,9 +13,9 @@ const AVAILABLE_TAGS = [
 ];
 
 const DEFAULT_LOGO = {
-  shape: "triangle",
+  shape: "circle",
   pattern: "solid",
-  color1: "#CCFF00",
+  color1: "#FFFFFF",
   color2: "#111111",
   iconName: "Zap",
   iconColor: "#111111"
