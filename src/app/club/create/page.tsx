@@ -98,14 +98,14 @@ export default function CreateClubPage() {
         {/* Basic Info */}
         <div className="flex flex-col gap-4">
           <div>
-            <label className="text-[10px] font-bold text-muted uppercase tracking-wider mb-2 block">Название франшизы</label>
+            <label className="text-[10px] font-bold text-muted uppercase tracking-wider mb-2 block">Название клуба</label>
             <input 
               type="text" 
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={20}
               className="w-full bg-card border border-border rounded-2xl px-4 py-4 text-foreground text-lg focus:outline-none focus:border-primary transition-colors font-black uppercase tracking-wide"
-              placeholder="Введите название..."
+              placeholder="Введите название"
             />
           </div>
           <div>
@@ -114,7 +114,7 @@ export default function CreateClubPage() {
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
               className="w-full bg-card border border-border rounded-2xl px-4 py-3 text-foreground focus:outline-none focus:border-primary transition-colors text-sm min-h-[100px] resize-none"
-              placeholder="Расскажите о клубе: где и как часто вы бегаете, кого ждете в команду..."
+              placeholder="Расскажите о клубе: где и как часто вы бегаете, кого ждете в команду"
             />
           </div>
         </div>

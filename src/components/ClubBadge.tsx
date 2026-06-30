@@ -2,7 +2,7 @@
 import React from "react";
 import { Zap, Flame, Skull, Sword, Shield, Mountain, Anchor, Crown, Star, Heart, Activity, Target, Trophy, Ghost, Crosshair, HelpCircle } from "lucide-react";
 
-export type ShapeType = "square" | "circle" | "hexagon" | "octagon";
+export type ShapeType = "square" | "circle" | "triangle" | "octagon";
 export type PatternType = "solid" | "split-diagonal" | "stripes" | "checker" | "half-vertical";
 
 interface ClubBadgeProps {
@@ -37,8 +37,8 @@ export default function ClubBadge({
   let clipPath = "";
   if (shape === "circle") {
     clipPath = "circle(50% at 50% 50%)";
-  } else if (shape === "hexagon") {
-    clipPath = "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)";
+  } else if (shape === "triangle") {
+    clipPath = "polygon(50% 0%, 0% 100%, 100% 100%)";
   } else if (shape === "octagon") {
     clipPath = "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)";
   } else {

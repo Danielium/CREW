@@ -5,7 +5,7 @@ import ClubBadge, { ShapeType, PatternType } from "@/components/ClubBadge";
 
 const SHAPES: { id: ShapeType; name: string }[] = [
   { id: "square", name: "Квадрат" },
-  { id: "hexagon", name: "Гексагон" },
+  { id: "triangle", name: "Треугольник" },
   { id: "circle", name: "Круг" },
   { id: "octagon", name: "Октагон" },
 ];
@@ -36,7 +36,7 @@ const ICON_MAP: Record<string, any> = {
 const ICONS = Object.keys(ICON_MAP);
 
 export default function LogoBuilder() {
-  const [shape, setShape] = useState<ShapeType>("hexagon");
+  const [shape, setShape] = useState<ShapeType>("triangle");
   const [pattern, setPattern] = useState<PatternType>("solid");
   const [color1, setColor1] = useState(COLORS[0]);
   const [color2, setColor2] = useState(COLORS[6]);
@@ -60,7 +60,7 @@ export default function LogoBuilder() {
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-background text-foreground z-50">
+    <div className="fixed inset-0 flex flex-col bg-background text-foreground z-50 overflow-hidden">
       
       {/* Header */}
       <div className="flex justify-between items-center px-4 pt-12 pb-4 bg-card border-b border-border">
