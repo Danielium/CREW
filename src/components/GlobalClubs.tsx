@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 import ClubBadge from "@/components/ClubBadge";
 import { Loader2, Users, Key, Search } from "lucide-react";
 
+import { globalCache } from "@/lib/cache";
+
 export default function GlobalClubs({ inClub }: { inClub?: boolean }) {
-  const [clubs, setClubs] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [clubs, setClubs] = useState<any[]>(globalCache.clubs || []);
+  const [isLoading, setIsLoading] = useState(!globalCache.clubs);
   const [inviteCode, setInviteCode] = useState("");
   const [inviteError, setInviteError] = useState("");
   const [isJoining, setIsJoining] = useState(false);
@@ -19,7 +21,10 @@ export default function GlobalClubs({ inClub }: { inClub?: boolean }) {
     fetch('/api/clubs', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
-        if (data.clubs) setClubs(data.clubs);
+        if (data.clubs) {
+          setClubs(data.clubs);
+          globalCache.clubs = data.clubs;
+        }
         setIsLoading(false);
       })
       .catch((err) => {

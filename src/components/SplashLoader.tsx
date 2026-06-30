@@ -20,9 +20,10 @@ export function SplashLoader({ children }: { children: React.ReactNode }) {
     if (status === "authenticated" && session?.user) {
       const loadAll = async () => {
         try {
-          const [feedRes, userRes] = await Promise.all([
+          const [feedRes, userRes, clubsRes] = await Promise.all([
             fetch('/api/feed', { cache: 'no-store' }),
-            fetch(`/api/users?userId=${(session.user as any).id}`)
+            fetch(`/api/users?userId=${(session.user as any).id}`),
+            fetch('/api/clubs', { cache: 'no-store' })
           ]);
           
           if (feedRes.ok) {
@@ -32,6 +33,10 @@ export function SplashLoader({ children }: { children: React.ReactNode }) {
           if (userRes.ok) {
             const userData = await userRes.json();
             globalCache.userData = userData.user;
+          }
+          if (clubsRes.ok) {
+            const clubsData = await clubsRes.json();
+            globalCache.clubs = clubsData.clubs;
           }
         } catch (e) {
           console.error("Failed to load initial data", e);
