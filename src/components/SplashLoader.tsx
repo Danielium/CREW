@@ -71,10 +71,15 @@ export function SplashLoader({ children }: { children: React.ReactNode }) {
   if (!isReady && status !== "unauthenticated") {
     return (
       <div className="flex-1 w-full h-[100dvh] flex flex-col items-center justify-center bg-background z-50 fixed inset-0 overflow-hidden">
-        <div className="w-24 h-24 bg-primary flex items-center justify-center rounded-[24px] animate-pulse shadow-[0_0_40px_rgba(204,255,0,0.4)]">
-          <span className="text-black font-black text-3xl tracking-tighter uppercase">CREW</span>
+        <img 
+          src="/logo.png" 
+          alt="CREW Logo" 
+          className="w-28 h-28 animate-pulse drop-shadow-[0_0_40px_rgba(204,255,0,0.3)] object-contain" 
+        />
+        <div className="mt-8 flex flex-col items-center gap-2">
+          <h1 className="text-xl font-black tracking-[0.2em] uppercase animate-pulse text-foreground">CREW</h1>
+          <p className="text-muted text-[10px] font-bold tracking-[0.3em] uppercase animate-pulse opacity-50">Загрузка...</p>
         </div>
-        <p className="mt-8 text-muted text-sm font-bold tracking-[0.2em] uppercase animate-pulse">Загрузка...</p>
       </div>
     );
   }
