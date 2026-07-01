@@ -58,85 +58,100 @@ export default function GlobalClubs({ inClub }: { inClub?: boolean }) {
 
   if (isLoading) return <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" size={32} /></div>;
 
-  const filteredClubs = clubs.filter(club => 
-    club.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (club.description && club.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const query = searchQuery.trim().toLowerCase();
+  
+  // Assign global ranks before filtering
+  const clubsWithRank = clubs.map((c, i) => ({ ...c, rank: i + 1 }));
+  
+  const filteredClubs = query ? clubsWithRank.filter(club => 
+    club.name.toLowerCase().includes(query) ||
+    (club.description && club.description.toLowerCase().includes(query)) ||
+    (club.tags && club.tags.toLowerCase().includes(query))
+  ) : clubsWithRank;
 
   return (
-    <div className="px-4">
+    <div className="px-4 relative z-10">
       {/* Invite Code Input */}
       {!inClub && (
-        <div className="bg-card rounded-[20px] border border-border p-4 mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Key size={14} className="text-primary" />
+        <div className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[24px] p-5 mb-6 shadow-xl">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+              <Key size={12} className="text-primary" />
+            </div>
             <span className="text-[10px] font-bold text-muted uppercase tracking-wider">Вступить по коду</span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <input
               type="text"
               value={inviteCode}
               onChange={(e) => { setInviteCode(e.target.value.toUpperCase()); setInviteError(""); }}
               placeholder="XXXXXX"
-              className="flex-1 bg-background border border-border rounded-xl px-4 py-3 font-mono font-bold text-center tracking-[0.2em] uppercase text-sm placeholder:text-muted/50 outline-none focus:border-primary transition-colors"
+              className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-4 py-4 font-mono font-bold text-center tracking-[0.2em] uppercase text-sm placeholder:text-muted/50 outline-none focus:border-primary/50 transition-colors shadow-inner"
               maxLength={10}
               onKeyDown={(e) => { if (e.key === "Enter") handleJoinByCode(); }}
             />
             <button
               onClick={handleJoinByCode}
               disabled={isJoining || !inviteCode.trim()}
-              className="px-5 py-3 rounded-xl bg-primary text-black font-bold uppercase tracking-wider text-xs hover:bg-[#b3e600] transition-colors disabled:opacity-50"
+              className="px-6 py-4 rounded-2xl bg-primary text-black font-bold uppercase tracking-wider text-xs hover:bg-[#b3e600] active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
             >
-              {isJoining ? <Loader2 size={16} className="animate-spin" /> : "Войти"}
+              {isJoining ? <Loader2 size={18} className="animate-spin mx-auto" /> : "Войти"}
             </button>
           </div>
-          {inviteError && <p className="text-red-500 text-xs mt-2 font-medium">{inviteError}</p>}
+          {inviteError && <p className="text-red-500 text-xs mt-3 font-medium px-2">{inviteError}</p>}
         </div>
       )}
 
       {/* Search Input */}
-      <div className="relative mb-6">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={18} />
+      <div className="relative mb-8">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
+          <Search className="text-muted-foreground" size={14} />
+        </div>
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Поиск клубов..."
-          className="w-full bg-card border border-border rounded-2xl pl-12 pr-4 py-4 text-sm placeholder:text-muted/50 outline-none focus:border-primary transition-colors"
+          placeholder="Поиск клубов (название, теги)..."
+          className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-[24px] pl-16 pr-6 py-5 text-sm placeholder:text-muted/50 outline-none focus:border-primary/50 transition-colors shadow-lg"
         />
       </div>
 
-      <div className="mb-6">
-        <h2 className="text-2xl font-black tracking-tight uppercase">Битва Клубов</h2>
-        <p className="text-xs text-muted uppercase tracking-wider font-bold mt-1">Топ беговых клубов мира</p>
+      <div className="mb-6 px-2">
+        <h2 className="text-2xl font-black tracking-tight uppercase drop-shadow-sm">Битва Клубов</h2>
+        <p className="text-xs text-primary uppercase tracking-widest font-bold mt-1">Топ беговых клубов</p>
       </div>
 
-      <div className="flex flex-col gap-3">
-        {filteredClubs.map((club, i) => (
+      <div className="flex flex-col gap-4">
+        {filteredClubs.map((club) => (
           <Link href={`/club/${club.id}`} key={club.id}>
-            <div className="bg-card border border-border rounded-[20px] p-4 flex items-center justify-between hover:border-primary transition-colors">
+            <div className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[24px] p-5 flex items-center justify-between hover:border-primary/50 hover:bg-black/20 transition-all shadow-lg group">
               <div className="flex items-center gap-4">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm border-2 flex-shrink-0 ${i === 0 ? 'bg-primary border-primary text-black shadow-[0_0_10px_#CCFF00]' : i === 1 ? 'bg-slate-300 border-slate-300 text-black' : i === 2 ? 'bg-amber-700 border-amber-700 text-white' : 'bg-background border-border text-muted'}`}>
-                  {i + 1}
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm border-2 flex-shrink-0 shadow-lg ${
+                  club.rank === 1 ? 'bg-primary border-primary text-black shadow-primary/30' : 
+                  club.rank === 2 ? 'bg-slate-300 border-slate-300 text-black shadow-slate-300/30' : 
+                  club.rank === 3 ? 'bg-amber-700 border-amber-700 text-white shadow-amber-700/30' : 
+                  'bg-black/50 border-white/10 text-muted-foreground'
+                }`}>
+                  {club.rank}
                 </div>
                 {(() => {
                   try {
                     const logo = JSON.parse(club.logoConfig);
-                    if (logo && logo.shape) return <div className="flex-shrink-0"><ClubBadge {...logo} size={40} /></div>;
+                    if (logo && logo.shape) return <div className="flex-shrink-0 drop-shadow-md group-hover:scale-105 transition-transform"><ClubBadge {...logo} size={44} /></div>;
                   } catch(e) {}
                   return null;
                 })()}
-                <div>
-                  <h3 className={`font-black uppercase tracking-tight ${club.name.length > 12 ? 'text-sm break-all' : 'text-lg'} leading-none mb-1`}>{club.name}</h3>
+                <div className="ml-1">
+                  <h3 className={`font-black uppercase tracking-tight ${club.name.length > 12 ? 'text-sm break-all' : 'text-lg'} leading-none mb-2 text-foreground/90 group-hover:text-white transition-colors`}>{club.name}</h3>
                   <div className="flex items-center gap-3 text-[10px] text-muted font-bold uppercase tracking-wider">
-                    <span className="flex items-center gap-1"><Users size={12}/> {club._count.members}</span>
-                    <span className="text-primary">{club.joinType}</span>
+                    <span className="flex items-center gap-1.5"><Users size={12} className="text-primary/70"/> {club._count.members}</span>
+                    <span className="text-primary/70 px-2 py-0.5 bg-primary/10 rounded-full">{club.joinType}</span>
                   </div>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-mono text-xl font-bold">{club.totalClubDistance.toFixed(0)}</p>
-                <p className="text-[10px] text-muted uppercase font-bold tracking-wider">КМ</p>
+              <div className="text-right flex flex-col items-end justify-center">
+                <p className="font-mono text-2xl font-black text-white/90 drop-shadow-md">{club.totalClubDistance.toFixed(0)}</p>
+                <p className="text-[9px] text-primary uppercase font-black tracking-widest mt-0.5">КМ</p>
               </div>
             </div>
           </Link>
