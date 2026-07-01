@@ -80,32 +80,36 @@ export default function CreateClubPage() {
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground pb-12 relative z-10">
-      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-md pt-safe pb-4 px-4 flex items-center gap-4">
-        <h1 className="text-2xl font-black uppercase tracking-tight">Создать Клуб</h1>
+      {/* Dynamic Background Glow */}
+      <div className="fixed top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-primary/10 to-transparent -z-10 pointer-events-none" />
+      <div className="fixed top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-primary/20 rounded-full blur-[100px] -z-10 pointer-events-none opacity-50" />
+
+      <div className="sticky top-0 z-50 bg-background/60 backdrop-blur-xl pt-safe pb-4 px-4 flex items-center gap-4 border-b border-white/5">
+        <h1 className="text-2xl font-black uppercase tracking-tight drop-shadow-sm">Создать Клуб</h1>
       </div>
 
-      <div className="px-6 py-4 flex flex-col gap-8 flex-1">
+      <div className="px-6 py-6 flex flex-col gap-8 flex-1 relative z-10">
         
         {/* Logo Preview */}
-        <div className="flex flex-col items-center justify-center py-4 bg-card border border-border rounded-2xl relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent pointer-events-none"></div>
+        <div className="flex flex-col items-center justify-center py-6 bg-card/40 backdrop-blur-xl border border-white/5 rounded-[28px] relative overflow-hidden group shadow-xl">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-[50px] -z-10 group-hover:bg-primary/20 transition-all duration-500" />
           {logoConfig ? (
-            <div className="relative z-10 scale-[0.85]">
+            <div className="relative z-10 scale-[0.85] drop-shadow-xl">
               <ClubBadge {...logoConfig} />
             </div>
           ) : (
-            <div className="w-24 h-24 rounded-2xl bg-background border-2 border-dashed border-border flex items-center justify-center mb-2 z-10 text-muted">
+            <div className="w-24 h-24 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 flex items-center justify-center mb-2 z-10 text-muted">
               <Shield size={32} />
             </div>
           )}
           
-          <Link href="/club/logo-builder" className="relative z-10 mt-3 px-4 py-2 bg-background border border-border rounded-full text-xs font-bold uppercase tracking-wider hover:border-primary transition-colors">
+          <Link href="/club/logo-builder" className="relative z-10 mt-3 px-5 py-2.5 bg-black/40 border border-white/10 rounded-full text-xs font-bold uppercase tracking-wider hover:border-primary/50 transition-colors shadow-lg">
             {logoConfig ? "Изменить эмблему" : "Создать эмблему"}
           </Link>
         </div>
 
         {/* Basic Info */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 bg-card/40 backdrop-blur-xl border border-white/5 rounded-[28px] p-6 shadow-xl">
           <div>
             <label className="text-[10px] font-bold text-muted uppercase tracking-wider mb-2 block">Название клуба</label>
             <input 
@@ -113,7 +117,7 @@ export default function CreateClubPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={20}
-              className="w-full bg-card border border-border rounded-2xl px-4 py-4 text-foreground text-lg focus:outline-none focus:border-primary transition-colors font-black uppercase tracking-wide"
+              className="w-full bg-black/40 border border-white/5 rounded-2xl px-4 py-4 text-foreground text-lg focus:outline-none focus:border-primary/50 transition-colors font-black uppercase tracking-wide"
               placeholder="Введите название"
             />
           </div>

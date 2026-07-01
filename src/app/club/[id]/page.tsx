@@ -103,9 +103,12 @@ export default function ClubProfilePage() {
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground relative z-10">
+      {/* Dynamic Background Glow */}
+      <div className="fixed top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-primary/10 to-transparent -z-10 pointer-events-none" />
+      <div className="fixed top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-primary/20 rounded-full blur-[100px] -z-10 pointer-events-none opacity-50" />
       
       {/* HEADER BANNER */}
-      <div className="h-64 bg-card relative flex flex-col justify-end p-6 border-b border-border">
+      <div className="h-64 bg-card/40 backdrop-blur-xl relative flex flex-col justify-end p-6 border-b border-white/5 shadow-lg">
         {/* Native back button used here via TelegramBackButton */}
         
         {isFounder && (
