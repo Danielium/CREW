@@ -65,8 +65,7 @@ export default function GlobalClubs({ inClub }: { inClub?: boolean }) {
   
   const filteredClubs = query ? clubsWithRank.filter(club => 
     club.name.toLowerCase().includes(query) ||
-    (club.description && club.description.toLowerCase().includes(query)) ||
-    (club.tags && club.tags.toLowerCase().includes(query))
+    (club.description && club.description.toLowerCase().includes(query))
   ) : clubsWithRank;
 
   return (
@@ -111,7 +110,7 @@ export default function GlobalClubs({ inClub }: { inClub?: boolean }) {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Поиск клубов (название, теги)..."
+          placeholder="Поиск клубов..."
           className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-[24px] pl-16 pr-6 py-5 text-sm placeholder:text-muted/50 outline-none focus:border-primary/50 transition-colors shadow-lg"
         />
       </div>
