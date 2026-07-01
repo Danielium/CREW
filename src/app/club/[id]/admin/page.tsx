@@ -116,7 +116,7 @@ export default function ClubAdminPage() {
       <div className="fixed top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-primary/20 rounded-full blur-[100px] -z-10 pointer-events-none opacity-50" />
 
       {/* Header */}
-      <div className="pt-12 px-6 pb-6 flex flex-col gap-1">
+      <div className="pt-24 px-6 pb-6 flex flex-col gap-1">
         <h1 className="text-3xl font-black uppercase tracking-tight drop-shadow-sm">Управление</h1>
         <p className="text-xs text-primary font-bold tracking-widest uppercase">{club.name}</p>
       </div>
