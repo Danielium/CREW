@@ -153,7 +153,8 @@ export default function ClubAdminPage() {
           </div>
         </div>
 
-        {/* Pending Applications */}
+        {/* Pending Applications - Only show if club uses applications or if there are legacy pending ones */}
+        {(club.joinType === "APPLICATION" || pendingMembers.length > 0) && (
         <div className="bg-card/40 backdrop-blur-xl rounded-[28px] border border-white/5 p-6 shadow-xl relative overflow-hidden">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
@@ -225,6 +226,7 @@ export default function ClubAdminPage() {
             </div>
           )}
         </div>
+        )}
 
         {/* Active Members Overview */}
         <div className="bg-card/40 backdrop-blur-xl rounded-[28px] border border-white/5 p-6 shadow-xl">
