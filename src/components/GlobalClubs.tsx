@@ -111,13 +111,27 @@ export default function GlobalClubs({ inClub }: { inClub?: boolean }) {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Поиск клубов..."
-          className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-[24px] pl-16 pr-6 py-5 text-sm placeholder:text-muted/50 outline-none focus:border-primary/50 transition-colors shadow-lg"
+          className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-[24px] pl-16 pr-12 py-5 text-sm placeholder:text-muted/50 outline-none focus:border-primary/50 transition-colors shadow-lg"
         />
+        {searchQuery && (
+          <button 
+            onClick={() => setSearchQuery("")}
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-muted-foreground transition-colors"
+          >
+            ×
+          </button>
+        )}
       </div>
 
-      <div className="mb-6 px-2">
-        <h2 className="text-2xl font-black tracking-tight uppercase drop-shadow-sm">Битва Клубов</h2>
-        <p className="text-xs text-primary uppercase tracking-widest font-bold mt-1">Топ беговых клубов</p>
+      <div className="mb-6 px-2 flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-black tracking-tight uppercase drop-shadow-sm">
+            {query ? "Результаты" : "Битва Клубов"}
+          </h2>
+          <p className="text-xs text-primary uppercase tracking-widest font-bold mt-1">
+            {query ? `Найдено: ${filteredClubs.length}` : "Топ беговых клубов"}
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-col gap-4">
