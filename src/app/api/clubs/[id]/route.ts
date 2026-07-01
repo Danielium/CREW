@@ -54,6 +54,10 @@ export async function POST(req: Request, context: any) {
       return NextResponse.json({ error: "Already a member or pending" }, { status: 400 });
     }
 
+    if (club.joinType === "INVITE_ONLY") {
+      return NextResponse.json({ error: "Этот клуб доступен только по коду приглашения" }, { status: 403 });
+    }
+
     const status = club.joinType === "APPLICATION" ? "PENDING" : "ACTIVE";
 
     const member = await prisma.clubMember.create({
