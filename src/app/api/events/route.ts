@@ -5,10 +5,25 @@ import { authOptions } from "@/lib/auth";
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json({ events: [] });
+    }
+
+    const userId = (session.user as any).id;
+    
+    // Fetch clubs where the user is an active member
+    const userClubs = await prisma.clubMember.findMany({
+      where: { userId, status: "ACTIVE" },
+      select: { clubId: true }
+    });
+    
+    const clubIds = userClubs.map(c => c.clubId);
+
     const events = await prisma.event.findMany({
+      where: { clubId: { in: clubIds } },
       include: {
         club: { select: { id: true, name: true } },
         attendees: { select: { id: true, image: true, name: true } }
