@@ -352,7 +352,7 @@ export default function LoginPage() {
               <p className="text-muted">Шаг 1 из 4. Придумайте логин и пароль.</p>
             </div>
 
-            <form onSubmit={(e) => { e.preventDefault(); handleCheckUsername(); }} className="flex flex-col gap-4 flex-1">
+            <form onSubmit={(e) => { e.preventDefault(); handleCheckUsername(e); }} className="flex flex-col gap-4 flex-1">
               {error && <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-xl text-sm font-medium">{error}</div>}
               
               <div className="relative">
