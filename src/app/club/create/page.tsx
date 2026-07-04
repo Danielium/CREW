@@ -33,12 +33,26 @@ export default function CreateClubPage() {
   const [logoConfig, setLogoConfig] = useState<any>(DEFAULT_LOGO);
 
   useEffect(() => {
-    const savedLogo = localStorage.getItem("clubLogoConfig");
-    if (savedLogo) {
-      try {
-        setLogoConfig(JSON.parse(savedLogo));
-      } catch (e) {}
-    }
+    const checkLogo = () => {
+      const savedLogo = localStorage.getItem("clubLogoConfig");
+      if (savedLogo) {
+        try {
+          const parsed = JSON.parse(savedLogo);
+          setLogoConfig(prev => {
+            // Only update if changed to avoid unnecessary re-renders
+            if (JSON.stringify(prev) !== JSON.stringify(parsed)) {
+              return parsed;
+            }
+            return prev;
+          });
+        } catch (e) {}
+      }
+    };
+    
+    checkLogo();
+    // Poll to catch updates when returning via history.back()
+    const interval = setInterval(checkLogo, 500);
+    return () => clearInterval(interval);
   }, []);
 
   const toggleTag = (tag: string) => {
