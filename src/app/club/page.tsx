@@ -20,7 +20,7 @@ export default function ClubTab() {
     if (status === "loading") return; // Wait for session to initialize
 
     if (status === "authenticated" && session?.user) {
-      fetch(`/api/users?userId=${(session.user as any).id}`)
+      fetch(`/api/users/${(session.user as any).id}`)
         .then(async res => {
           const data = await res.json();
           if (res.status === 404) {

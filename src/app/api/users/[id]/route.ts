@@ -18,6 +18,9 @@ export async function GET(
         runs: {
           orderBy: { startTime: 'desc' }
         },
+        clubMembers: {
+          include: { club: true }
+        },
         accounts: true,
       }
     });

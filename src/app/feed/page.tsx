@@ -82,7 +82,7 @@ export default function FeedTab() {
 
   useEffect(() => {
     if (session?.user) {
-      fetch(`/api/users?userId=${(session.user as any).id}`)
+      fetch(`/api/users/${(session.user as any).id}`)
         .then(res => res.json())
         .then(data => {
           if (data.user) setCurrentUser(data.user);

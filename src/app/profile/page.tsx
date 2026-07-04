@@ -61,7 +61,7 @@ export default function ProfileTab() {
 
   const fetchUserData = async () => {
     try {
-      const res = await fetch(`/api/users?userId=${(session?.user as any).id}`);
+      const res = await fetch(`/api/users/${(session?.user as any).id}`);
       const data = await res.json();
       if (data.user) {
         setUserData(data.user);
