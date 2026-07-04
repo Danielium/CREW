@@ -74,6 +74,9 @@ export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
     const requestingUserId = session?.user ? (session.user as any).id : null;
 
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const skip = parseInt(searchParams.get('skip') || '0');
+
     if (requestingUserId !== userId) {
       const targetUser = await prisma.user.findUnique({ where: { id: userId }, select: { isPrivate: true } });
       if (!targetUser || targetUser.isPrivate) {
@@ -84,7 +87,8 @@ export async function GET(request: Request) {
     const runs = await prisma.run.findMany({
       where: { userId },
       orderBy: { startTime: 'desc' },
-      take: 20
+      take: limit > 100 ? 100 : limit,
+      skip
     });
     
     return NextResponse.json({ runs });

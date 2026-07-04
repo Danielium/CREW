@@ -14,15 +14,23 @@ const RunRouteMap = dynamic(() => import('@/components/RunRouteMap'), {
 export default function EventDetailsPage() {
   const { id } = useParams() as { id: string };
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchEvent();
-  }, [id]);
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchEvent();
+    }
+  }, [id, status]);
 
   const fetchEvent = async () => {
     try {

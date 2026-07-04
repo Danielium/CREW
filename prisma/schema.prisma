@@ -173,7 +173,7 @@ model VerificationToken {
 model Post {
   id            String   @id @default(cuid())
   userId        String
-  type          String   // "RUN" | "ACHIEVEMENT" | "TEXT"
+  type          String   // "RUN" | "ACHIEVEMENT" | "TEXT" | "MEDIA"
   runId         String?  @unique
   content       String?
   mediaUrl      String?
