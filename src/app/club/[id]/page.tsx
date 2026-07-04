@@ -42,7 +42,7 @@ export default function ClubProfilePage() {
       if (data.member) {
         globalCache.clubs = null;
         globalCache.userData = null;
-        fetchClub(); // refresh
+        router.push("/club");
       }
     } catch (e) {
       console.error(e);

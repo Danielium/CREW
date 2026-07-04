@@ -42,6 +42,12 @@ export default function CreateEventPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!form.routeData) {
+      const confirmNoRoute = confirm("Вы не нарисовали маршрут на карте. Без маршрута событие не будет отображаться на карте для других бегунов. Продолжить создание?");
+      if (!confirmNoRoute) return;
+    }
+
     setIsLoading(true);
     
     // Combine date and time

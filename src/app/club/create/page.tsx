@@ -82,7 +82,7 @@ export default function CreateClubPage() {
       if (data.club) {
         globalCache.clubs = null;
         globalCache.userData = null;
-        router.push(`/club/${data.club.id}`);
+        router.push("/club");
       } else {
         alert(data.error || "Ошибка при создании клуба");
         setIsLoading(false);
