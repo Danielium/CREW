@@ -3,13 +3,13 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || !session.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const userId = (session.user as any).id;
-    const { id } = params;
+    const { id } = await params;
     const { logoConfig } = await req.json();
 
     const member = await prisma.clubMember.findUnique({
