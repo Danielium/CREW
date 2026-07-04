@@ -119,11 +119,22 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
             } else if (shape === "square") {
               svgShape = `<rect x="2" y="2" width="36" height="36" rx="6" fill="${bg}" stroke="white" stroke-width="3" />`;
             }
+
+            let defs = "";
+            let imageTag = "";
+            if (logoConfig.imageUrl) {
+              defs = `<defs><clipPath id="clip-${p.id}">${svgShape}</clipPath></defs>`;
+              imageTag = `<image href="${logoConfig.imageUrl}" width="40" height="40" preserveAspectRatio="xMidYMid slice" clip-path="url(#clip-${p.id})" />`;
+              svgShape = svgShape.replace(/fill="[^"]+"/, 'fill="transparent"');
+              iconHtml = ""; // Don't show lucide icon if there's a photo
+            }
             
             icon = new L.DivIcon({
               html: `
                 <div style="width: 40px; height: 40px; filter: drop-shadow(0px 6px 6px rgba(0,0,0,0.4)); display: flex; align-items: center; justify-content: center; position: relative;">
                   <svg width="40" height="40" viewBox="0 0 40 40" style="position: absolute; top: 0; left: 0; z-index: 1;">
+                    ${defs}
+                    ${imageTag}
                     ${svgShape}
                   </svg>
                   <div style="position: absolute; top: ${iconY}px; left: ${20 - iconSize/2}px; width: ${iconSize}px; height: ${iconSize}px; z-index: 2; display: flex; align-items: center; justify-content: center;">
