@@ -32,7 +32,7 @@ export default function PublicProfilePage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch(`/api/users/${id}`);
+        const res = await fetch(`/api/users/${id}`, { cache: "no-store" });
         const data = await res.json();
         if (data.user) {
           setUserData(data.user);
