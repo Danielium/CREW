@@ -99,7 +99,7 @@ model Event {
   checkInToken  String?  @unique
   createdAt     DateTime @default(now())
   
-  club          Club?    @relation(fields: [clubId], references: [id], onDelete: SetNull)
+  club          Club?    @relation(fields: [clubId], references: [id], onDelete: Cascade)
   creator       User     @relation("EventCreator", fields: [creatorId], references: [id], onDelete: Cascade)
   attendees     User[]   @relation("EventAttendees")
   checkedInUsers User[]  @relation("EventCheckedIn")
