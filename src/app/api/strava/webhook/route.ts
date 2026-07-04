@@ -126,16 +126,6 @@ export async function POST(request: Request) {
               }
             });
 
-            // Generate a Feed Post for this Run
-            await prisma.post.create({
-              data: {
-                userId: account.userId,
-                type: "RUN",
-                runId: newRun.id,
-                content: `Тренировка из Strava: ${activity.name}`
-              }
-            });
-
             console.log("Successfully synced Strava run for user:", account.userId);
           }
         }
