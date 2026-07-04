@@ -101,13 +101,34 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
               logoConfig = JSON.parse(p.event.club.logoConfig);
             } catch(e) {}
             
-            // Render the ClubBadge directly to string
-            const badgeHtml = renderToStaticMarkup(<ClubBadge {...logoConfig} size={40} />);
+            const bg = logoConfig.color1 || "#CCFF00";
+            const iconColor = logoConfig.iconColor || "#000000";
+            const shape = logoConfig.shape || "circle";
+            const IconComp = ICON_MAP[logoConfig.iconName] || HelpCircle;
+            
+            // Adjust icon size
+            const iconSize = shape === "triangle" ? 18 : 22;
+            const iconY = shape === "triangle" ? 12 : 9; // slightly lower for triangle
+            const iconHtml = renderToStaticMarkup(<IconComp size={iconSize} color={iconColor} strokeWidth={2.5} />);
+
+            let svgShape = `<circle cx="20" cy="20" r="18.5" fill="${bg}" stroke="white" stroke-width="3" />`;
+            if (shape === "triangle") {
+              svgShape = `<polygon points="20,2 2,38 38,38" fill="${bg}" stroke="white" stroke-width="3" stroke-linejoin="round" />`;
+            } else if (shape === "octagon") {
+              svgShape = `<polygon points="12,2 28,2 38,12 38,28 28,38 12,38 2,28 2,12" fill="${bg}" stroke="white" stroke-width="3" stroke-linejoin="round" />`;
+            } else if (shape === "square") {
+              svgShape = `<rect x="2" y="2" width="36" height="36" rx="6" fill="${bg}" stroke="white" stroke-width="3" />`;
+            }
             
             icon = new L.DivIcon({
               html: `
-                <div style="filter: drop-shadow(0px 6px 6px rgba(0,0,0,0.4)); display: flex; align-items: center; justify-content: center;">
-                  ${badgeHtml}
+                <div style="width: 40px; height: 40px; filter: drop-shadow(0px 6px 6px rgba(0,0,0,0.4)); display: flex; align-items: center; justify-content: center; position: relative;">
+                  <svg width="40" height="40" viewBox="0 0 40 40" style="position: absolute; top: 0; left: 0; z-index: 1;">
+                    ${svgShape}
+                  </svg>
+                  <div style="position: absolute; top: ${iconY}px; left: ${20 - iconSize/2}px; width: ${iconSize}px; height: ${iconSize}px; z-index: 2; display: flex; align-items: center; justify-content: center;">
+                    ${iconHtml}
+                  </div>
                 </div>
               `,
               className: '',
