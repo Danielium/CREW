@@ -11,8 +11,7 @@ const nextConfig: NextConfig = {
     "a.pinggy.io",
     "*.trycloudflare.com",
     "localhost"
-  ],
-  optimizeFonts: false,
+  ]
 };
 
 export default nextConfig;
