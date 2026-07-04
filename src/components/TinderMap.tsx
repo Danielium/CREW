@@ -109,7 +109,7 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
             // Adjust icon size
             const iconSize = shape === "triangle" ? 18 : 22;
             const iconY = shape === "triangle" ? 12 : 9; // slightly lower for triangle
-            const iconHtml = renderToStaticMarkup(<IconComp size={iconSize} color={iconColor} strokeWidth={2.5} />);
+            let iconHtml = renderToStaticMarkup(<IconComp size={iconSize} color={iconColor} strokeWidth={2.5} />);
 
             let svgShape = `<circle cx="20" cy="20" r="18.5" fill="${bg}" stroke="white" stroke-width="3" />`;
             if (shape === "triangle") {

@@ -379,6 +379,7 @@ function MapContent() {
     });
 
     setSortedProposals(sorted);
+    setActivePinIndex(-1); // Reset active pin when proposals change
   }, [proposals]);
 
   const cyclePins = (direction: 1 | -1) => {
