@@ -38,7 +38,7 @@ export default function CreateClubPage() {
       if (savedLogo) {
         try {
           const parsed = JSON.parse(savedLogo);
-          setLogoConfig(prev => {
+          setLogoConfig((prev: any) => {
             // Only update if changed to avoid unnecessary re-renders
             if (JSON.stringify(prev) !== JSON.stringify(parsed)) {
               return parsed;
