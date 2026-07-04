@@ -43,6 +43,8 @@ export default function ClubProfilePage() {
         globalCache.clubs = null;
         globalCache.userData = null;
         router.push("/club");
+      } else {
+        alert(data.error || "Ошибка при вступлении в клуб");
       }
     } catch (e) {
       console.error(e);
