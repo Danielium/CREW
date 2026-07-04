@@ -46,6 +46,14 @@ export async function POST(req: Request, context: any) {
       return NextResponse.json({ error: "Вы уже состоите в клубе. Можно состоять только в одном клубе одновременно." }, { status: 400 });
     }
 
+    const membersCount = await prisma.clubMember.count({
+      where: { clubId: params.id, status: "ACTIVE" }
+    });
+
+    if (membersCount >= 1000) {
+      return NextResponse.json({ error: "Клуб достиг максимального количества участников (1000)." }, { status: 400 });
+    }
+
     const existingPending = await prisma.clubMember.findUnique({
       where: { userId_clubId: { userId: (session.user as any).id, clubId: params.id } }
     });
