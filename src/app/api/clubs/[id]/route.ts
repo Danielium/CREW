@@ -75,6 +75,16 @@ export async function POST(req: Request, context: any) {
     }
     const status = club.joinType === "APPLICATION" ? "PENDING" : "ACTIVE";
 
+    // Auto-leave old club if already in one
+    const activeInOther = await prisma.clubMember.findFirst({
+      where: { userId: (session.user as any).id, status: "ACTIVE" }
+    });
+    if (activeInOther) {
+      await prisma.clubMember.delete({
+        where: { id: activeInOther.id }
+      });
+    }
+
     const member = await prisma.clubMember.create({
       data: {
         userId: (session.user as any).id,
