@@ -42,19 +42,59 @@ export default function LogoBuilder() {
   const [color2, setColor2] = useState(COLORS[6]);
   const [icon, setIcon] = useState("Zap");
   const [iconColor, setIconColor] = useState(COLORS[6]);
+  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const [activeTab, setActiveTab] = useState<"shape" | "pattern" | "color" | "icon">("shape");
+  const [activeTab, setActiveTab] = useState<"shape" | "pattern" | "color" | "icon" | "photo">("shape");
 
-  // Hide BottomNav on mount
+  // Hide BottomNav on mount and load existing config
   useEffect(() => {
     window.dispatchEvent(new Event("hideNav"));
+    
+    // Load existing config if available
+    try {
+      const savedConfig = localStorage.getItem("clubLogoConfig");
+      if (savedConfig) {
+        const parsed = JSON.parse(savedConfig);
+        if (parsed.shape) setShape(parsed.shape);
+        if (parsed.pattern) setPattern(parsed.pattern);
+        if (parsed.color1) setColor1(parsed.color1);
+        if (parsed.color2) setColor2(parsed.color2);
+        if (parsed.iconName) setIcon(parsed.iconName);
+        if (parsed.iconColor) setIconColor(parsed.iconColor);
+        if (parsed.imageUrl) setImageUrl(parsed.imageUrl);
+      }
+    } catch (e) {
+      console.error("Failed to parse existing logo config", e);
+    }
+
     return () => {
       window.dispatchEvent(new Event("showNav"));
     };
   }, []);
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
+      const uploadData = await uploadRes.json();
+      if (uploadData.url) setImageUrl(uploadData.url);
+    } catch (e) {
+      console.error(e);
+      alert("Ошибка загрузки");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSave = () => {
-    const config = { shape, pattern, color1, color2, iconName: icon, iconColor };
+    const config = { shape, pattern, color1, color2, iconName: icon, iconColor, imageUrl };
     localStorage.setItem("clubLogoConfig", JSON.stringify(config));
     window.history.back();
   };
@@ -84,6 +124,7 @@ export default function LogoBuilder() {
           color2={color2} 
           iconName={icon} 
           iconColor={iconColor} 
+          imageUrl={imageUrl}
           className="shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all duration-300"
         />
       </div>
@@ -95,6 +136,7 @@ export default function LogoBuilder() {
           { id: "pattern", label: "Узор" },
           { id: "color", label: "Цвета" },
           { id: "icon", label: "Иконка" },
+          { id: "photo", label: "Фото" },
         ].map((tab) => (
           <button 
             key={tab.id}
@@ -200,6 +242,26 @@ export default function LogoBuilder() {
                 </button>
               );
             })}
+          </div>
+        )}
+
+        {activeTab === "photo" && (
+          <div className="flex flex-col items-center justify-center gap-4 py-8">
+            <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
+            {imageUrl ? (
+              <>
+                <button onClick={() => fileInputRef.current?.click()} className="py-4 px-8 rounded-2xl bg-muted text-foreground font-bold uppercase tracking-wider text-sm active:scale-95 transition-transform">
+                  {isUploading ? "Загрузка..." : "Изменить фото"}
+                </button>
+                <button onClick={() => setImageUrl(undefined)} className="py-4 px-8 rounded-2xl bg-red-500/10 text-red-500 font-bold uppercase tracking-wider text-sm active:scale-95 transition-transform">
+                  Удалить фото
+                </button>
+              </>
+            ) : (
+              <button onClick={() => fileInputRef.current?.click()} className="py-4 px-8 rounded-2xl bg-primary text-black font-bold uppercase tracking-wider text-sm active:scale-95 transition-transform">
+                {isUploading ? "Загрузка..." : "Загрузить фото"}
+              </button>
+            )}
           </div>
         )}
 

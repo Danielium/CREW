@@ -8,8 +8,8 @@ import { globalCache } from "@/lib/cache";
 
 export default function FeedEvents({ userData }: { userData: any }) {
   const router = useRouter();
-  const [events, setEvents] = useState<any[]>(globalCache.events || []);
-  const [isLoading, setIsLoading] = useState(!globalCache.events);
+  const [events, setEvents] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetch('/api/events', { cache: 'no-store' })
@@ -17,7 +17,6 @@ export default function FeedEvents({ userData }: { userData: any }) {
       .then(data => {
         if (data.events) {
           setEvents(data.events);
-          globalCache.events = data.events;
         }
         setIsLoading(false);
       });

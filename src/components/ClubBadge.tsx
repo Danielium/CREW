@@ -13,6 +13,7 @@ interface ClubBadgeProps {
   color2?: string;
   iconName?: string;
   iconColor?: string;
+  imageUrl?: string;
   className?: string;
 }
 
@@ -28,6 +29,7 @@ export default function ClubBadge({
   color2 = "#111111",
   iconName = "Zap",
   iconColor = "#000000",
+  imageUrl,
   className = "",
 }: ClubBadgeProps) {
   // Get icon component dynamically from map
@@ -95,18 +97,27 @@ export default function ClubBadge({
       className={`relative flex items-center justify-center ${className}`}
       style={{ width: size, height: size }}
     >
-      <svg width="100%" height="100%" viewBox="0 0 100 100" style={{ clipPath }}>
-        <defs>{renderPattern()}</defs>
-        <rect x="0" y="0" width="100" height="100" fill={fill} />
-      </svg>
-      
-      <div className="absolute inset-0 flex items-center justify-center drop-shadow-md" style={{ marginTop: iconMarginTop }}>
-        <IconComponent 
-          size={iconSize} 
-          color={iconColor} 
-          strokeWidth={2.5} 
+      {imageUrl ? (
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ clipPath, backgroundImage: `url(${imageUrl})` }}
         />
-      </div>
+      ) : (
+        <>
+          <svg width="100%" height="100%" viewBox="0 0 100 100" style={{ clipPath }}>
+            <defs>{renderPattern()}</defs>
+            <rect x="0" y="0" width="100" height="100" fill={fill} />
+          </svg>
+          
+          <div className="absolute inset-0 flex items-center justify-center drop-shadow-md" style={{ marginTop: iconMarginTop }}>
+            <IconComponent 
+              size={iconSize} 
+              color={iconColor} 
+              strokeWidth={2.5} 
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }

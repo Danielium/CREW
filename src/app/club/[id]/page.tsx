@@ -227,7 +227,7 @@ export default function ClubProfilePage() {
             
             <div className="flex flex-col gap-2">
               {club.members.filter((m: any)=>m.status==="ACTIVE").slice(0, 5).map((member: any, i: number) => (
-                <div key={member.id} className="flex items-center justify-between p-3 bg-card border border-border rounded-2xl">
+                <Link key={member.id} href={`/profile/${member.userId}`} className="flex items-center justify-between p-3 bg-card border border-border rounded-2xl hover:border-primary transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 font-black text-muted bg-background rounded-full flex items-center justify-center text-xs border border-border">
                       {i + 1}
@@ -241,15 +241,15 @@ export default function ClubProfilePage() {
                       <div className="text-[10px] text-muted uppercase tracking-wider">{member.role}</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
                     <div className="font-bold font-mono text-right">{member.user.totalDistance.toFixed(1)} <span className="text-[10px] text-muted">КМ</span></div>
                     {isFounder && member.userId !== (session?.user as any)?.id && (
-                      <button onClick={() => handleRemoveMember(member.userId)} className="p-2 text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors ml-2 border border-red-500/20 rounded-xl">
+                      <button onClick={(e) => { e.preventDefault(); handleRemoveMember(member.userId); }} className="p-2 text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors ml-2 border border-red-500/20 rounded-xl relative z-10">
                         <Trash2 size={14} />
                       </button>
                     )}
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

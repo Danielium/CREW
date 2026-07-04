@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronLeft, Copy, Check, Loader2, UserCheck, UserX, Users, Shield, Key } from "lucide-react";
+import { ChevronLeft, Copy, Check, Loader2, UserCheck, UserX, Users, Shield, Key, Edit2 } from "lucide-react";
 import Link from "next/link";
+import ClubBadge from "@/components/ClubBadge";
+import React from "react";
 
 export default function ClubAdminPage() {
   const { id } = useParams();
@@ -15,6 +17,8 @@ export default function ClubAdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchClub();
@@ -31,6 +35,46 @@ export default function ClubAdminPage() {
       console.error(e);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // upload to /api/upload
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const uploadData = await uploadRes.json();
+
+      if (uploadData.url) {
+        const currentConfig = club.logoConfig ? JSON.parse(club.logoConfig) : {};
+        currentConfig.imageUrl = uploadData.url;
+        
+        const saveRes = await fetch(`/api/clubs/${id}/logo`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ logoConfig: JSON.stringify(currentConfig) }),
+        });
+        
+        if (saveRes.ok) {
+          fetchClub();
+        } else {
+          alert("Ошибка при сохранении логотипа");
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Ошибка загрузки");
+    } finally {
+      setIsUploadingLogo(false);
     }
   };
 
@@ -116,9 +160,41 @@ export default function ClubAdminPage() {
       <div className="fixed top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-primary/20 rounded-full blur-[100px] -z-10 pointer-events-none opacity-50" />
 
       {/* Header */}
-      <div className="pt-24 px-6 pb-6 flex flex-col gap-1">
-        <h1 className="text-3xl font-black uppercase tracking-tight drop-shadow-sm">Управление</h1>
-        <p className="text-xs text-primary font-bold tracking-widest uppercase">{club.name}</p>
+      <div className="pt-24 px-6 pb-6 flex flex-col gap-4">
+        <div>
+          <h1 className="text-3xl font-black uppercase tracking-tight drop-shadow-sm">Управление</h1>
+          <p className="text-xs text-primary font-bold tracking-widest uppercase">{club.name}</p>
+        </div>
+
+        {/* Logo Edit Section */}
+        <div className="flex items-center gap-4 mt-2">
+          <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+            {(() => {
+              try {
+                const logo = JSON.parse(club.logoConfig);
+                return (
+                  <div className={`relative ${isUploadingLogo ? 'opacity-50' : 'opacity-100'} transition-opacity`}>
+                    <ClubBadge {...logo} size={80} />
+                    <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-black shadow-lg">
+                      {isUploadingLogo ? <Loader2 size={14} className="animate-spin" /> : <Edit2 size={14} />}
+                    </div>
+                  </div>
+                );
+              } catch(e) {}
+              return null;
+            })()}
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/*" 
+              onChange={handleImageUpload} 
+            />
+          </div>
+          <div className="text-sm text-muted">
+            Нажмите на логотип, чтобы загрузить свою фотографию
+          </div>
+        </div>
       </div>
 
       <div className="px-4 flex flex-col gap-5 relative z-10">
