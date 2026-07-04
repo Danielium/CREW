@@ -229,7 +229,7 @@ export default function ClubProfilePage() {
             
             <div className="flex flex-col gap-2">
               {club.members.filter((m: any)=>m.status==="ACTIVE").slice(0, 5).map((member: any, i: number) => (
-                <Link key={member.id} href={`/profile/${member.userId}`} className="flex items-center justify-between p-3 bg-card border border-border rounded-2xl hover:border-primary transition-colors">
+                <Link key={member.id} href={`/users/${member.userId}`} className="flex items-center justify-between p-3 bg-card border border-border rounded-2xl hover:border-primary transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 font-black text-muted bg-background rounded-full flex items-center justify-center text-xs border border-border">
                       {i + 1}

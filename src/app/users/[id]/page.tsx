@@ -248,17 +248,17 @@ export default function PublicProfilePage() {
           </div>
 
           {/* Stats Summary */}
-          <div className="flex flex-col mb-4 items-center">
+          <div className="flex flex-col mb-4">
             <div className="flex items-center gap-1 mb-1 w-fit py-3">
               <span className="text-sm font-medium">{getDateLabel()}</span>
             </div>
             
-            <h2 className="text-[80px] leading-[0.8] font-black italic tracking-tighter">
+            <h2 className="text-[80px] leading-[0.8] font-black italic tracking-tighter -ml-1">
               {filteredDistance.toFixed(2).replace('.', ',')}
             </h2>
             <p className="text-xs text-muted font-bold tracking-widest uppercase mt-3 mb-6">Километров</p>
             
-            <div className="grid grid-cols-3 gap-2 w-full text-center">
+            <div className="grid grid-cols-3 gap-2 w-full">
               <div className="flex flex-col">
                 <span className="text-2xl font-black">{filteredRuns.length}</span>
                 <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Пробежек</span>
@@ -331,7 +331,7 @@ export default function PublicProfilePage() {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-3 gap-2 w-full text-center">
+                      <div className="grid grid-cols-3 gap-2 w-full">
                         <div className="flex flex-col">
                           <span className="text-xl font-black">{run.distance.toFixed(2).replace('.', ',')}</span>
                           <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">КМ</span>
