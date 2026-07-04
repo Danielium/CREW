@@ -162,6 +162,7 @@ export default function CreateEventPage() {
                 type="date" 
                 value={form.date} 
                 onChange={e => setForm({...form, date: e.target.value})} 
+                min={new Date().toISOString().split('T')[0]}
                 required 
                 className="bg-transparent border-none outline-none w-full font-medium text-sm pl-8 cursor-pointer relative z-20" 
               />
