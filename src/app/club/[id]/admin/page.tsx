@@ -44,19 +44,11 @@ export default function ClubAdminPage() {
 
     setIsUploadingLogo(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      // upload to /api/upload
-      const uploadRes = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-      const uploadData = await uploadRes.json();
-
-      if (uploadData.url) {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Url = reader.result as string;
         const currentConfig = club.logoConfig ? JSON.parse(club.logoConfig) : {};
-        currentConfig.imageUrl = uploadData.url;
+        currentConfig.imageUrl = base64Url;
         
         const saveRes = await fetch(`/api/clubs/${id}/logo`, {
           method: "PATCH",
@@ -69,11 +61,12 @@ export default function ClubAdminPage() {
         } else {
           alert("Ошибка при сохранении логотипа");
         }
-      }
+        setIsUploadingLogo(false);
+      };
+      reader.readAsDataURL(file);
     } catch (e) {
       console.error(e);
       alert("Ошибка загрузки");
-    } finally {
       setIsUploadingLogo(false);
     }
   };

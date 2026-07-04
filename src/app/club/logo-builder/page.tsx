@@ -80,15 +80,15 @@ export default function LogoBuilder() {
 
     setIsUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
-      const uploadData = await uploadRes.json();
-      if (uploadData.url) setImageUrl(uploadData.url);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageUrl(reader.result as string);
+        setIsUploading(false);
+      };
+      reader.readAsDataURL(file);
     } catch (e) {
       console.error(e);
       alert("Ошибка загрузки");
-    } finally {
       setIsUploading(false);
     }
   };
