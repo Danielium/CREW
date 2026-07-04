@@ -126,6 +126,21 @@ export async function POST(request: Request) {
               }
             });
 
+            // Update club total distance for active memberships
+            const activeMemberships = await prisma.clubMember.findMany({
+              where: { userId: account.userId, status: "ACTIVE" }
+            });
+            for (const membership of activeMemberships) {
+              await prisma.club.update({
+                where: { id: membership.clubId },
+                data: {
+                  totalClubDistance: {
+                    increment: distanceKm
+                  }
+                }
+              });
+            }
+
             console.log("Successfully synced Strava run for user:", account.userId);
           }
         }
