@@ -26,12 +26,18 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    let parsedMax = undefined;
+    if (maxParticipants !== undefined) {
+      parsedMax = parseInt(maxParticipants);
+      if (isNaN(parsedMax)) parsedMax = undefined;
+    }
+
     const updated = await prisma.runProposal.update({
       where: { id: proposalId },
       data: {
         startTime: startTime ? new Date(startTime) : undefined,
         pace,
-        maxParticipants: maxParticipants !== undefined ? parseInt(maxParticipants) : undefined,
+        maxParticipants: parsedMax,
       }
     });
 
