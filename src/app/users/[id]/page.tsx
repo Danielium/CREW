@@ -18,6 +18,7 @@ export default function PublicProfilePage() {
   const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear());
   
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showAllRuns, setShowAllRuns] = useState(false);
 
   useEffect(() => {
@@ -249,9 +250,14 @@ export default function PublicProfilePage() {
 
           {/* Stats Summary */}
           <div className="flex flex-col mb-4">
-            <div className="flex items-center gap-1 mb-1 w-fit py-3">
+            <button 
+              className={`flex items-center gap-1 mb-1 w-fit py-3 pr-6 -ml-3 pl-3 ${timeRange !== "ALL" ? "hover:opacity-70 transition-opacity cursor-pointer" : "cursor-default"}`}
+              onClick={() => timeRange !== "ALL" && setShowDatePicker(true)}
+              disabled={timeRange === "ALL"}
+            >
               <span className="text-sm font-medium">{getDateLabel()}</span>
-            </div>
+              {timeRange !== "ALL" && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>}
+            </button>
             
             <h2 className="text-[80px] leading-[0.8] font-black italic tracking-tighter -ml-1">
               {filteredDistance.toFixed(2).replace('.', ',')}
@@ -361,6 +367,163 @@ export default function PublicProfilePage() {
                   В этом периоде нет пробежек.
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DATE PICKER MODAL */}
+      {showDatePicker && (
+        <div className="fixed inset-0 z-[100] flex justify-center pointer-events-none">
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm pointer-events-auto" onClick={() => setShowDatePicker(false)}></div>
+          <div className="w-full max-w-[480px] h-full relative pointer-events-none flex flex-col justify-end">
+            <div 
+              className={`w-full bg-card border-t border-border rounded-t-[32px] p-6 pb-12 pointer-events-auto relative z-10 animate-in slide-in-from-bottom-full duration-300 shadow-2xl`}
+            >
+              <div 
+                className="h-48 relative flex overflow-hidden mb-4"
+                style={{ WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)' }}
+              >
+                {/* Visual selection highlight line */}
+                <div className="absolute top-1/2 left-0 right-0 h-10 -translate-y-1/2 border-y border-border pointer-events-none"></div>
+
+                {timeRange === "W" && (
+                  <div 
+                    className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-4 text-center" 
+                    style={{ scrollbarWidth: 'none' }}
+                    ref={el => { if (el && el.getAttribute('data-init') !== 'true') { el.scrollTop = selectedWeekOffset * 40; el.setAttribute('data-init', 'true'); } }}
+                    onScroll={e => {
+                      const newOffset = Math.round(e.currentTarget.scrollTop / 40);
+                      if (newOffset !== selectedWeekOffset) {
+                        if (typeof window !== 'undefined') (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged();
+                        setSelectedWeekOffset(newOffset);
+                      }
+                    }}
+                  >
+                    {[0, 1, 2, 3, 4, 5, 6].map(offset => (
+                      <div 
+                        key={offset} 
+                        className="h-10 flex items-center justify-center snap-center cursor-pointer"
+                        onClick={(e) => e.currentTarget.parentElement?.scrollTo({top: offset * 40, behavior: 'smooth'})}
+                      >
+                        <span className={`text-lg transition-colors ${selectedWeekOffset === offset ? 'font-bold text-foreground' : 'text-muted'}`}>
+                          {offset === 0 ? "Эта неделя" : offset === 1 ? "Прошлая неделя" : `${offset} нед. назад`}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {timeRange === "M" && (
+                  <>
+                    <div 
+                      className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-2 text-center" 
+                      style={{ scrollbarWidth: 'none' }}
+                      ref={el => { if (el && el.getAttribute('data-init') !== 'true') { el.scrollTop = selectedMonth * 40; el.setAttribute('data-init', 'true'); } }}
+                      onScroll={e => {
+                        const newMonth = Math.round(e.currentTarget.scrollTop / 40);
+                        if (newMonth !== selectedMonth) {
+                          if (typeof window !== 'undefined') (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged();
+                          setSelectedMonth(newMonth);
+                        }
+                      }}
+                    >
+                      {(selectedYear === now.getFullYear() ? Array.from({length: now.getMonth() + 1}) : Array.from({length: 12})).map((_, i) => (
+                        <div 
+                          key={i} 
+                          className="h-10 flex items-center justify-center snap-center cursor-pointer"
+                          onClick={(e) => e.currentTarget.parentElement?.scrollTo({top: i * 40, behavior: 'smooth'})}
+                        >
+                          <span className={`text-lg transition-colors capitalize ${selectedMonth === i ? 'font-bold text-foreground' : 'text-muted'}`}>
+                            {new Date(2020, i, 1).toLocaleString('ru', { month: 'long' })}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <div 
+                      className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-2 text-center" 
+                      style={{ scrollbarWidth: 'none' }}
+                      ref={el => { 
+                        if (el && el.getAttribute('data-init') !== 'true') { 
+                          const arr = [now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2];
+                          const idx = arr.indexOf(selectedYear);
+                          if (idx >= 0) el.scrollTop = idx * 40; 
+                          el.setAttribute('data-init', 'true'); 
+                        } 
+                      }}
+                      onScroll={e => {
+                        const arr = [now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2];
+                        const idx = Math.round(e.currentTarget.scrollTop / 40);
+                        if (arr[idx] !== undefined && arr[idx] !== selectedYear) {
+                          if (typeof window !== 'undefined') (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged();
+                          setSelectedYear(arr[idx]);
+                        }
+                      }}
+                    >
+                      {[now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2].map((year, i) => (
+                        <div 
+                          key={year} 
+                          className="h-10 flex items-center justify-center snap-center cursor-pointer"
+                          onClick={(e) => e.currentTarget.parentElement?.scrollTo({top: i * 40, behavior: 'smooth'})}
+                        >
+                          <span className={`text-lg transition-colors ${selectedYear === year ? 'font-bold text-foreground' : 'text-muted'}`}>
+                            {year}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {timeRange === "Y" && (
+                  <div 
+                    className="flex-1 overflow-y-auto snap-y snap-mandatory py-20 px-4 text-center" 
+                    style={{ scrollbarWidth: 'none' }}
+                    ref={el => { 
+                      if (el && el.getAttribute('data-init') !== 'true') { 
+                        const arr = [now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4];
+                        const idx = arr.indexOf(selectedYear);
+                        if (idx >= 0) el.scrollTop = idx * 40; 
+                        el.setAttribute('data-init', 'true'); 
+                      } 
+                    }}
+                    onScroll={e => {
+                      const arr = [now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4];
+                      const idx = Math.round(e.currentTarget.scrollTop / 40);
+                      if (arr[idx] !== undefined && arr[idx] !== selectedYear) {
+                        if (typeof window !== 'undefined') (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged();
+                        setSelectedYear(arr[idx]);
+                      }
+                    }}
+                  >
+                    {[now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2, now.getFullYear() - 3, now.getFullYear() - 4].map((year, i) => (
+                      <div 
+                        key={year} 
+                        className="h-10 flex items-center justify-center snap-center cursor-pointer"
+                        onClick={(e) => e.currentTarget.parentElement?.scrollTo({top: i * 40, behavior: 'smooth'})}
+                      >
+                        <span className={`text-lg transition-colors ${selectedYear === year ? 'font-bold text-foreground' : 'text-muted'}`}>
+                          {year}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {timeRange === "ALL" && (
+                  <div className="flex-1 flex items-center justify-center text-muted h-full">
+                    Для периода "Все" выбор дат недоступен
+                  </div>
+                )}
+              </div>
+              
+              <button 
+                onClick={() => setShowDatePicker(false)}
+                className="w-full mt-2 py-4 rounded-full bg-foreground text-background font-bold text-lg hover:opacity-90 transition-opacity"
+              >
+                Выбрать
+              </button>
+
             </div>
           </div>
         </div>
