@@ -84,10 +84,9 @@ export const authOptions: NextAuthOptions = {
 
           return {
             id: user.id,
-            email: user.telegramUsername, // Map telegramUsername to email field in NextAuth JWT to avoid ts errors without extending types deeply
+            telegramUsername: user.telegramUsername,
             name: user.name,
-            // image: user.image, // Removed: Storing large Base64 strings in JWT causes 494 Header Too Large errors
-          };
+          } as any;
         } catch (error) {
           console.error("Auth error:", error);
           return null;
@@ -99,12 +98,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.telegramUsername = (user as any).telegramUsername;
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         (session.user as any).id = token.id;
+        (session.user as any).telegramUsername = token.telegramUsername;
       }
       return session;
     }
