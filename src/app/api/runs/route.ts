@@ -71,6 +71,16 @@ export async function GET(request: Request) {
   }
 
   try {
+    const session = await getServerSession(authOptions);
+    const requestingUserId = session?.user ? (session.user as any).id : null;
+
+    if (requestingUserId !== userId) {
+      const targetUser = await prisma.user.findUnique({ where: { id: userId }, select: { isPrivate: true } });
+      if (!targetUser || targetUser.isPrivate) {
+        return NextResponse.json({ error: "Profile is private" }, { status: 403 });
+      }
+    }
+
     const runs = await prisma.run.findMany({
       where: { userId },
       orderBy: { startTime: 'desc' },

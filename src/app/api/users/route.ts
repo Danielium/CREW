@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -10,6 +12,9 @@ export async function GET(request: Request) {
   }
 
   try {
+    const session = await getServerSession(authOptions);
+    const requestingUserId = session?.user ? (session.user as any).id : null;
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -24,6 +29,24 @@ export async function GET(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const isOwner = requestingUserId === userId;
+
+    if (user.isPrivate && !isOwner) {
+      return NextResponse.json({
+        user: {
+          id: user.id,
+          name: user.name,
+          image: user.image,
+          isPrivate: true
+        }
+      });
+    }
+
+    // Strip password field before sending response
+    if (user.password) {
+      delete (user as any).password;
     }
 
     return NextResponse.json({ user });

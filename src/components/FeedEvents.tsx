@@ -4,16 +4,12 @@ import { useState, useEffect } from "react";
 import { Loader2, Edit2, Trash2, Calendar, MapPin, Activity, Clock, BarChart2, User, KeyRound, Lock, Check, Plus, Footprints, Play, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import PinShowModal from "@/components/PinShowModal";
-import PinEntryModal from "@/components/PinEntryModal";
 import { globalCache } from "@/lib/cache";
 
 export default function FeedEvents({ userData }: { userData: any }) {
   const router = useRouter();
   const [events, setEvents] = useState<any[]>(globalCache.events || []);
   const [isLoading, setIsLoading] = useState(!globalCache.events);
-  const [showPinForEvent, setShowPinForEvent] = useState<string | null>(null);
-  const [pinEntryEvent, setPinEntryEvent] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/events', { cache: 'no-store' })
@@ -31,8 +27,17 @@ export default function FeedEvents({ userData }: { userData: any }) {
 
   const handleDelete = async (id: string) => {
     if (confirm("Удалить это событие навсегда?")) {
-      await fetch(`/api/events/${id}`, { method: 'DELETE' });
-      setEvents(events.filter(e => e.id !== id));
+      try {
+        const res = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          setEvents(events.filter(e => e.id !== id));
+        } else {
+          const data = await res.json();
+          alert(data.error || "Ошибка при удалении события");
+        }
+      } catch (e) {
+        alert("Ошибка сети");
+      }
     }
   };
 
@@ -51,24 +56,6 @@ export default function FeedEvents({ userData }: { userData: any }) {
     }
   };
 
-  const handleDirectCheckIn = async (id: string) => {
-    try {
-      const res = await fetch(`/api/events/checkin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId: id })
-      });
-      if (res.ok) {
-        fetch('/api/events', { cache: 'no-store' })
-          .then(r => r.json())
-          .then(data => {
-            if (data.events) setEvents(data.events);
-          });
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   if (isLoading) return <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" size={32} /></div>;
 

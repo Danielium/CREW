@@ -52,10 +52,14 @@ export default function UserLocationMarker({
     };
 
     const requestBrowserGeo = () => {
-      if (!navigator.geolocation) return;
+      if (!navigator.geolocation) {
+        return;
+      }
       navigator.geolocation.getCurrentPosition(
         (pos) => saveAndShow(pos.coords.latitude, pos.coords.longitude),
-        (err) => console.warn("Geo error:", err.code),
+        (err) => {
+          console.warn("Geo error:", err.code);
+        },
         { enableHighAccuracy: true, timeout: 10000 }
       );
       // Start watching for live updates (won't prompt again if permission already granted)
@@ -71,18 +75,44 @@ export default function UserLocationMarker({
       const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
       if (tg?.LocationManager) {
         const runTgGeo = () => {
-          tg.LocationManager.getLocation((data: any) => {
-            if (data) {
-              saveAndShow(data.latitude, data.longitude);
-              // After TG gave us location, start browser watch for live updates
-              requestBrowserGeo();
-            } else {
+          // Add a timeout in case TG LocationManager hangs
+          let tgResolved = false;
+          const fallbackTimeout = setTimeout(() => {
+            if (!tgResolved) {
+              tgResolved = true;
               requestBrowserGeo();
             }
-          });
+          }, 3000);
+
+          try {
+            tg.LocationManager.getLocation((data: any) => {
+              if (tgResolved) return; // already timed out
+              tgResolved = true;
+              clearTimeout(fallbackTimeout);
+
+              if (data && typeof data.latitude === 'number' && typeof data.longitude === 'number') {
+                saveAndShow(data.latitude, data.longitude);
+                // After TG gave us location, start browser watch for live updates
+                requestBrowserGeo();
+              } else {
+                requestBrowserGeo();
+              }
+            });
+          } catch(e) {
+            if (!tgResolved) {
+              tgResolved = true;
+              clearTimeout(fallbackTimeout);
+              requestBrowserGeo();
+            }
+          }
         };
+
         if (!tg.LocationManager.isInited) {
-          tg.LocationManager.init(() => runTgGeo());
+          try {
+            tg.LocationManager.init(() => runTgGeo());
+          } catch(e) {
+            requestBrowserGeo();
+          }
         } else {
           runTgGeo();
         }

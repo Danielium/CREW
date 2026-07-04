@@ -16,7 +16,18 @@ export async function POST(
     const { id } = await params;
     const body = await request.json();
     const userId = session.user.id;
-    
+    const existingRun = await prisma.run.findUnique({
+      where: { id: id, userId: userId }
+    });
+
+    if (!existingRun) {
+      return NextResponse.json({ success: false, error: "Run not found" }, { status: 404 });
+    }
+
+    if (existingRun.status === "COMPLETED") {
+      return NextResponse.json({ success: false, error: "Run is already completed" }, { status: 400 });
+    }
+
     const run = await prisma.run.update({
       where: { id: id, userId: userId },
       data: {

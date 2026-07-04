@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Zap, Flame, Skull, Sword, Shield, Mountain, Anchor, Crown, Star, Heart, Activity, Target, Trophy, Ghost, Crosshair, HelpCircle } from "lucide-react";
 import UserLocationMarker from "./UserLocationMarker";
+import ClubBadge from "./ClubBadge";
 
 const ICON_MAP: Record<string, any> = {
   Zap, Flame, Skull, Sword, Shield, Mountain, Anchor, Crown, Star, Heart, Activity, Target, Trophy, Ghost, Crosshair
@@ -100,16 +101,13 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
               logoConfig = JSON.parse(p.event.club.logoConfig);
             } catch(e) {}
             
-            // Render just the Lucide icon to string
-            const IconComp = ICON_MAP[logoConfig.iconName] || HelpCircle;
-            const iconHtml = renderToStaticMarkup(<IconComp size={22} color={logoConfig.iconColor || "#000000"} strokeWidth={2.5} />);
-            const bg = logoConfig.color1 || "#CCFF00";
+            // Render the ClubBadge directly to string
+            const badgeHtml = renderToStaticMarkup(<ClubBadge {...logoConfig} size={40} />);
             
             icon = new L.DivIcon({
               html: `
-                <div style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 12px rgba(0,0,0,0.4); overflow: hidden; position: relative; background: ${bg};">
-                  ${iconHtml}
-                  <div style="position: absolute; bottom: -6px; right: -6px; width: 24px; height: 24px; background: rgba(0,0,0,0.15); border-radius: 50%; pointer-events: none;"></div>
+                <div style="filter: drop-shadow(0px 6px 6px rgba(0,0,0,0.4)); display: flex; align-items: center; justify-content: center;">
+                  ${badgeHtml}
                 </div>
               `,
               className: '',

@@ -29,7 +29,11 @@ export async function POST(req: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     
-    const filename = `${Date.now()}-${file.name.replace(/\s/g, '_')}`;
+    // Sanitize filename to prevent path traversal
+    const extension = file.type.split('/')[1] || 'jpeg';
+    const safeName = Math.random().toString(36).substring(2, 15);
+    const filename = `${Date.now()}-${safeName}.${extension}`;
+    
     const uploadPath = path.join(process.cwd(), 'public', 'uploads', filename);
     
     await writeFile(uploadPath, buffer);

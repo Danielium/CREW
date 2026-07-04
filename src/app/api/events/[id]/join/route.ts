@@ -32,6 +32,15 @@ export async function POST(req: Request, context: any) {
       return NextResponse.json({ attending: false });
     } else {
       // Join
+      if (event.clubId) {
+        const membership = await prisma.clubMember.findUnique({
+          where: { userId_clubId: { userId, clubId: event.clubId } }
+        });
+        if (!membership || membership.status !== "ACTIVE") {
+          return NextResponse.json({ error: "Только активные участники клуба могут присоединиться к этому событию" }, { status: 403 });
+        }
+      }
+
       await prisma.event.update({
         where: { id: eventId },
         data: {

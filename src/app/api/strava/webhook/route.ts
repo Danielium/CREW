@@ -89,6 +89,19 @@ export async function POST(request: Request) {
               avgPace = (durationSec / 60) / distanceKm;
             }
 
+            const startTime = new Date(activity.start_date);
+            const existingRun = await prisma.run.findFirst({
+              where: {
+                userId: account.userId,
+                startTime: startTime
+              }
+            });
+
+            if (existingRun) {
+              console.log("Run already exists for this Strava activity, skipping");
+              return NextResponse.json({ success: true, message: "Duplicate skipped" });
+            }
+
             // Create Run
             const newRun = await prisma.run.create({
               data: {

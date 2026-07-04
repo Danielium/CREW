@@ -51,13 +51,20 @@ export async function POST(req: Request, context: any) {
     });
 
     if (existingPending) {
+      if (existingPending.status === "KICKED") {
+        const newStatus = club.joinType === "APPLICATION" ? "PENDING" : "ACTIVE";
+        const member = await prisma.clubMember.update({
+          where: { id: existingPending.id },
+          data: { status: newStatus, role: "MEMBER" }
+        });
+        return NextResponse.json({ member, status: newStatus });
+      }
       return NextResponse.json({ error: "Already a member or pending" }, { status: 400 });
     }
 
     if (club.joinType === "INVITE_ONLY") {
       return NextResponse.json({ error: "Этот клуб доступен только по коду приглашения" }, { status: 403 });
     }
-
     const status = club.joinType === "APPLICATION" ? "PENDING" : "ACTIVE";
 
     const member = await prisma.clubMember.create({
@@ -88,8 +95,8 @@ export async function DELETE(req: Request, context: any) {
       where: { userId_clubId: { userId: currentUserId, clubId } }
     });
 
-    if (!currentMember || currentMember.role !== "FOUNDER") {
-      return NextResponse.json({ error: "Only founders can disband the club" }, { status: 403 });
+    if (!currentMember || currentMember.role !== "FOUNDER" || currentMember.status !== "ACTIVE") {
+      return NextResponse.json({ error: "Only active founders can disband the club" }, { status: 403 });
     }
 
     await prisma.club.delete({

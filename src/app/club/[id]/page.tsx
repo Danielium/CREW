@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ChevronLeft, Flag, Users, Shield, Loader2, Star, Target, Map, Trash2 } from "lucide-react";
 import Link from "next/link";
 import ClubBadge from "@/components/ClubBadge";
+import { globalCache } from "@/lib/cache";
 
 export default function ClubProfilePage() {
   const { id } = useParams();
@@ -39,6 +40,8 @@ export default function ClubProfilePage() {
       const res = await fetch(`/api/clubs/${id}`, { method: "POST" });
       const data = await res.json();
       if (data.member) {
+        globalCache.clubs = null;
+        globalCache.userData = null;
         fetchClub(); // refresh
       }
     } catch (e) {
@@ -53,6 +56,8 @@ export default function ClubProfilePage() {
     try {
       const res = await fetch(`/api/clubs/${id}/members/${userId}`, { method: "DELETE" });
       if (res.ok) {
+        globalCache.clubs = null;
+        globalCache.userData = null;
         fetchClub(); // refresh
       } else {
         alert("Ошибка при удалении участника.");
@@ -67,6 +72,8 @@ export default function ClubProfilePage() {
     try {
       const res = await fetch(`/api/clubs/${id}/leave`, { method: "DELETE" });
       if (res.ok) {
+        globalCache.clubs = null;
+        globalCache.userData = null;
         router.push("/");
       } else {
         const data = await res.json();
@@ -82,6 +89,8 @@ export default function ClubProfilePage() {
     try {
       const res = await fetch(`/api/clubs/${id}`, { method: "DELETE" });
       if (res.ok) {
+        globalCache.clubs = null;
+        globalCache.userData = null;
         router.push("/");
       } else {
         alert("Ошибка при распускании клуба.");

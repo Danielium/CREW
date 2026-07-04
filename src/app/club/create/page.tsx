@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import ClubBadge from "@/components/ClubBadge";
+import { globalCache } from "@/lib/cache";
 
 const AVAILABLE_TAGS = [
   "Party Pace", "Hardcore", "Beginners", "Dogs friendly", 
@@ -65,6 +66,8 @@ export default function CreateClubPage() {
       });
       const data = await res.json();
       if (data.club) {
+        globalCache.clubs = null;
+        globalCache.userData = null;
         router.push(`/club/${data.club.id}`);
       } else {
         alert(data.error || "Ошибка при создании клуба");

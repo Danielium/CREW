@@ -3,6 +3,11 @@ import { prisma } from '@/lib/prisma';
 
 export async function POST(req: Request) {
   try {
+    const secretToken = req.headers.get("x-telegram-bot-api-secret-token");
+    if (process.env.TELEGRAM_WEBHOOK_SECRET && secretToken !== process.env.TELEGRAM_WEBHOOK_SECRET) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+
     const body = await req.json();
 
     // Handle /start command

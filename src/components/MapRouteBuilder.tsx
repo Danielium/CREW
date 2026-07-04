@@ -183,7 +183,9 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, i
     }, 1000);
   };
 
-  const handleLocate = () => {
+  const handleLocate = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setTriggerLocate(prev => prev + 1);
   };
 

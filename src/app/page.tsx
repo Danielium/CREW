@@ -215,9 +215,19 @@ function MapContent() {
       });
       if (res.ok) {
         setShowClubJoinModal(false);
-        // Mark as member locally
+        // Mark as member locally (optimistic)
         setSelectedProposal({...selectedProposal, isMember: true});
-        await fetch(`/api/events/${selectedProposal.event.id}/join`, { method: "POST" });
+        const eventRes = await fetch(`/api/events/${selectedProposal.event.id}/join`, { method: "POST" });
+        if (!eventRes.ok) {
+          const eventData = await eventRes.json();
+          alert(eventData.error || "Заявка в клуб отправлена, но присоединиться к событию пока нельзя.");
+        }
+        
+        // Clear global cache so header updates club status
+        const { globalCache } = await import("@/lib/cache");
+        globalCache.clubs = null;
+        globalCache.userData = null;
+        
         fetchProposals();
         closeSheet();
       } else {

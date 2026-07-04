@@ -9,9 +9,11 @@ export async function POST(req: Request) {
     if (!session || !session.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     
     const userId = (session.user as any).id;
+    const body = await req.json();
+
     const userExists = await prisma.user.findUnique({ 
       where: { id: userId },
-      include: { clubMembers: { where: { status: "ACTIVE" } } }
+      include: { clubMembers: { where: { status: { in: ["ACTIVE", "PENDING"] } } } }
     });
     
     if (!userExists) {
@@ -23,12 +25,13 @@ export async function POST(req: Request) {
         }
       });
     } else if (userExists.clubMembers.length > 0) {
-      return NextResponse.json({ error: "У вас уже есть клуб" }, { status: 400 });
+      return NextResponse.json({ error: "Вы уже состоите в клубе или ваша заявка на рассмотрении" }, { status: 400 });
     }
 
-    const { name, description, joinType, tags, logoConfig } = await req.json();
+    const { name, description, joinType, tags, logoConfig } = body;
     
-    const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+    const { randomBytes } = await import('crypto');
+    const inviteCode = randomBytes(4).toString('hex').toUpperCase(); // 8 characters
 
     const club = await prisma.club.create({
       data: {
@@ -51,7 +54,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ club });
   } catch (error: any) {
     console.error("Club creation error", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error", stack: error.stack }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
 }
 

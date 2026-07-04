@@ -192,7 +192,7 @@ export default function LoginPage() {
         setError("Пользователь с таким юзернеймом уже существует");
       } else {
         if (isTgLogin) {
-          setMode("REGISTER_4"); // Skip name & avatar
+          handleRegister(); // Skip name & avatar
         } else {
           setMode("REGISTER_2");
         }
@@ -204,8 +204,8 @@ export default function LoginPage() {
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRegister = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setIsLoading(true);
     setError("");
 
