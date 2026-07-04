@@ -292,7 +292,7 @@ export default function LoginPage() {
         
         {mode !== "LOGIN" && (
           <div className="flex-1 flex justify-center items-center gap-2 pr-10">
-            {[1, 2, 3].map(step => (
+            {[1, 2, 3, 4].map(step => (
               <div 
                 key={step} 
                 className={`h-1.5 rounded-full transition-all duration-500 ${
@@ -334,10 +334,40 @@ export default function LoginPage() {
 
               <div className="mt-auto mb-8 text-center">
                 <p className="text-muted mb-4">Впервые здесь?</p>
-                <button type="button" disabled={isLoading} onClick={handleCheckUsername} className="w-full bg-primary text-black font-black uppercase tracking-wider py-4 rounded-[20px] flex justify-center items-center hover:bg-[#b3e600] active:scale-95 transition-all disabled:opacity-50">
-                  {isLoading ? <Loader2 className="animate-spin" size={24} /> : "Создать аккаунт"}
+                <button type="button" disabled={isLoading} onClick={() => { setTelegramUsername(""); setPassword(""); setError(""); setMode("REGISTER_1"); }} className="w-full bg-primary text-black font-black uppercase tracking-wider py-4 rounded-[20px] flex justify-center items-center hover:bg-[#b3e600] active:scale-95 transition-all disabled:opacity-50">
+                  Создать аккаунт
                 </button>
               </div>
+            </form>
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* REGISTER 1: CREDENTIALS */}
+        {/* ======================================================== */}
+        {mode === "REGISTER_1" && (
+          <div className="flex flex-col flex-1 min-h-0 animate-in fade-in slide-in-from-right-8 duration-500">
+            <div className="mb-10">
+              <h1 className="text-4xl font-black uppercase mb-4 leading-tight">Создать<br/>Аккаунт</h1>
+              <p className="text-muted">Шаг 1 из 4. Придумайте логин и пароль.</p>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); handleCheckUsername(); }} className="flex flex-col gap-4 flex-1">
+              {error && <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-xl text-sm font-medium">{error}</div>}
+              
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted"><Send size={20} /></div>
+                <input type="text" value={telegramUsername} onChange={(e) => setTelegramUsername(e.target.value)} placeholder="Telegram Username (@username)" required className="w-full bg-card border border-border rounded-[20px] py-4 pl-12 pr-4 text-foreground placeholder:text-muted/50 focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted"><Lock size={20} /></div>
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Придумайте пароль" required className="w-full bg-card border border-border rounded-[20px] py-4 pl-12 pr-4 text-foreground placeholder:text-muted/50 focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
+              </div>
+
+              <button type="submit" disabled={isLoading} className="w-full bg-primary text-black font-black uppercase tracking-wider py-4 rounded-[20px] flex justify-center items-center mt-auto mb-8 hover:bg-[#b3e600] active:scale-95 transition-all disabled:opacity-50">
+                {isLoading ? <Loader2 className="animate-spin" size={24} /> : <>Далее <ChevronRight size={20} className="ml-1" /></>}
+              </button>
             </form>
           </div>
         )}
