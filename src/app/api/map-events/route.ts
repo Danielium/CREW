@@ -78,18 +78,19 @@ export async function GET(req: Request) {
 
     const formattedProposals = visibleProposals.map(p => ({ type: "DUO", ...p }));
 
-    // Fetch club events
+    // Fetch club events and standalone events
     const clubEvents = await prisma.event.findMany({
       where: {
-        clubId: { not: null },
         routeData: { not: null },
         date: { gt: new Date() },
         OR: userId ? [
           { club: { joinType: "OPEN" } },
+          { clubId: null },
           { attendees: { some: { id: userId } } },
           { club: { members: { some: { userId: userId, status: "ACTIVE" } } } }
         ] : [
-          { club: { joinType: "OPEN" } }
+          { club: { joinType: "OPEN" } },
+          { clubId: null }
         ]
       },
       include: {
