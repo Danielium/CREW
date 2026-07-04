@@ -22,6 +22,14 @@ export default function PublicProfilePage() {
   const [showAllRuns, setShowAllRuns] = useState(false);
 
   useEffect(() => {
+    if (showDatePicker) {
+      window.dispatchEvent(new Event("hideNav"));
+    } else {
+      window.dispatchEvent(new Event("showNav"));
+    }
+  }, [showDatePicker]);
+
+  useEffect(() => {
     const fetchUser = async () => {
       try {
         const res = await fetch(`/api/users/${id}`);
