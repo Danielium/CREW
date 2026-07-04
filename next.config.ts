@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
     "*.trycloudflare.com",
     "localhost"
   ],
+  optimizeFonts: false,
 };
 
 export default nextConfig;
