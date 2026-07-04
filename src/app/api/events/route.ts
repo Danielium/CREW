@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
 
     const { title, description, location, date, distance, pace, image, routeData } = await req.json();
 
-    const checkInToken = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const checkInToken = crypto.randomBytes(3).toString('hex').toUpperCase();
 
     const event = await prisma.event.create({
       data: {

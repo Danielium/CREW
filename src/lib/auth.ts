@@ -38,7 +38,7 @@ export const authOptions: NextAuthOptions = {
             });
 
             if (!user) {
-              const dummyPassword = await bcrypt.hash(Math.random().toString(36).slice(-10), 10);
+              const dummyPassword = await bcrypt.hash(require("crypto").randomBytes(5).toString('hex'), 10);
               user = await prisma.user.create({
                 data: {
                   telegramUsername: tUsername,
