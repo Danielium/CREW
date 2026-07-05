@@ -138,12 +138,17 @@ export default function LogoBuilder() {
     <div className="fixed inset-0 flex flex-col bg-background text-foreground z-50 overflow-hidden">
       
       {/* Header */}
-      <div className="flex justify-between items-center px-4 pt-12 pb-4 bg-card border-b border-border">
-        <div></div>
-        <h1 className="text-xl font-bold">Эмблема клуба</h1>
+      <div className="flex justify-between items-center px-4 pt-[60px] pb-4 bg-card border-b border-border">
+        <button 
+          onClick={() => window.history.back()}
+          className="p-2 -ml-2 rounded-full text-foreground hover:bg-border transition-colors"
+        >
+          <ArrowLeft size={24} />
+        </button>
+        <h1 className="text-xl font-bold">Эмблема</h1>
         <button 
           onClick={handleSave}
-          className="p-2 rounded-full text-primary hover:bg-border transition-colors"
+          className="p-2 -mr-2 rounded-full text-primary hover:bg-border transition-colors"
         >
           <Check size={24} />
         </button>

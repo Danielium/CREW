@@ -116,7 +116,7 @@ export default function CreateEventPage() {
             <input 
               type="text"
               required
-              placeholder="Например: Воскресная длительная..."
+              placeholder="Придумайте название забега"
               className="bg-transparent border-none outline-none w-full font-medium"
               value={form.title}
               onChange={(e) => setForm({...form, title: e.target.value})}

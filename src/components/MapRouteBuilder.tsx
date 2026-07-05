@@ -238,23 +238,20 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, o
       
       {/* Search & Tools */}
       <div className="flex gap-2 relative z-10">
-        <div className="flex-1 bg-card border border-border rounded-xl flex items-center px-3 gap-2 focus-within:border-primary transition-colors h-10">
+        <form 
+          onSubmit={handleSearch} 
+          className="flex-1 bg-card border border-border rounded-xl flex items-center px-3 gap-2 focus-within:border-primary transition-colors h-10"
+        >
           <Search size={16} className="text-muted" />
           <input 
-            type="text" 
-            placeholder="Найти адрес... (Enter)" 
+            type="search" 
+            placeholder="Найти адрес..." 
             className="bg-transparent border-none outline-none w-full text-xs font-medium"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleSearch(e as any);
-              }
-            }}
           />
           {isSearching && <Loader2 size={14} className="animate-spin text-primary" />}
-        </div>
+        </form>
         <button 
           type="button" 
           onClick={handleLocate}

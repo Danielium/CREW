@@ -31,10 +31,10 @@ export default function ClubAdminPage() {
       setIsUploadingLogo(true);
       try {
         const config = JSON.parse(savedConfig);
-        fetch(`/api/clubs/${id}`, {
+        fetch(`/api/clubs/${id}/logo`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ logoConfig: config })
+          body: JSON.stringify({ logoConfig: JSON.stringify(config) })
         }).then(res => {
           if (res.ok) fetchClub();
         }).finally(() => {
@@ -153,7 +153,10 @@ export default function ClubAdminPage() {
 
         {/* Logo Edit Section */}
         <div className="flex items-center gap-4 mt-2">
-          <div className="relative group cursor-pointer" onClick={() => router.push(`/club/logo-builder?admin=true&clubId=${id}`)}>
+          <div className="relative group cursor-pointer" onClick={() => {
+            if (club?.logoConfig) localStorage.setItem("clubLogoConfig", club.logoConfig);
+            router.push(`/club/logo-builder?admin=true&clubId=${id}`);
+          }}>
             {(() => {
               try {
                 const logo = JSON.parse(club.logoConfig);
