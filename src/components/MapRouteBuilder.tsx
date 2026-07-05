@@ -125,12 +125,20 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, o
           .then(res => res.json())
           .then(data => {
             if (data && data.address) {
-              const road = data.address.road || "";
-              const house = data.address.house_number || "";
-              if (road) {
-                onAddressFound(`${road}${house ? `, ${house}` : ''}`);
+              const a = data.address;
+              const city = a.city || a.town || a.village || "";
+              const road = a.road || "";
+              const house = a.house_number || "";
+              
+              const parts = [];
+              if (city) parts.push(city);
+              if (road) parts.push(road);
+              if (house) parts.push(house);
+              
+              if (parts.length > 0) {
+                onAddressFound(parts.join(", "));
               } else {
-                onAddressFound(data.display_name?.split(',')[0] || "");
+                onAddressFound(data.display_name || "");
               }
             }
           })

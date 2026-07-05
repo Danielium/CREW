@@ -43,7 +43,21 @@ function CreateProposalInner() {
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position[0]}&lon=${position[1]}&accept-language=ru`);
         const data = await res.json();
         if (data && data.address) {
-          setAddress(data.display_name || "Адрес не найден");
+          const a = data.address;
+          const city = a.city || a.town || a.village || "";
+          const road = a.road || "";
+          const house = a.house_number || "";
+          
+          const parts = [];
+          if (city) parts.push(city);
+          if (road) parts.push(road);
+          if (house) parts.push(house);
+          
+          if (parts.length > 0) {
+            setAddress(parts.join(", "));
+          } else {
+            setAddress(data.display_name || "Адрес не найден");
+          }
         }
       } catch (e) {
         setAddress("Ошибка сети");
