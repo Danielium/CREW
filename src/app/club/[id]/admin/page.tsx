@@ -24,6 +24,31 @@ export default function ClubAdminPage() {
     fetchClub();
   }, [id]);
 
+  useEffect(() => {
+    // Check if we just returned from logo builder
+    const savedConfig = localStorage.getItem("clubLogoConfig");
+    if (savedConfig && id) {
+      setIsUploadingLogo(true);
+      try {
+        const config = JSON.parse(savedConfig);
+        fetch(`/api/clubs/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ logoConfig: config })
+        }).then(res => {
+          if (res.ok) fetchClub();
+        }).finally(() => {
+          localStorage.removeItem("clubLogoConfig");
+          setIsUploadingLogo(false);
+        });
+      } catch (e) {
+        console.error(e);
+        localStorage.removeItem("clubLogoConfig");
+        setIsUploadingLogo(false);
+      }
+    }
+  }, [id]);
+
   const fetchClub = async () => {
     try {
       const res = await fetch(`/api/clubs/${id}`);
@@ -35,80 +60,6 @@ export default function ClubAdminPage() {
       console.error(e);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploadingLogo(true);
-    try {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const img = new Image();
-        img.onload = async () => {
-          const canvas = document.createElement("canvas");
-          const MAX_SIZE = 300;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > height) {
-            if (width > MAX_SIZE) {
-              height *= MAX_SIZE / width;
-              width = MAX_SIZE;
-            }
-          } else {
-            if (height > MAX_SIZE) {
-              width *= MAX_SIZE / height;
-              height = MAX_SIZE;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx?.drawImage(img, 0, 0, width, height);
-
-          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
-          
-          try {
-            const currentConfig = club.logoConfig ? JSON.parse(club.logoConfig) : {};
-            currentConfig.imageUrl = compressedBase64;
-            
-            const saveRes = await fetch(`/api/clubs/${id}/logo`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ logoConfig: JSON.stringify(currentConfig) }),
-            });
-            
-            if (saveRes.ok) {
-              fetchClub();
-            } else {
-              alert("Ошибка при сохранении логотипа");
-            }
-          } catch (apiError) {
-            console.error("API error", apiError);
-            alert("Ошибка сети при сохранении");
-          } finally {
-            setIsUploadingLogo(false);
-          }
-        };
-        img.onerror = () => {
-          alert("Ошибка чтения картинки");
-          setIsUploadingLogo(false);
-        };
-        img.src = reader.result as string;
-      };
-      reader.onerror = () => {
-        alert("Ошибка файла");
-        setIsUploadingLogo(false);
-      };
-      reader.readAsDataURL(file);
-    } catch (e) {
-      console.error(e);
-      alert("Ошибка загрузки");
-      setIsUploadingLogo(false);
     }
   };
 
@@ -202,7 +153,7 @@ export default function ClubAdminPage() {
 
         {/* Logo Edit Section */}
         <div className="flex items-center gap-4 mt-2">
-          <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+          <div className="relative group cursor-pointer" onClick={() => router.push(`/club/logo-builder?admin=true&clubId=${id}`)}>
             {(() => {
               try {
                 const logo = JSON.parse(club.logoConfig);
@@ -217,16 +168,9 @@ export default function ClubAdminPage() {
               } catch(e) {}
               return null;
             })()}
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              accept="image/*" 
-              onChange={handleImageUpload} 
-            />
           </div>
           <div className="text-sm text-muted">
-            Нажмите на логотип, чтобы загрузить свою фотографию
+            Нажмите на логотип, чтобы изменить дизайн
           </div>
         </div>
       </div>

@@ -18,6 +18,7 @@ L.Icon.Default.mergeOptions({
 interface MapRouteBuilderProps {
   onDistanceChange: (distance: string) => void;
   onRouteDataChange?: (routeData: string) => void;
+  onAddressFound?: (address: string) => void;
   initialRouteData?: string | null;
 }
 
@@ -55,7 +56,7 @@ function RouteEvents({
   return null;
 }
 
-export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, initialRouteData }: MapRouteBuilderProps) {
+export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, onAddressFound, initialRouteData }: MapRouteBuilderProps) {
   const [waypoints, setWaypoints] = useState<L.LatLng[]>([]);
   const [segments, setSegments] = useState<L.LatLng[][]>([]);
   const [isRouting, setIsRouting] = useState(false);
@@ -98,7 +99,7 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, i
     setDistance(distStr);
     
     // Pass to parent
-    onDistanceChange(distStr);
+    if (onDistanceChange) onDistanceChange(distStr);
     if (onRouteDataChange) {
       let flattened: L.LatLng[] = [];
       if (segs.length === 0) {
@@ -118,6 +119,23 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, i
     if (waypoints.length === 0) {
       setWaypoints([newPoint]);
       updateDistanceAndRoute([newPoint], [], map);
+      
+      if (onAddressFound) {
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${newPoint.lat}&lon=${newPoint.lng}&accept-language=ru`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.address) {
+              const road = data.address.road || "";
+              const house = data.address.house_number || "";
+              if (road) {
+                onAddressFound(`${road}${house ? `, ${house}` : ''}`);
+              } else {
+                onAddressFound(data.display_name?.split(',')[0] || "");
+              }
+            }
+          })
+          .catch(e => console.error("Address fetch error", e));
+      }
       return;
     }
 
@@ -172,15 +190,26 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, i
     if (onRouteDataChange) onRouteDataChange("[]");
   };
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!search.trim()) return;
-    setActiveSearch(search);
     setIsSearching(true);
-    setTimeout(() => {
-      setActiveSearch(null);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(search)}&accept-language=ru`);
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        if (mapRef.current) {
+          mapRef.current.flyTo([parseFloat(lat), parseFloat(lon)], 14);
+        }
+      } else {
+        alert("Адрес не найден");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
       setIsSearching(false);
-    }, 1000);
+    }
   };
 
   const handleLocate = (e: React.MouseEvent) => {
@@ -247,10 +276,6 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, i
           <TileLayer
             attribution='&copy; <a href="https://carto.com/">CartoDB</a>'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          />
-          
-          <MapController 
-            searchQuery={activeSearch} 
           />
           
           <UserLocationMarker triggerLocate={triggerLocate} />

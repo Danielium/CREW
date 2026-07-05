@@ -564,6 +564,16 @@ function MapContent() {
                   </div>
                 </div>
 
+                {selectedProposal.address && (
+                  <div className="bg-muted/30 rounded-2xl p-4 flex items-center gap-3">
+                    <MapPin size={20} className="text-primary flex-shrink-0" />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-0.5">Локация</span>
+                      <span className="font-medium text-sm leading-tight">{selectedProposal.address}</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="bg-muted/30 rounded-2xl p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Users size={20} className="text-primary" />

@@ -111,6 +111,7 @@ model RunProposal {
   creatorId       String
   lat             Float
   lng             Float
+  address         String?
   routeData       String?  // JSON stringified coordinates
   pace            String?
   startTime       DateTime

@@ -30,8 +30,36 @@ function CreateProposalInner() {
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
   const [maxParticipants, setMaxParticipants] = useState("");
+  const [address, setAddress] = useState("");
+  const [isFetchingAddress, setIsFetchingAddress] = useState(false);
 
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (!position) return;
+    const fetchAddress = async () => {
+      setIsFetchingAddress(true);
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position[0]}&lon=${position[1]}&accept-language=ru`);
+        const data = await res.json();
+        if (data && data.address) {
+          const road = data.address.road || "";
+          const house = data.address.house_number || "";
+          if (road) {
+            setAddress(`${road}${house ? `, ${house}` : ''}`);
+          } else {
+            setAddress(data.display_name?.split(',')[0] || "Адрес не найден");
+          }
+        }
+      } catch (e) {
+        setAddress("Ошибка сети");
+      } finally {
+        setIsFetchingAddress(false);
+      }
+    };
+    const timer = setTimeout(fetchAddress, 800);
+    return () => clearTimeout(timer);
+  }, [position]);
 
   useEffect(() => {
     // Hide navigation bar
@@ -106,6 +134,7 @@ function CreateProposalInner() {
         body: JSON.stringify({
           lat: position[0],
           lng: position[1],
+          address: address,
           pace: finalPace,
           startTime: startTime.toISOString(),
           maxParticipants: parseInt(maxParticipants) || 0
@@ -139,8 +168,19 @@ function CreateProposalInner() {
           {typeof window !== 'undefined' && (
             <MapPicker position={position} setPosition={setPosition} />
           )}
-          <div className="absolute top-4 left-4 bg-black/60 backdrop-blur px-3 py-1.5 rounded-full text-xs font-bold pointer-events-none z-[400] text-white">
-            Кликните на карту, чтобы поставить точку
+          <div className="absolute bottom-4 left-4 right-4 bg-background/90 backdrop-blur-md px-4 py-3 rounded-[16px] flex items-center gap-3 z-[400] shadow-lg border border-border">
+            <MapPin size={18} className="text-primary flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted uppercase tracking-wider font-bold mb-0.5">Точка старта</p>
+              {isFetchingAddress ? (
+                <div className="flex items-center gap-2 text-sm text-foreground">
+                  <Loader2 size={14} className="animate-spin text-primary" />
+                  <span>Поиск адреса...</span>
+                </div>
+              ) : (
+                <p className="text-sm font-semibold text-foreground truncate">{address || "Выберите место на карте"}</p>
+              )}
+            </div>
           </div>
         </div>
 

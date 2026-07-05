@@ -9,13 +9,14 @@ export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
     if (!session || !session.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { lat, lng, routeData, pace, startTime, maxParticipants } = await req.json();
+    const { lat, lng, address, routeData, pace, startTime, maxParticipants } = await req.json();
 
     const proposal = await prisma.runProposal.create({
       data: {
         creatorId: (session.user as any).id,
         lat,
         lng,
+        address,
         routeData: routeData ? JSON.stringify(routeData) : null,
         pace,
         startTime: new Date(startTime),

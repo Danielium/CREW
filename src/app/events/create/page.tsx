@@ -116,7 +116,7 @@ export default function CreateEventPage() {
             <input 
               type="text"
               required
-              placeholder="e.g. Sunday Long Run"
+              placeholder="Например: Воскресная длительная..."
               className="bg-transparent border-none outline-none w-full font-medium"
               value={form.title}
               onChange={(e) => setForm({...form, title: e.target.value})}
@@ -132,21 +132,6 @@ export default function CreateEventPage() {
               className="bg-transparent border-none outline-none w-full font-medium resize-none min-h-[80px] text-sm"
               value={form.description}
               onChange={(e) => setForm({...form, description: e.target.value})}
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Точка сбора</label>
-          <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors">
-            <MapPin size={18} className="text-primary" />
-            <input 
-              type="text"
-              required
-              placeholder="ул. Ленина, д. 1"
-              className="bg-transparent border-none outline-none w-full font-medium"
-              value={form.location}
-              onChange={(e) => setForm({...form, location: e.target.value})}
             />
           </div>
         </div>
@@ -205,7 +190,23 @@ export default function CreateEventPage() {
         <MapRouteBuilder 
           onDistanceChange={(dist) => setForm(prev => ({...prev, distance: dist}))} 
           onRouteDataChange={(route) => setForm(prev => ({...prev, routeData: route}))} 
+          onAddressFound={(address) => setForm(prev => ({...prev, location: address}))}
         />
+
+        <div className="flex flex-col gap-2">
+          <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Точка сбора</label>
+          <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors">
+            <MapPin size={18} className="text-primary" />
+            <input 
+              type="text"
+              required
+              placeholder="ул. Ленина, д. 1 (заполняется автоматически)"
+              className="bg-transparent border-none outline-none w-full font-medium"
+              value={form.location}
+              onChange={(e) => setForm({...form, location: e.target.value})}
+            />
+          </div>
+        </div>
 
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Ожидаемый Темп (мин/км)</label>
