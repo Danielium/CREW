@@ -33,6 +33,12 @@ export function TelegramInit() {
             if (tg.disableVerticalSwipes) {
               try { tg.disableVerticalSwipes(); } catch(e){}
             }
+            if (tg.requestFullscreen) {
+              try { tg.requestFullscreen(); } catch(e){}
+            }
+            if (tg.setBottomBarColor) {
+              try { tg.setBottomBarColor("#000000"); } catch(e){}
+            }
           }
 
           // Step 1: Mount viewport
