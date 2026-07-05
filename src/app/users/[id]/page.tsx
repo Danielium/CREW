@@ -184,10 +184,7 @@ export default function PublicProfilePage() {
 
   return (
     <div className="flex flex-col min-h-[100dvh] text-foreground pt-safe pb-24 relative z-10 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center px-4 pb-4 sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <h1 className="text-xl font-black uppercase tracking-widest">Профиль</h1>
-        {/* Native back button used here via TelegramBackButton */}
-      </div>
+
 
       {/* Header & Avatar */}
       <div className="px-4 mb-6 relative">
