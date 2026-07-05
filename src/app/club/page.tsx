@@ -46,7 +46,7 @@ export default function ClubTab() {
 
   const inClub = userData?.clubMembers?.length > 0;
   
-  const tabs = inClub ? ["События", "Атлеты", "Клубы"] : ["Клубы"];
+  const tabs = inClub ? ["События", "Атлеты", "Клубы", "Топ"] : ["Клубы", "Топ"];
 
   if (isLoadingUser) {
     return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-primary" size={40} /></div>;
@@ -107,6 +107,7 @@ export default function ClubTab() {
         {activeTab === "События" && <FeedEvents userData={userData} />}
         {activeTab === "Атлеты" && <Leaderboard clubId={userData?.clubMembers[0]?.clubId} />}
         {activeTab === "Клубы" && <GlobalClubs inClub={inClub} />}
+        {activeTab === "Топ" && <Leaderboard />}
       </div>
     </div>
   );
