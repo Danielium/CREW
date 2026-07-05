@@ -43,13 +43,7 @@ function CreateProposalInner() {
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position[0]}&lon=${position[1]}&accept-language=ru`);
         const data = await res.json();
         if (data && data.address) {
-          const road = data.address.road || "";
-          const house = data.address.house_number || "";
-          if (road) {
-            setAddress(`${road}${house ? `, ${house}` : ''}`);
-          } else {
-            setAddress(data.display_name?.split(',')[0] || "Адрес не найден");
-          }
+          setAddress(data.display_name || "Адрес не найден");
         }
       } catch (e) {
         setAddress("Ошибка сети");
@@ -168,19 +162,8 @@ function CreateProposalInner() {
           {typeof window !== 'undefined' && (
             <MapPicker position={position} setPosition={setPosition} />
           )}
-          <div className="absolute bottom-4 left-4 right-4 bg-background/90 backdrop-blur-md px-4 py-3 rounded-[16px] flex items-center gap-3 z-[400] shadow-lg border border-border">
-            <MapPin size={18} className="text-primary flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-muted uppercase tracking-wider font-bold mb-0.5">Точка старта</p>
-              {isFetchingAddress ? (
-                <div className="flex items-center gap-2 text-sm text-foreground">
-                  <Loader2 size={14} className="animate-spin text-primary" />
-                  <span>Поиск адреса...</span>
-                </div>
-              ) : (
-                <p className="text-sm font-semibold text-foreground truncate">{address || "Выберите место на карте"}</p>
-              )}
-            </div>
+          <div className="absolute top-4 left-4 bg-black/60 backdrop-blur px-3 py-1.5 rounded-full text-xs font-bold pointer-events-none z-[400] text-white">
+            Кликните на карту, чтобы поставить точку
           </div>
         </div>
 
@@ -211,6 +194,25 @@ function CreateProposalInner() {
                   className="bg-transparent border-none outline-none w-full font-medium text-sm pl-8 cursor-pointer relative z-20" 
                 />
               </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Локация</label>
+            <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors">
+              {isFetchingAddress ? (
+                <Loader2 size={18} className="text-primary animate-spin" />
+              ) : (
+                <MapPin size={18} className="text-primary" />
+              )}
+              <textarea 
+                required
+                placeholder="Адрес (заполняется автоматически)"
+                className="bg-transparent border-none outline-none w-full font-medium text-sm resize-none min-h-[40px]"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                rows={2}
+              />
             </div>
           </div>
 
