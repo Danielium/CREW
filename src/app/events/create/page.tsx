@@ -200,7 +200,7 @@ export default function CreateEventPage() {
             <input 
               type="text"
               required
-              placeholder="ул. Ленина, д. 1 (заполняется автоматически)"
+              placeholder="Адрес"
               className="bg-transparent border-none outline-none w-full font-medium"
               value={form.location}
               onChange={(e) => setForm({...form, location: e.target.value})}

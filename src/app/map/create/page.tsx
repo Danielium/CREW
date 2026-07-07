@@ -221,7 +221,7 @@ function CreateProposalInner() {
               )}
               <textarea 
                 required
-                placeholder="Адрес (заполняется автоматически)"
+                placeholder="Адрес"
                 className="bg-transparent border-none outline-none w-full font-medium text-sm resize-none min-h-[40px]"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
