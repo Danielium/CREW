@@ -37,9 +37,18 @@ function MapContent() {
       setForceCenter([parseFloat(lat), parseFloat(lng)]);
     }
     
-    if (focus && proposals.length > 0) {
-      const p = proposals.find(pr => pr.id === focus);
-      if (p && !selectedProposal) {
+    let focusId = focus;
+    
+    // Support Telegram Mini App startapp parameter
+    const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
+    const startParam = tg?.initDataUnsafe?.start_param;
+    if (startParam && startParam.startsWith('focus_')) {
+      focusId = startParam.replace('focus_', '');
+    }
+    
+    if (focusId && proposals.length > 0) {
+      const p = proposals.find(pr => pr.id === focusId);
+      if (p && (!selectedProposal || selectedProposal.id !== focusId)) {
         handleSelectProposal(p);
       }
     }
@@ -487,7 +496,9 @@ function MapContent() {
                   <h2 className="text-2xl font-black uppercase tracking-tight leading-none">{selectedProposal.event.title}</h2>
                   <button 
                     onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/?focus=${selectedProposal.id}`);
+                      const botAppUrl = process.env.NEXT_PUBLIC_BOT_APP_URL;
+                  const link = botAppUrl ? `${botAppUrl}?startapp=focus_${selectedProposal.id}` : `${window.location.origin}/?focus=${selectedProposal.id}`;
+                  navigator.clipboard.writeText(link);
                       alert("Ссылка скопирована!");
                     }}
                     className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary active:scale-95 transition-transform shrink-0"
@@ -539,7 +550,9 @@ function MapContent() {
               <h2 className="text-2xl font-black uppercase tracking-tight">Совместная пробежка</h2>
               <button 
                 onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/?focus=${selectedProposal.id}`);
+                  const botAppUrl = process.env.NEXT_PUBLIC_BOT_APP_URL;
+                  const link = botAppUrl ? `${botAppUrl}?startapp=focus_${selectedProposal.id}` : `${window.location.origin}/?focus=${selectedProposal.id}`;
+                  navigator.clipboard.writeText(link);
                   alert("Ссылка скопирована!");
                 }}
                 className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary active:scale-95 transition-transform shrink-0"
