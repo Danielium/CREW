@@ -45,6 +45,22 @@ function MapContent() {
     }
   }, [searchParams, proposals]);
 
+  useEffect(() => {
+    if (session?.user) {
+      const lastSync = localStorage.getItem("lastStravaSync");
+      const now = Date.now();
+      // Auto-sync every 15 minutes (900000 ms) silently in background
+      if (!lastSync || now - parseInt(lastSync) > 900000) {
+        fetch("/api/strava/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: (session.user as any).id })
+        }).catch(() => {});
+        localStorage.setItem("lastStravaSync", now.toString());
+      }
+    }
+  }, [session]);
+
   const [isEditingProposal, setIsEditingProposal] = useState(false);
   const [editDate, setEditDate] = useState("");
   const [editTime, setEditTime] = useState("");
