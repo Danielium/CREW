@@ -51,7 +51,7 @@ export async function POST(req: Request) {
       const { sendTelegramMessageToUser } = await import('@/lib/telegram');
       
       // We don't expose requester's TG username here for privacy until accepted, but we can show their name
-      const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+      const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' (мск)';
       const text = `🏃 <b>Новая заявка на пробежку!</b>\n\nАтлет <b>${request.user.name || "Аноним"}</b> хочет присоединиться к вашей пробежке, запланированной на <i>${runDate}</i>.\n\nЧто делаем?`;
       
       const replyMarkup = {

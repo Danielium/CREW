@@ -113,7 +113,7 @@ export async function POST(req: Request) {
               });
 
               // Edit the original message to remove buttons and show the result
-              const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+              const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' (мск)';
               
               let newText = `🏃 <b>Заявка на пробежку (${runDate})</b>\n\n`;
               if (isAccept) {
