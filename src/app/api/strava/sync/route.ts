@@ -19,9 +19,9 @@ export async function POST() {
 
     // BUG-033 fix: simple idempotency guard — reject if synced within last 5 seconds
     const recentRun = await prisma.run.findFirst({
-      where: { userId, createdAt: { gte: new Date(Date.now() - 5000) } },
-      orderBy: { createdAt: "desc" },
-      select: { createdAt: true }
+      where: { userId, startTime: { gte: new Date(Date.now() - 5000) } },
+      orderBy: { startTime: "desc" },
+      select: { startTime: true }
     });
     if (recentRun) {
       return NextResponse.json({ success: true, syncedCount: 0, message: "Too soon" });

@@ -256,14 +256,23 @@ export default function SettingsPage() {
               </div>
             ) : isStravaConnected ? (
               <div className="flex flex-col">
-                <div className="flex items-center justify-between p-4 border-b border-border">
+                <div className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-5 h-5 bg-[#FC4C02] rounded flex items-center justify-center text-white text-[10px] font-bold">S</div>
                     <p className="font-bold">Strava</p>
                   </div>
-                  <span className="text-xs font-bold text-primary uppercase">Подключено</span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleStravaDisconnect}
+                      disabled={isSyncingStrava || isDisconnectingStrava}
+                      className="text-xs font-bold text-red-500 hover:text-red-400 uppercase transition-colors"
+                    >
+                      {isDisconnectingStrava ? "Отвязка..." : "Отключить"}
+                    </button>
+                    <span className="text-xs font-bold text-primary uppercase">Подключено</span>
+                  </div>
                 </div>
-                <div className="p-4 flex flex-col gap-2">
+                <div className="px-4 pb-4">
                   <button 
                     onClick={handleStravaSync}
                     disabled={isSyncingStrava || isDisconnectingStrava}
@@ -271,14 +280,6 @@ export default function SettingsPage() {
                   >
                     {isSyncingStrava ? <Loader2 size={16} className="animate-spin" /> : <Activity size={16} />}
                     {isSyncingStrava ? "Синхронизация..." : "Синхронизировать тренировки"}
-                  </button>
-                  <button 
-                    onClick={handleStravaDisconnect}
-                    disabled={isSyncingStrava || isDisconnectingStrava}
-                    className="w-full text-red-500 hover:text-red-400 text-xs font-bold uppercase tracking-widest py-2 transition-colors flex items-center justify-center gap-2"
-                  >
-                    {isDisconnectingStrava ? <Loader2 size={14} className="animate-spin" /> : null}
-                    {isDisconnectingStrava ? "Отвязываем..." : "Отвязать Strava"}
                   </button>
                 </div>
               </div>
@@ -294,14 +295,6 @@ export default function SettingsPage() {
                 </div>
               </Link>
             )}
-
-            <div className="flex items-center justify-between p-4 opacity-50 pointer-events-none">
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 bg-white rounded flex items-center justify-center text-black text-[10px] font-bold">A</div>
-                <p className="font-bold">Apple Health</p>
-              </div>
-              <span className="text-xs font-bold text-muted uppercase">Скоро</span>
-            </div>
 
           </div>
         </div>
