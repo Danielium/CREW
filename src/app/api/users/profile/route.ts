@@ -22,10 +22,10 @@ export async function PUT(req: Request) {
     }
 
     if (image !== undefined && image !== null) {
-      if (typeof image !== "string" || image.length > 2000) {
+      if (typeof image !== "string") {
         return NextResponse.json({ error: "Invalid image URL" }, { status: 400 });
       }
-      if (image.startsWith("data:") || image.startsWith("javascript:")) {
+      if (image.startsWith("javascript:")) {
         return NextResponse.json({ error: "Invalid image format" }, { status: 400 });
       }
     }
