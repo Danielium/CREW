@@ -78,7 +78,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     // Notify accepted participants
     if (proposal.requests.length > 0) {
       const { sendTelegramMessageToUser } = await import('@/lib/telegram');
-      const runDate = new Date(proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' (мск)';
+      const runDate = new Date(proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' мск';
       const text = `⚠️ <b>Отмена пробежки</b>\n\nОрганизатор <b>${proposal.creator?.name || "Аноним"}</b> отменил пробежку, запланированную на <i>${runDate}</i>.`;
       
       for (const req of proposal.requests) {

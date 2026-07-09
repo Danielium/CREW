@@ -108,7 +108,7 @@ export async function POST(req: Request) {
                 });
 
                 // Edit message to remove buttons
-                const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' (мск)';
+                const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' мск';
                 const newText = `🏃 <b>Заявка на пробежку (${runDate})</b>\n\n⚠️ Атлет <b>${request.user.name || "Аноним"}</b> отменил эту заявку.`;
                 
                 await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/editMessageText`, {
@@ -140,7 +140,7 @@ export async function POST(req: Request) {
               });
 
               // Edit the original message to remove buttons and show the result
-              const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' (мск)';
+              const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' мск';
               
               let newText = `🏃 <b>Заявка на пробежку (${runDate})</b>\n\n`;
               if (isAccept) {
