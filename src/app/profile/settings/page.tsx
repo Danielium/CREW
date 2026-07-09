@@ -269,7 +269,6 @@ export default function SettingsPage() {
                     >
                       {isDisconnectingStrava ? "Отвязка..." : "Отключить"}
                     </button>
-                    <span className="text-xs font-bold text-primary uppercase">Подключено</span>
                   </div>
                 </div>
                 <div className="px-4 pb-4">
