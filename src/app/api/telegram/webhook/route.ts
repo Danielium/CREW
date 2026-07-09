@@ -13,9 +13,33 @@ export async function POST(req: Request) {
     // Handle /start command
     if (body.message && typeof body.message.text === 'string' && body.message.text.startsWith('/start')) {
       const chatId = body.message.chat.id;
+      const telegramId = body.message.from.id;
       const firstName = body.message.from?.first_name || "Бегун";
+      let username = body.message.from?.username;
       
       console.log(`Received /start from ${firstName} (chatId: ${chatId})`);
+      
+      // Auto-link account if username exists
+      if (username) {
+        username = '@' + username.toLowerCase();
+        const user = await prisma.user.findUnique({ where: { telegramUsername: username } });
+        if (user) {
+          const accountExists = await prisma.account.findFirst({
+            where: { provider: 'telegram', providerAccountId: String(telegramId) }
+          });
+          if (!accountExists) {
+            await prisma.account.create({
+              data: {
+                userId: user.id,
+                type: "oauth",
+                provider: "telegram",
+                providerAccountId: String(telegramId),
+              }
+            });
+            console.log(`Linked Telegram ID ${telegramId} to user ${user.id} via /start`);
+          }
+        }
+      }
       
       const welcomeText = `Привет, ${firstName}! 👋\n\nДобро пожаловать в CREW — приложение для бегунов и беговых клубов!\nЗдесь ты можешь находить компанию для пробежек, вступать в клубы и соревноваться с другими.\n\nЖми кнопку ниже, чтобы открыть приложение!`;
       

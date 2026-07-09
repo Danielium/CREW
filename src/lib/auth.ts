@@ -95,6 +95,33 @@ export const authOptions: NextAuthOptions = {
               }
             }
 
+            // Extract numeric Telegram ID from initData and save to Account
+            try {
+              const params = new URLSearchParams(initData);
+              const userParam = params.get("user");
+              if (userParam) {
+                const tgUser = JSON.parse(userParam);
+                if (tgUser && tgUser.id) {
+                  // Upsert Account record
+                  const accountExists = await prisma.account.findFirst({
+                    where: { provider: 'telegram', providerAccountId: String(tgUser.id) }
+                  });
+                  if (!accountExists) {
+                    await prisma.account.create({
+                      data: {
+                        userId: user.id,
+                        type: "oauth",
+                        provider: "telegram",
+                        providerAccountId: String(tgUser.id),
+                      }
+                    });
+                  }
+                }
+              }
+            } catch (e) {
+              console.error("Failed to parse initData user:", e);
+            }
+
             return {
               id: user.id,
               email: user.telegramUsername,
