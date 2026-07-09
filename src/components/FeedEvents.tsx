@@ -199,7 +199,7 @@ export default function FeedEvents({ userData }: { userData: any }) {
 
 
               {/* Avatars */}
-              <div className="border-t border-white/10 p-5 pt-4 pb-5 flex items-center justify-between">
+              <div className="p-5 pt-2 pb-5 flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="flex -space-x-3">
                     {ev.attendees?.slice(0, 4).map((user: any) => (
