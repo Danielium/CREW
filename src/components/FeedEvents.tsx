@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Edit2, Trash2, Calendar, MapPin, Activity, Clock, BarChart2, User, KeyRound, Lock, Check, Plus, Footprints, Play, X } from "lucide-react";
+import { Loader2, Edit2, Trash2, Calendar, MapPin, Activity, Clock, User, KeyRound, Lock, Check, Plus, Footprints, Play, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { globalCache } from "@/lib/cache";
@@ -166,8 +166,8 @@ export default function FeedEvents({ userData }: { userData: any }) {
             {/* Stats Bottom Section */}
             <div className="bg-[#1a1a1c] flex flex-col relative z-20">
               
-              {/* 3 Columns */}
-              <div className="grid grid-cols-[28%_44%_28%] divide-x divide-white/10 py-4 items-center w-full">
+              {/* 2 Columns */}
+              <div className="grid grid-cols-2 divide-x divide-white/10 py-4 items-center w-full">
                 {/* Distance */}
                 <div className="flex items-center gap-1.5 justify-center min-w-0 px-1">
                   <Activity size={18} className="text-primary flex-shrink-0" />
@@ -193,16 +193,8 @@ export default function FeedEvents({ userData }: { userData: any }) {
                     <span className="text-[10px] text-white/50 font-medium mt-0.5 truncate">Темп</span>
                   </div>
                 </div>
-
-                {/* Level */}
-                <div className="flex items-center gap-1.5 justify-center min-w-0 px-1">
-                  <BarChart2 size={18} className="text-primary flex-shrink-0" />
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[14px] font-black text-white leading-none truncate">Средний</span>
-                    <span className="text-[10px] text-white/50 font-medium mt-0.5 truncate">Уровень</span>
-                  </div>
-                </div>
               </div>
+
 
               {/* Avatars */}
               <div className="border-t border-white/10 p-5 pt-4 pb-5 flex items-center justify-between">
