@@ -67,3 +67,21 @@ export async function getActivityInfo(access_token: string, activityId: string |
 
   return res.json();
 }
+
+/**
+ * Fetches recent activities for the authenticated athlete.
+ */
+export async function getAthleteActivities(access_token: string, per_page: number = 30) {
+  const res = await fetch(`https://www.strava.com/api/v3/athlete/activities?per_page=${per_page}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch Strava activities: ${await res.text()}`);
+  }
+
+  return res.json();
+}

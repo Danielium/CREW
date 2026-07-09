@@ -1,5 +1,5 @@
 "use client";
-import { ArrowLeft, Bell, Globe, Shield, LogOut, ChevronRight, X } from "lucide-react";
+import { ArrowLeft, Bell, Globe, Shield, LogOut, ChevronRight, X, Loader2, Activity } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
@@ -23,6 +23,7 @@ export default function SettingsPage() {
   const { data: session } = useSession();
   const [isStravaConnected, setIsStravaConnected] = useState(false);
   const [isLoadingIntegrations, setIsLoadingIntegrations] = useState(true);
+  const [isSyncingStrava, setIsSyncingStrava] = useState(false);
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -68,6 +69,33 @@ export default function SettingsPage() {
   const handleSavePrivacy = (value: string) => {
     setPrivacy(value);
     localStorage.setItem("profilePrivacy", value);
+  };
+
+  const handleStravaSync = async () => {
+    if (!session?.user) return;
+    setIsSyncingStrava(true);
+    try {
+      const res = await fetch("/api/strava/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: (session.user as any).id })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.syncedCount > 0) {
+          alert(`Синхронизировано новых тренировок: ${data.syncedCount}`);
+        } else {
+          alert("Новых тренировок не найдено.");
+        }
+      } else {
+        alert("Ошибка при синхронизации.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Ошибка при синхронизации.");
+    } finally {
+      setIsSyncingStrava(false);
+    }
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -211,12 +239,24 @@ export default function SettingsPage() {
                 <span className="text-xs font-bold text-muted">Загрузка...</span>
               </div>
             ) : isStravaConnected ? (
-              <div className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 bg-[#FC4C02] rounded flex items-center justify-center text-white text-[10px] font-bold">S</div>
-                  <p className="font-bold">Strava</p>
+              <div className="flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b border-border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 bg-[#FC4C02] rounded flex items-center justify-center text-white text-[10px] font-bold">S</div>
+                    <p className="font-bold">Strava</p>
+                  </div>
+                  <span className="text-xs font-bold text-primary uppercase">Подключено</span>
                 </div>
-                <span className="text-xs font-bold text-primary uppercase">Подключено</span>
+                <div className="p-4">
+                  <button 
+                    onClick={handleStravaSync}
+                    disabled={isSyncingStrava}
+                    className="w-full bg-border hover:bg-border/80 text-foreground text-xs font-bold uppercase tracking-widest py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                  >
+                    {isSyncingStrava ? <Loader2 size={16} className="animate-spin" /> : <Activity size={16} />}
+                    {isSyncingStrava ? "Синхронизация..." : "Синхронизировать тренировки"}
+                  </button>
+                </div>
               </div>
             ) : (
               <Link href="/api/strava/connect" className="flex items-center justify-between p-4 hover:bg-border/50 transition-colors">
