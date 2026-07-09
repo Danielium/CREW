@@ -49,6 +49,7 @@ function MapContent() {
     if (focusId && proposals.length > 0) {
       const p = proposals.find(pr => pr.id === focusId);
       if (p && (!selectedProposal || selectedProposal.id !== focusId)) {
+        setForceCenter([p.lat, p.lng]);
         handleSelectProposal(p);
       }
     }
