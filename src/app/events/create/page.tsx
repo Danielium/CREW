@@ -50,8 +50,10 @@ export default function CreateEventPage() {
 
     setIsLoading(true);
     
-    // Combine date and time
-    const dateTime = new Date(`${form.date}T${form.time}`).toISOString();
+    // Combine date and time safely in local timezone
+    const [year, month, day] = form.date.split('-');
+    const [hours, minutes] = form.time.split(':');
+    const dateTime = new Date(Number(year), Number(month) - 1, Number(day), Number(hours), Number(minutes)).toISOString();
 
     let uploadedImageUrl = null;
     
