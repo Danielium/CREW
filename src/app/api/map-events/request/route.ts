@@ -197,11 +197,14 @@ export async function DELETE(req: Request) {
       sendTelegramMessageToUser(request.proposal.creatorId, text).catch(console.error);
     }
 
-    await prisma.runJoinRequest.deleteMany({
+    await prisma.runJoinRequest.updateMany({
       where: {
         proposalId,
         userId,
-        status: { not: "REJECTED" } // Prevent deleting rejected requests (spam protection)
+        status: { not: "REJECTED" } // Prevent updating rejected requests (spam protection)
+      },
+      data: {
+        status: "CANCELLED"
       }
     });
 

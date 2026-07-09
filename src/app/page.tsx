@@ -609,6 +609,10 @@ function MapContent() {
                       <div className="w-full h-16 flex items-center justify-center rounded-full bg-red-500/10 text-red-500 font-black uppercase tracking-wider text-sm pointer-events-none border border-red-500/20">
                         Организатор отклонил заявку
                       </div>
+                    ) : selectedProposal.requests[0].status === "CANCELLED" ? (
+                      <div className="w-full h-16 flex items-center justify-center rounded-full bg-muted text-muted-foreground font-black uppercase tracking-wider text-sm pointer-events-none border border-border">
+                        Вы отменили участие
+                      </div>
                     ) : (
                       <SwipeButton 
                         key="cancel"
