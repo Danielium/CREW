@@ -58,7 +58,13 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
     const proposal = await prisma.runProposal.findUnique({
       where: { id: proposalId },
-      select: { creatorId: true }
+      include: {
+        creator: { select: { name: true } },
+        requests: {
+          where: { status: "ACCEPTED" },
+          select: { userId: true }
+        }
+      }
     });
 
     if (!proposal) {
@@ -67,6 +73,17 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
     if (proposal.creatorId !== (session.user as any).id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Notify accepted participants
+    if (proposal.requests.length > 0) {
+      const { sendTelegramMessageToUser } = await import('@/lib/telegram');
+      const runDate = new Date(proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' (мск)';
+      const text = `⚠️ <b>Отмена пробежки</b>\n\nОрганизатор <b>${proposal.creator?.name || "Аноним"}</b> отменил пробежку, запланированную на <i>${runDate}</i>.`;
+      
+      for (const req of proposal.requests) {
+        sendTelegramMessageToUser(req.userId, text).catch(console.error);
+      }
     }
 
     await prisma.runProposal.delete({

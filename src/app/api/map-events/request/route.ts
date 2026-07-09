@@ -182,6 +182,21 @@ export async function DELETE(req: Request) {
 
     if (!proposalId) return NextResponse.json({ error: "Missing proposalId" }, { status: 400 });
 
+    const request = await prisma.runJoinRequest.findUnique({
+      where: { proposalId_userId: { proposalId, userId } },
+      include: {
+        user: { select: { name: true, telegramUsername: true } },
+        proposal: { select: { creatorId: true, startTime: true } }
+      }
+    });
+
+    if (request && request.status === "ACCEPTED") {
+      const { sendTelegramMessageToUser } = await import('@/lib/telegram');
+      const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' (мск)';
+      const text = `⚠️ <b>Отмена участия</b>\n\nАтлет <b>${request.user.name || "Аноним"}</b> отменил свое участие в вашей пробежке (${runDate}).`;
+      sendTelegramMessageToUser(request.proposal.creatorId, text).catch(console.error);
+    }
+
     await prisma.runJoinRequest.deleteMany({
       where: {
         proposalId,
@@ -192,6 +207,7 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    console.error("Error deleting request:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
