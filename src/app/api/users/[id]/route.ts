@@ -16,7 +16,8 @@ export async function GET(
       where: { id: targetUserId },
       include: {
         runs: {
-          orderBy: { startTime: 'desc' }
+          orderBy: { startTime: 'desc' },
+          take: 50
         },
         clubMembers: {
           include: { club: true }

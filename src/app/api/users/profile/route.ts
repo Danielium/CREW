@@ -12,6 +12,24 @@ export async function PUT(req: Request) {
 
     const { name, image, isPrivate } = await req.json();
 
+    if (name !== undefined) {
+      if (typeof name !== "string" || name.trim().length === 0) {
+        return NextResponse.json({ error: "Name cannot be empty" }, { status: 400 });
+      }
+      if (name.length > 50) {
+        return NextResponse.json({ error: "Name is too long" }, { status: 400 });
+      }
+    }
+
+    if (image !== undefined && image !== null) {
+      if (typeof image !== "string" || image.length > 2000) {
+        return NextResponse.json({ error: "Invalid image URL" }, { status: 400 });
+      }
+      if (image.startsWith("data:") || image.startsWith("javascript:")) {
+        return NextResponse.json({ error: "Invalid image format" }, { status: 400 });
+      }
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: (session.user as any).id },
       data: {

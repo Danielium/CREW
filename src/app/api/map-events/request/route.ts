@@ -57,6 +57,10 @@ export async function PATCH(req: Request) {
     const { requestId, status } = await req.json(); // status: ACCEPTED | REJECTED
     const userId = (session.user as any).id;
 
+    if (status !== "ACCEPTED" && status !== "REJECTED") {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    }
+
     const request = await prisma.runJoinRequest.findUnique({
       where: { id: requestId },
       include: { proposal: true }
