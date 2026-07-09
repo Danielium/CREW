@@ -169,31 +169,31 @@ export default function FeedEvents({ userData }: { userData: any }) {
               {/* 2 Columns */}
               <div className="grid grid-cols-2 divide-x divide-white/10 py-5 w-full">
                 {/* Distance */}
-                <div className="flex justify-center items-center px-2 min-w-0">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Activity size={22} className="text-primary flex-shrink-0" />
-                    <div className="flex flex-col min-w-0">
-                      <div className="flex items-baseline gap-1.5 min-w-0">
-                        <span className="text-[16px] font-black text-white leading-none truncate">{ev.distance || "-"}</span>
-                        {ev.distance && <span className="text-[10px] text-white/50 font-bold uppercase tracking-wider flex-shrink-0">КМ</span>}
+                <div className="flex justify-start items-center pl-6 sm:pl-10">
+                  <div className="flex items-center gap-2.5">
+                    <Activity size={20} className="text-primary flex-shrink-0" />
+                    <div className="flex flex-col">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-[15px] font-black text-white leading-none">{ev.distance || "-"}</span>
+                        {ev.distance && <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider">КМ</span>}
                       </div>
-                      <span className="text-[11px] text-white/50 font-medium mt-1 truncate">Дистанция</span>
+                      <span className="text-[11px] text-white/50 font-medium mt-1">Дистанция</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Pace */}
-                <div className="flex justify-center items-center px-2 min-w-0">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Clock size={22} className="text-primary flex-shrink-0" />
+                <div className="flex justify-start items-center pl-6 sm:pl-10 overflow-hidden">
+                  <div className="flex items-center gap-2.5">
+                    <Clock size={20} className="text-primary flex-shrink-0" />
                     <div className="flex flex-col min-w-0">
-                      <div className="flex items-baseline gap-1.5 min-w-0">
-                        <span className="text-[16px] font-black text-white leading-none truncate">
+                      <div className="flex items-baseline gap-1 shrink-0">
+                        <span className="text-[15px] font-black text-white leading-none tracking-tight whitespace-nowrap shrink-0">
                           {paceDisplay}
                         </span>
-                        {paces.length > 0 && <span className="text-[10px] text-white/50 font-bold uppercase tracking-wider flex-shrink-0">МИН/КМ</span>}
+                        {paces.length > 0 && <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider shrink-0">МИН/КМ</span>}
                       </div>
-                      <span className="text-[11px] text-white/50 font-medium mt-1 truncate">Темп</span>
+                      <span className="text-[11px] text-white/50 font-medium mt-1">Темп</span>
                     </div>
                   </div>
                 </div>
