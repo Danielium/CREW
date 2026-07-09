@@ -1,7 +1,7 @@
 "use client";
 import { Suspense, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { Bell, MapPin, Clock, Users, X, Search, Activity, ArrowLeft, LocateFixed } from "lucide-react";
+import { Bell, MapPin, Clock, Users, X, Search, Activity, ArrowLeft, LocateFixed, Share } from "lucide-react";
 import { SwipeButton } from "@/components/SwipeButton";
 import { triggerHaptic } from "@/lib/haptics";
 import Link from "next/link";
@@ -483,7 +483,18 @@ function MapContent() {
               </div>
               <div className="flex flex-col">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Клубная пробежка</span>
-                <span className="text-xl font-black uppercase tracking-tight">{selectedProposal.event.title}</span>
+                <div className="flex items-center justify-between gap-4">
+                  <h2 className="text-2xl font-black uppercase tracking-tight leading-none">{selectedProposal.event.title}</h2>
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/?focus=${selectedProposal.id}`);
+                      alert("Ссылка скопирована!");
+                    }}
+                    className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary active:scale-95 transition-transform shrink-0"
+                  >
+                    <Share size={18} />
+                  </button>
+                </div>
                 <span className="text-sm font-medium text-muted">{selectedProposal.event.club?.name}</span>
               </div>
             </div>
@@ -524,7 +535,18 @@ function MapContent() {
           </div>
         ) : selectedProposal && (
           <div className="flex flex-col gap-6">
-            <h2 className="text-2xl font-black uppercase tracking-tight">Совместная пробежка</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-black uppercase tracking-tight">Совместная пробежка</h2>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/?focus=${selectedProposal.id}`);
+                  alert("Ссылка скопирована!");
+                }}
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary active:scale-95 transition-transform shrink-0"
+              >
+                <Share size={18} />
+              </button>
+            </div>
 
             {isEditingProposal ? (
               <div className="flex flex-col gap-4">
