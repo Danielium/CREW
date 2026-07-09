@@ -127,14 +127,17 @@ export async function POST() {
           });
           
           for (const membership of activeMemberships) {
-            await prisma.club.update({
-              where: { id: membership.clubId },
-              data: {
-                totalClubDistance: {
-                  increment: distanceKm
+            // Anti-cheat / Logic fix: only count runs towards the club if they were actually performed AFTER joining the club
+            if (startTime >= membership.joinedAt) {
+              await prisma.club.update({
+                where: { id: membership.clubId },
+                data: {
+                  totalClubDistance: {
+                    increment: distanceKm
+                  }
                 }
-              }
-            });
+              });
+            }
           }
           
           syncedCount++;
