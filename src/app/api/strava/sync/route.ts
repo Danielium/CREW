@@ -56,8 +56,8 @@ export async function POST(request: Request) {
     let syncedCount = 0;
 
     for (const activity of activities) {
-      // Only process runs (Run, VirtualRun, TrailRun, etc)
-      if (activity.type.includes("Run")) {
+      // Only process runs (Run, VirtualRun, TrailRun, etc) and exclude manual entries
+      if (activity.type.includes("Run") && !activity.manual) {
         const distanceKm = activity.distance / 1000;
         const durationSec = activity.moving_time;
         
@@ -65,6 +65,12 @@ export async function POST(request: Request) {
         let avgPace = 0;
         if (distanceKm > 0) {
           avgPace = (durationSec / 60) / distanceKm;
+        }
+
+        // Anti-cheat: ignore runs faster than 2:00 min/km or longer than 150km
+        if (avgPace < 2.0 || distanceKm > 150) {
+          console.log("Sync rejected run due to anti-cheat limits:", { avgPace, distanceKm });
+          continue;
         }
 
         const startTime = new Date(activity.start_date);

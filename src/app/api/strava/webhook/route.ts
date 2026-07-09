@@ -78,8 +78,8 @@ export async function POST(request: Request) {
           const activity = await getActivityInfo(accessToken, activityId);
           console.log("Fetched Activity Details:", activity.name);
 
-          // Only process runs (Run, VirtualRun, TrailRun, etc)
-          if (activity.type.includes("Run")) {
+          // Only process runs (Run, VirtualRun, TrailRun, etc) and exclude manual entries
+          if (activity.type.includes("Run") && !activity.manual) {
             const distanceKm = activity.distance / 1000;
             const durationSec = activity.moving_time;
             
@@ -87,6 +87,12 @@ export async function POST(request: Request) {
             let avgPace = 0;
             if (distanceKm > 0) {
               avgPace = (durationSec / 60) / distanceKm;
+            }
+
+            // Anti-cheat: ignore runs faster than 2:00 min/km or longer than 150km
+            if (avgPace < 2.0 || distanceKm > 150) {
+              console.log("Run rejected due to anti-cheat limits:", { avgPace, distanceKm });
+              return new NextResponse("OK", { status: 200 }); // Still return 200 so Strava doesn't retry
             }
 
             const startTime = new Date(activity.start_date);
