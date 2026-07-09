@@ -12,13 +12,24 @@ export default function FeedEvents({ userData }: { userData: any }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (globalCache.events) {
+      setEvents(globalCache.events);
+      setIsLoading(false);
+      return;
+    }
+
     fetch('/api/events', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (data.events) {
           setEvents(data.events);
+          globalCache.events = data.events;
         }
         setIsLoading(false);
+      })
+      .catch((e) => {
+        console.error(e);
+        setIsLoading(false); // BUG-039 fix: disable spinner on error
       });
   }, []);
 
