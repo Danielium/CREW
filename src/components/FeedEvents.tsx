@@ -167,30 +167,30 @@ export default function FeedEvents({ userData }: { userData: any }) {
             <div className="bg-[#1a1a1c] flex flex-col relative z-20">
               
               {/* 2 Columns */}
-              <div className="grid grid-cols-2 divide-x divide-white/10 py-4 items-center w-full">
+              <div className="grid grid-cols-2 divide-x divide-white/10 py-5 w-full">
                 {/* Distance */}
-                <div className="flex items-center gap-1.5 justify-center min-w-0 px-1">
-                  <Activity size={18} className="text-primary flex-shrink-0" />
+                <div className="flex items-center gap-3 pl-6 pr-2">
+                  <Activity size={22} className="text-primary flex-shrink-0" />
                   <div className="flex flex-col min-w-0">
-                    <div className="flex items-baseline gap-1 min-w-0">
-                      <span className="text-[14px] font-black text-white leading-none truncate">{ev.distance || "-"}</span>
-                      {ev.distance && <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider flex-shrink-0">КМ</span>}
+                    <div className="flex items-baseline gap-1.5 min-w-0">
+                      <span className="text-[16px] font-black text-white leading-none truncate">{ev.distance || "-"}</span>
+                      {ev.distance && <span className="text-[10px] text-white/50 font-bold uppercase tracking-wider flex-shrink-0">КМ</span>}
                     </div>
-                    <span className="text-[10px] text-white/50 font-medium mt-0.5 truncate">Дистанция</span>
+                    <span className="text-[11px] text-white/50 font-medium mt-1 truncate">Дистанция</span>
                   </div>
                 </div>
 
                 {/* Pace */}
-                <div className="flex items-center gap-1.5 justify-center min-w-0 px-1">
-                  <Clock size={18} className="text-primary flex-shrink-0" />
+                <div className="flex items-center gap-3 pl-6 pr-2">
+                  <Clock size={22} className="text-primary flex-shrink-0" />
                   <div className="flex flex-col min-w-0">
-                    <div className="flex items-baseline gap-1 min-w-0">
-                      <span className="text-[14px] font-black text-white leading-none whitespace-nowrap">
+                    <div className="flex items-baseline gap-1.5 min-w-0">
+                      <span className="text-[16px] font-black text-white leading-none whitespace-nowrap">
                         {paceDisplay}
                       </span>
-                      {paces.length > 0 && <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider flex-shrink-0">МИН/КМ</span>}
+                      {paces.length > 0 && <span className="text-[10px] text-white/50 font-bold uppercase tracking-wider flex-shrink-0">МИН/КМ</span>}
                     </div>
-                    <span className="text-[10px] text-white/50 font-medium mt-0.5 truncate">Темп</span>
+                    <span className="text-[11px] text-white/50 font-medium mt-1 truncate">Темп</span>
                   </div>
                 </div>
               </div>
