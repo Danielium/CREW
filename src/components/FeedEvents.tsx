@@ -174,10 +174,9 @@ export default function FeedEvents({ userData }: { userData: any }) {
                     <Activity size={20} className="text-primary flex-shrink-0" />
                     <div className="flex flex-col">
                       <div className="flex items-baseline gap-1">
-                        <span className="text-[15px] font-black text-white leading-none">{ev.distance || "-"}</span>
-                        {ev.distance && <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider">КМ</span>}
+                        <span className="text-[16px] font-black text-white leading-none">{ev.distance || "-"}</span>
                       </div>
-                      <span className="text-[11px] text-white/50 font-medium mt-1">Дистанция</span>
+                      <span className="text-[11px] text-white/50 font-medium mt-1">Дистанция{ev.distance ? ", км" : ""}</span>
                     </div>
                   </div>
                 </div>
@@ -188,12 +187,11 @@ export default function FeedEvents({ userData }: { userData: any }) {
                     <Clock size={20} className="text-primary flex-shrink-0" />
                     <div className="flex flex-col min-w-0">
                       <div className="flex items-baseline gap-1 shrink-0">
-                        <span className="text-[15px] font-black text-white leading-none tracking-tight whitespace-nowrap shrink-0">
+                        <span className="text-[16px] font-black text-white leading-none tracking-tight whitespace-nowrap shrink-0">
                           {paceDisplay}
                         </span>
-                        {paces.length > 0 && <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider shrink-0">МИН/КМ</span>}
                       </div>
-                      <span className="text-[11px] text-white/50 font-medium mt-1">Темп</span>
+                      <span className="text-[11px] text-white/50 font-medium mt-1">Темп{paces.length > 0 ? ", мин/км" : ""}</span>
                     </div>
                   </div>
                 </div>
