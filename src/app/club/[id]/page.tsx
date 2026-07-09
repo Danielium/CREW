@@ -23,7 +23,7 @@ export default function ClubProfilePage() {
 
   const fetchClub = async () => {
     try {
-      const res = await fetch(`/api/clubs/${id}`);
+      const res = await fetch(`/api/clubs/${id}`, { cache: "no-store" });
       const data = await res.json();
       if (data.club) setClub(data.club);
     } catch (e) {

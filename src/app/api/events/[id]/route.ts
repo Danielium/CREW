@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
+export const dynamic = 'force-dynamic';
+
 async function hasManageRights(userId: string, eventId: string) {
   const event = await prisma.event.findUnique({
     where: { id: eventId },
