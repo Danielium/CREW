@@ -29,6 +29,16 @@ export async function POST(req: Request, context: any) {
           attendees: { disconnect: [{ id: userId }] }
         }
       });
+      
+      // Notify creator
+      if (event.creatorId !== userId) {
+        const { sendTelegramMessageToUser } = await import('@/lib/telegram');
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        const eventDate = new Date(event.date).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' мск';
+        const text = `⚠️ <b>Отмена участия</b>\n\nАтлет <b>${user?.name || "Аноним"}</b> передумал и отменил свое участие в клубной пробежке <i>${event.title}</i> (${eventDate}).`;
+        sendTelegramMessageToUser(event.creatorId, text).catch(console.error);
+      }
+      
       return NextResponse.json({ attending: false });
     } else {
       // Join
@@ -47,6 +57,16 @@ export async function POST(req: Request, context: any) {
           attendees: { connect: [{ id: userId }] }
         }
       });
+      
+      // Notify creator
+      if (event.creatorId !== userId) {
+        const { sendTelegramMessageToUser } = await import('@/lib/telegram');
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        const eventDate = new Date(event.date).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' мск';
+        const text = `🏃 <b>Новый участник!</b>\n\nАтлет <b>${user?.name || "Аноним"}</b> присоединился к клубной пробежке <i>${event.title}</i>, запланированной на ${eventDate}.`;
+        sendTelegramMessageToUser(event.creatorId, text).catch(console.error);
+      }
+      
       return NextResponse.json({ attending: true });
     }
   } catch (error: any) {

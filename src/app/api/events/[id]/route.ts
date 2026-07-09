@@ -56,6 +56,29 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const event = await prisma.event.findUnique({
+      where: { id },
+      include: {
+        attendees: { select: { id: true } },
+        creator: { select: { name: true } }
+      }
+    });
+
+    if (!event) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    // Notify attendees
+    if (event.attendees.length > 0) {
+      const { sendTelegramMessageToUser } = await import('@/lib/telegram');
+      const eventDate = new Date(event.date).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' мск';
+      const text = `⚠️ <b>Отмена пробежки</b>\n\nОрганизатор <b>${event.creator?.name || "Аноним"}</b> отменил клубную пробежку <i>${event.title}</i>, запланированную на ${eventDate}.`;
+      
+      for (const attendee of event.attendees) {
+        if (attendee.id !== event.creatorId) {
+          sendTelegramMessageToUser(attendee.id, text).catch(console.error);
+        }
+      }
+    }
+
     await prisma.event.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
