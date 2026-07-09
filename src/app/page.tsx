@@ -157,6 +157,8 @@ function MapContent() {
       const data = await res.json();
       if (data.incomingPending && data.incomingPending.length > 0) {
         setHasUnreadRequests(true);
+      } else {
+        setHasUnreadRequests(false);
       }
     } catch (e) {
       console.error(e);
