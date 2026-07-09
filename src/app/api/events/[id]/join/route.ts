@@ -35,8 +35,8 @@ export async function POST(req: Request, context: any) {
         const { sendTelegramMessageToUser } = await import('@/lib/telegram');
         const user = await prisma.user.findUnique({ where: { id: userId } });
         const eventDate = new Date(event.date).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' мск';
-        const tgUsername = user?.telegramUsername ? `(${user.telegramUsername}) ` : '';
-        const text = `⚠️ <b>Отмена участия</b>\n\nАтлет <b>${user?.name || "Аноним"}</b> ${tgUsername}передумал и отменил свое участие в клубной пробежке <i>${event.title}</i> (${eventDate}).`;
+        const usernameText = user?.telegramUsername ? ` (${user.telegramUsername})` : "";
+        const text = `⚠️ <b>Отмена участия</b>\n\nАтлет <b>${user?.name || "Аноним"}</b>${usernameText} передумал и отменил свое участие в клубной пробежке <i>${event.title}</i> (${eventDate}).`;
         sendTelegramMessageToUser(event.creatorId, text).catch(console.error);
       }
       
@@ -64,8 +64,8 @@ export async function POST(req: Request, context: any) {
         const { sendTelegramMessageToUser } = await import('@/lib/telegram');
         const user = await prisma.user.findUnique({ where: { id: userId } });
         const eventDate = new Date(event.date).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' мск';
-        const tgUsername = user?.telegramUsername ? `(${user.telegramUsername}) ` : '';
-        const text = `🏃 <b>Новый участник!</b>\n\nАтлет <b>${user?.name || "Аноним"}</b> ${tgUsername}присоединился к клубной пробежке <i>${event.title}</i>, запланированной на ${eventDate}.`;
+        const usernameText = user?.telegramUsername ? ` (${user.telegramUsername})` : "";
+        const text = `🏃 <b>Новый участник!</b>\n\nАтлет <b>${user?.name || "Аноним"}</b>${usernameText} присоединился к клубной пробежке <i>${event.title}</i>, запланированной на ${eventDate}.`;
         sendTelegramMessageToUser(event.creatorId, text).catch(console.error);
       }
       
