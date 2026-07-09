@@ -331,8 +331,8 @@ export default function FeedTab() {
       {/* Composer (Tweet Box) */}
       <div className="px-4 py-4 border-b border-border bg-card/30">
         <div className="flex gap-3">
-          {currentUser?.image ? (
-            <img src={currentUser.image} className="w-10 h-10 rounded-full object-cover border border-border shrink-0" />
+          {(currentUser?.image || (session?.user as any)?.image) ? (
+            <img src={currentUser?.image || (session?.user as any)?.image} className="w-10 h-10 rounded-full object-cover border border-border shrink-0" />
           ) : (
             <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 border border-border">
               <User size={20} className="text-foreground" />
