@@ -35,8 +35,37 @@ export async function POST(req: Request) {
         proposalId,
         userId,
         status: "PENDING"
+      },
+      include: {
+        user: true,
+        proposal: {
+          include: {
+            creator: true
+          }
+        }
       }
     });
+
+    // Send Telegram Notification to the Creator
+    if (request.proposal.creatorId !== userId) {
+      const { sendTelegramMessageToUser } = await import('@/lib/telegram');
+      
+      // We don't expose requester's TG username here for privacy until accepted, but we can show their name
+      const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+      const text = `🏃 <b>Новая заявка на пробежку!</b>\n\nАтлет <b>${request.user.name || "Аноним"}</b> хочет присоединиться к вашей пробежке, запланированной на <i>${runDate}</i>.\n\nЧто делаем?`;
+      
+      const replyMarkup = {
+        inline_keyboard: [
+          [
+            { text: "✅ Принять", callback_data: `accept_req_${request.id}` },
+            { text: "❌ Отклонить", callback_data: `reject_req_${request.id}` }
+          ]
+        ]
+      };
+
+      // Best effort send
+      sendTelegramMessageToUser(request.proposal.creatorId, text, replyMarkup).catch(console.error);
+    }
 
     return NextResponse.json({ success: true, request });
   } catch (error: any) {

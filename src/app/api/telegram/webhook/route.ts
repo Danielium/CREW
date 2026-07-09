@@ -48,6 +48,96 @@ export async function POST(req: Request) {
       }
     }
 
+    // Handle inline button callbacks
+    if (body.callback_query) {
+      const callbackQuery = body.callback_query;
+      const callbackData = callbackQuery.data; // e.g. "accept_req_123"
+      const chatId = callbackQuery.message.chat.id;
+      const messageId = callbackQuery.message.message_id;
+      const telegramId = callbackQuery.from.id;
+
+      if (callbackData && (callbackData.startsWith('accept_req_') || callbackData.startsWith('reject_req_'))) {
+        const isAccept = callbackData.startsWith('accept_req_');
+        const requestId = callbackData.split('_')[2];
+
+        try {
+          // Find the creator by their Telegram ID
+          const account = await prisma.account.findFirst({
+            where: { provider: 'telegram', providerAccountId: String(telegramId) }
+          });
+
+          if (account) {
+            // Check if the request exists and belongs to a proposal created by this user
+            const request = await prisma.runJoinRequest.findUnique({
+              where: { id: requestId },
+              include: { proposal: true, user: true }
+            });
+
+            if (request && request.proposal.creatorId === account.userId) {
+              const newStatus = isAccept ? "ACCEPTED" : "REJECTED";
+              
+              await prisma.runJoinRequest.update({
+                where: { id: requestId },
+                data: { status: newStatus }
+              });
+
+              // Answer callback query so the button stops loading
+              await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ callback_query_id: callbackQuery.id })
+              });
+
+              // Edit the original message to remove buttons and show the result
+              const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+              
+              let newText = `🏃 <b>Заявка на пробежку (${runDate})</b>\n\n`;
+              if (isAccept) {
+                newText += `✅ Вы приняли заявку от <b>${request.user.name || "Аноним"}</b>.`;
+                if (request.user.telegramUsername) {
+                  newText += ` Вы можете связаться с ним: ${request.user.telegramUsername}`;
+                }
+              } else {
+                newText += `❌ Вы отклонили заявку от <b>${request.user.name || "Аноним"}</b>.`;
+              }
+
+              await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/editMessageText`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  chat_id: chatId,
+                  message_id: messageId,
+                  text: newText,
+                  parse_mode: 'HTML',
+                  reply_markup: { inline_keyboard: [] }
+                })
+              });
+
+              // Notify the requester if they have TG linked
+              const { sendTelegramMessageToUser } = await import('@/lib/telegram');
+              const creator = await prisma.user.findUnique({ where: { id: request.proposal.creatorId } });
+              
+              if (isAccept) {
+                let notifyText = `🏃 <b>Заявка одобрена!</b>\n\nСоздатель пробежки <b>${creator?.name || "Аноним"}</b> принял вашу заявку на ${runDate}! Ждем на старте!`;
+                if (creator?.telegramUsername) {
+                  notifyText += ` Связаться с организатором: ${creator.telegramUsername}`;
+                }
+                await sendTelegramMessageToUser(request.userId, notifyText);
+              } else {
+                const notifyText = `🏃 <b>Заявка отклонена</b>\n\nК сожалению, вашу заявку на пробежку (${runDate}) отклонили.`;
+                await sendTelegramMessageToUser(request.userId, notifyText);
+              }
+
+            }
+          }
+        } catch (err) {
+          console.error("Callback processing error:", err);
+        }
+      }
+
+      return NextResponse.json({ ok: true });
+    }
+
     // Check if it's an edited message with live location
     if (body.edited_message && body.edited_message.location && body.edited_message.location.live_period) {
       const telegramId = body.edited_message.from.id;
