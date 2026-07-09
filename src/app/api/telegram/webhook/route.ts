@@ -98,6 +98,33 @@ export async function POST(req: Request) {
             });
 
             if (request && request.proposal.creatorId === account.userId) {
+              
+              if (request.status === "CANCELLED") {
+                // Answer callback query
+                await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ callback_query_id: callbackQuery.id, text: "Участник отменил заявку" })
+                });
+
+                // Edit message to remove buttons
+                const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' (мск)';
+                const newText = `🏃 <b>Заявка на пробежку (${runDate})</b>\n\n⚠️ Атлет <b>${request.user.name || "Аноним"}</b> отменил эту заявку.`;
+                
+                await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/editMessageText`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    chat_id: chatId,
+                    message_id: messageId,
+                    text: newText,
+                    parse_mode: 'HTML',
+                    reply_markup: { inline_keyboard: [] }
+                  })
+                });
+                return NextResponse.json({ ok: true });
+              }
+
               const newStatus = isAccept ? "ACCEPTED" : "REJECTED";
               
               await prisma.runJoinRequest.update({
