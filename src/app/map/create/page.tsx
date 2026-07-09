@@ -176,9 +176,6 @@ function CreateProposalInner() {
           {typeof window !== 'undefined' && (
             <MapPicker position={position} setPosition={setPosition} />
           )}
-          <div className="absolute top-4 left-4 bg-black/60 backdrop-blur px-3 py-1.5 rounded-full text-xs font-bold pointer-events-none z-[400] text-white">
-            Кликните на карту, чтобы поставить точку
-          </div>
         </div>
 
         {/* Details Form */}

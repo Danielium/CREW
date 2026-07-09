@@ -29,7 +29,10 @@ function LocationPicker({ position, setPosition }: { position: [number, number],
   
   useEffect(() => {
     map.invalidateSize();
-  }, [map]);
+    if (position) {
+      map.setView(position, map.getZoom(), { animate: false });
+    }
+  }, [map, position]);
 
   return position ? <Marker position={position} icon={crewIcon} /> : null;
 }
