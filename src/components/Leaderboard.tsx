@@ -14,6 +14,12 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
   const [isLoading, setIsLoading] = useState(!globalCache.leaderboard[cacheKey]);
 
   useEffect(() => {
+    if (globalCache.leaderboard[cacheKey]) {
+      setUsers(globalCache.leaderboard[cacheKey]);
+      setIsLoading(false);
+      return;
+    }
+
     fetch(`/api/leaderboard${clubId ? `?clubId=${clubId}` : ''}`, { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
@@ -22,6 +28,10 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
           globalCache.leaderboard[cacheKey] = data.users;
         }
         setIsLoading(false);
+      })
+      .catch((e) => {
+        console.error(e);
+        setIsLoading(false); // disable spinner on error
       });
   }, [clubId]);
 

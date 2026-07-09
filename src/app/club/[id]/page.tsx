@@ -244,7 +244,7 @@ export default function ClubProfilePage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                    <div className="font-bold font-mono text-right">{member.user.totalDistance.toFixed(1)} <span className="text-[10px] text-muted">КМ</span></div>
+                    <div className="font-bold font-mono text-right">{(member.clubDistance || 0).toFixed(1)} <span className="text-[10px] text-muted">КМ</span></div>
                     {isFounder && member.userId !== (session?.user as any)?.id && (
                       <button onClick={(e) => { e.preventDefault(); handleRemoveMember(member.userId); }} className="p-2 text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors ml-2 border border-red-500/20 rounded-xl relative z-10">
                         <Trash2 size={14} />

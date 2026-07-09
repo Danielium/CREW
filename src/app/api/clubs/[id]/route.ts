@@ -11,7 +11,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       include: {
         members: {
           include: { user: { select: { id: true, name: true, image: true, totalDistance: true } } },
-          orderBy: { joinedAt: 'asc' }
+          orderBy: { clubDistance: 'desc' }
         },
         events: {
           where: { date: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },

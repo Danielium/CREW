@@ -77,6 +77,7 @@ model ClubMember {
   role          String   @default("MEMBER") // "MEMBER" | "PACER" | "OFFICER" | "FOUNDER"
   status        String   @default("ACTIVE") // "PENDING" | "ACTIVE" | "KICKED"
   joinedAt      DateTime @default(now())
+  clubDistance  Float    @default(0)
 
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   club          Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)

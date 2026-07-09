@@ -137,6 +137,14 @@ export async function POST() {
                   }
                 }
               });
+              await prisma.clubMember.update({
+                where: { id: membership.id },
+                data: {
+                  clubDistance: {
+                    increment: distanceKm
+                  }
+                }
+              });
             }
           }
           

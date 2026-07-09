@@ -51,6 +51,10 @@ export async function POST(request: Request) {
         where: { id: activeMembership.clubId },
         data: { totalClubDistance: { increment: body.distance } }
       });
+      await prisma.clubMember.update({
+        where: { id: activeMembership.id },
+        data: { clubDistance: { increment: body.distance } }
+      });
     }
 
     if (body.eventId) {

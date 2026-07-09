@@ -8,15 +8,26 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const clubId = searchParams.get('clubId');
 
-    const topUsers = await prisma.user.findMany({
-      where: clubId ? {
-        clubMembers: {
-          some: {
-            clubId: clubId,
-            status: "ACTIVE"
+    if (clubId) {
+      const topMembers = await prisma.clubMember.findMany({
+        where: { clubId, status: "ACTIVE" },
+        orderBy: { clubDistance: 'desc' },
+        take: 10,
+        include: {
+          user: {
+            select: { id: true, name: true, image: true, totalDistance: true }
           }
         }
-      } : undefined,
+      });
+      // Map it to match the expected users format, but override totalDistance with clubDistance for the UI to display
+      const topUsers = topMembers.map(m => ({
+        ...m.user,
+        totalDistance: m.clubDistance 
+      }));
+      return NextResponse.json({ users: topUsers });
+    }
+
+    const topUsers = await prisma.user.findMany({
       orderBy: { totalDistance: 'desc' },
       take: 10,
       select: {
