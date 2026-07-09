@@ -185,7 +185,8 @@ export async function DELETE(req: Request) {
     await prisma.runJoinRequest.deleteMany({
       where: {
         proposalId,
-        userId
+        userId,
+        status: { not: "REJECTED" } // Prevent deleting rejected requests (spam protection)
       }
     });
 

@@ -605,13 +605,19 @@ function MapContent() {
                       Запрос ожидает ответа
                     </div>
                   ) : (selectedProposal.requests && selectedProposal.requests.length > 0) ? (
-                    <SwipeButton 
-                      key="cancel"
-                      variant="cancel" 
-                      onConfirm={handleCancelRequest} 
-                      text={selectedProposal.requests[0].status === "ACCEPTED" ? "Отменить участие" : "Отменить запрос"} 
-                      successText="Отменено" 
-                    />
+                    selectedProposal.requests[0].status === "REJECTED" ? (
+                      <div className="w-full h-16 flex items-center justify-center rounded-full bg-red-500/10 text-red-500 font-black uppercase tracking-wider text-sm pointer-events-none border border-red-500/20">
+                        Организатор отклонил заявку
+                      </div>
+                    ) : (
+                      <SwipeButton 
+                        key="cancel"
+                        variant="cancel" 
+                        onConfirm={handleCancelRequest} 
+                        text={selectedProposal.requests[0].status === "ACCEPTED" ? "Отменить участие" : "Отменить запрос"} 
+                        successText="Отменено" 
+                      />
+                    )
                   ) : selectedProposal.creator?.id === (session?.user as any)?.id ? (
                     <div className="grid grid-cols-2 gap-4">
                       <button onClick={handleDeleteProposal} className="py-4 bg-red-500/10 text-red-500 rounded-2xl font-bold uppercase tracking-wider active:scale-95 transition-transform text-sm">
