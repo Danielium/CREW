@@ -57,17 +57,11 @@ export default function CreateEventPage() {
     
     if (imageFile) {
       try {
-        const formData = new FormData();
-        formData.append("file", imageFile);
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
+        uploadedImageUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(imageFile);
         });
-        if (!uploadRes.ok) {
-          throw new Error("Не удалось загрузить фотографию");
-        }
-        const uploadData = await uploadRes.json();
-        uploadedImageUrl = uploadData.url;
       } catch (err) {
         console.error("Failed to upload image", err);
       }
