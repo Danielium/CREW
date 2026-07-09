@@ -28,13 +28,21 @@ export async function POST(
       return NextResponse.json({ success: false, error: "Run is already completed" }, { status: 400 });
     }
 
+    // BUG-009 fix: anti-cheat validation
+    const distance = Number(body.distance) || 0;
+    const durationSec = Number(body.durationSec) || 0;
+    const avgPace = distance > 0 ? (durationSec / 60) / distance : 0;
+    if (distance > 150 || (distance > 0 && avgPace < 2.0)) {
+      return NextResponse.json({ success: false, error: "Invalid run data" }, { status: 400 });
+    }
+
     const run = await prisma.run.update({
       where: { id: id, userId: userId },
       data: {
         status: "COMPLETED",
-        distance: body.distance,
-        durationSec: body.durationSec,
-        avgPace: body.avgPace,
+        distance: distance,
+        durationSec: durationSec,
+        avgPace: avgPace || body.avgPace,
         routeData: body.routeData ? JSON.stringify(body.routeData) : null,
         splits: body.splits || null,
       }
@@ -42,11 +50,7 @@ export async function POST(
 
     await prisma.user.update({
       where: { id: userId },
-      data: {
-        totalDistance: {
-          increment: body.distance
-        }
-      }
+      data: { totalDistance: { increment: distance } }
     });
 
     // Update club totalClubDistance if user is in a club

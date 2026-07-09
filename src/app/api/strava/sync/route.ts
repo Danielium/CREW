@@ -1,14 +1,30 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { refreshToken, getAthleteActivities } from "@/lib/strava";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
-    const body = await request.json();
-    const { userId } = body;
+    // BUG-003 fix: always use session userId, never trust client-supplied userId
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const userId = (session.user as any).id;
 
     if (!userId) {
       return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+    }
+
+    // BUG-033 fix: simple idempotency guard — reject if synced within last 5 seconds
+    const recentRun = await prisma.run.findFirst({
+      where: { userId, createdAt: { gte: new Date(Date.now() - 5000) } },
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true }
+    });
+    if (recentRun) {
+      return NextResponse.json({ success: true, syncedCount: 0, message: "Too soon" });
     }
 
     // Find user with Strava account

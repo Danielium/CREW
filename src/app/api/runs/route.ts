@@ -12,13 +12,21 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const userId = session.user.id;
+
+    // BUG-008 fix: anti-cheat validation
+    const distance = Number(body.distance) || 0;
+    const durationSec = Number(body.durationSec) || 0;
+    const avgPace = distance > 0 ? (durationSec / 60) / distance : 0;
+    if (distance > 150 || (distance > 0 && avgPace < 2.0)) {
+      return NextResponse.json({ success: false, error: "Invalid run data" }, { status: 400 });
+    }
     
     const run = await prisma.run.create({
       data: {
         userId: userId,
-        distance: body.distance,
-        durationSec: body.durationSec,
-        avgPace: body.avgPace,
+        distance: distance,
+        durationSec: durationSec,
+        avgPace: avgPace || body.avgPace,
         routeData: body.routeData ? JSON.stringify(body.routeData) : null,
         eventId: body.eventId || null,
         splits: body.splits || null,
@@ -29,7 +37,7 @@ export async function POST(request: Request) {
       where: { id: userId },
       data: {
         totalDistance: {
-          increment: body.distance
+          increment: distance
         }
       }
     });

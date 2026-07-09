@@ -24,6 +24,7 @@ export default function SettingsPage() {
   const [isStravaConnected, setIsStravaConnected] = useState(false);
   const [isLoadingIntegrations, setIsLoadingIntegrations] = useState(true);
   const [isSyncingStrava, setIsSyncingStrava] = useState(false);
+  const [isDisconnectingStrava, setIsDisconnectingStrava] = useState(false);
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -75,11 +76,8 @@ export default function SettingsPage() {
     if (!session?.user) return;
     setIsSyncingStrava(true);
     try {
-      const res = await fetch("/api/strava/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: (session.user as any).id })
-      });
+      // BUG-003 fix: server reads userId from session, no need to send it
+      const res = await fetch("/api/strava/sync", { method: "POST" });
       const data = await res.json();
       if (data.success) {
         if (data.syncedCount > 0) {
@@ -95,6 +93,24 @@ export default function SettingsPage() {
       alert("Ошибка при синхронизации.");
     } finally {
       setIsSyncingStrava(false);
+    }
+  };
+
+  const handleStravaDisconnect = async () => {
+    if (!confirm("Отвязать Strava? Новые тренировки больше не будут синхронизироваться.")) return;
+    setIsDisconnectingStrava(true);
+    try {
+      const res = await fetch("/api/strava/disconnect", { method: "DELETE" });
+      if (res.ok) {
+        setIsStravaConnected(false);
+      } else {
+        alert("Ошибка при отвязке Strava.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Ошибка при отвязке Strava.");
+    } finally {
+      setIsDisconnectingStrava(false);
     }
   };
 
@@ -247,14 +263,22 @@ export default function SettingsPage() {
                   </div>
                   <span className="text-xs font-bold text-primary uppercase">Подключено</span>
                 </div>
-                <div className="p-4">
+                <div className="p-4 flex flex-col gap-2">
                   <button 
                     onClick={handleStravaSync}
-                    disabled={isSyncingStrava}
+                    disabled={isSyncingStrava || isDisconnectingStrava}
                     className="w-full bg-border hover:bg-border/80 text-foreground text-xs font-bold uppercase tracking-widest py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
                   >
                     {isSyncingStrava ? <Loader2 size={16} className="animate-spin" /> : <Activity size={16} />}
                     {isSyncingStrava ? "Синхронизация..." : "Синхронизировать тренировки"}
+                  </button>
+                  <button 
+                    onClick={handleStravaDisconnect}
+                    disabled={isSyncingStrava || isDisconnectingStrava}
+                    className="w-full text-red-500 hover:text-red-400 text-xs font-bold uppercase tracking-widest py-2 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {isDisconnectingStrava ? <Loader2 size={14} className="animate-spin" /> : null}
+                    {isDisconnectingStrava ? "Отвязываем..." : "Отвязать Strava"}
                   </button>
                 </div>
               </div>

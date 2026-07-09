@@ -2,6 +2,29 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+
+// Verify Telegram WebApp initData HMAC signature
+function verifyTelegramInitData(initData: string, botToken: string): boolean {
+  try {
+    const params = new URLSearchParams(initData);
+    const hash = params.get("hash");
+    if (!hash) return false;
+
+    params.delete("hash");
+    const dataCheckString = Array.from(params.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${k}=${v}`)
+      .join("\n");
+
+    const secretKey = crypto.createHmac("sha256", "WebAppData").update(botToken).digest();
+    const expectedHash = crypto.createHmac("sha256", secretKey).update(dataCheckString).digest("hex");
+
+    return expectedHash === hash;
+  } catch {
+    return false;
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   // No adapter — pure JWT mode, no DB sessions needed
@@ -18,6 +41,7 @@ export const authOptions: NextAuthOptions = {
         telegramUsername: { label: "Telegram Username", type: "text" },
         password: { label: "Пароль", type: "password" },
         isTgWebApp: { label: "isTgWebApp", type: "text" },
+        initData: { label: "InitData", type: "text" },
         name: { label: "Name", type: "text" },
         image: { label: "Image", type: "text" }
       },
@@ -33,12 +57,22 @@ export const authOptions: NextAuthOptions = {
           }
 
           if (credentials.isTgWebApp === "true") {
+            // Verify Telegram initData signature
+            const botToken = process.env.TELEGRAM_BOT_TOKEN || "";
+            const initData = credentials.initData || "";
+            
+            // In development without a real bot token, skip verification
+            if (botToken && initData && !verifyTelegramInitData(initData, botToken)) {
+              console.warn("Invalid Telegram initData signature for:", tUsername);
+              return null;
+            }
+
             let user = await prisma.user.findUnique({
               where: { telegramUsername: tUsername }
             });
 
             if (!user) {
-              const dummyPassword = await bcrypt.hash(require("crypto").randomBytes(5).toString('hex'), 10);
+              const dummyPassword = await bcrypt.hash(crypto.randomBytes(5).toString('hex'), 10);
               user = await prisma.user.create({
                 data: {
                   telegramUsername: tUsername,

@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
 import { writeFile } from 'fs/promises';
 import path from 'path';
+import crypto from 'crypto';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
-    // Временно разрешаем загрузку без авторизации для экрана регистрации
-    // (Аватар загружается ДО того, как пользователь зарегистрирован)
+    // BUG-001 fix: require authentication for file uploads
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const data = await req.formData();
     const file: File | null = data.get('file') as unknown as File;
@@ -29,9 +33,9 @@ export async function POST(req: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     
-    // Sanitize filename to prevent path traversal
+    // BUG-002 fix: use cryptographically secure random bytes for filename
     const extension = file.type.split('/')[1] || 'jpeg';
-    const safeName = Math.random().toString(36).substring(2, 15);
+    const safeName = crypto.randomBytes(16).toString('hex');
     const filename = `${Date.now()}-${safeName}.${extension}`;
     
     const uploadPath = path.join(process.cwd(), 'public', 'uploads', filename);
