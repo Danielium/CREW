@@ -98,6 +98,7 @@ model Event {
   routeData     String?  // JSON stringified coordinates
   image         String?
   checkInToken  String?  @unique
+  reminderSent  Boolean  @default(false)
   createdAt     DateTime @default(now())
   
   club          Club?    @relation(fields: [clubId], references: [id], onDelete: Cascade)
@@ -118,6 +119,7 @@ model RunProposal {
   startTime       DateTime
   maxParticipants Int      @default(0) // 0 means no limit
   status          String   @default("ACTIVE") // ACTIVE, CANCELLED, COMPLETED
+  reminderSent    Boolean  @default(false)
   createdAt       DateTime @default(now())
 
   creator         User     @relation("RunProposalCreator", fields: [creatorId], references: [id], onDelete: Cascade)
