@@ -49,7 +49,7 @@ export async function POST(req: Request) {
       where: {
         userId,
         status: "ACTIVE",
-        role: { in: ["FOUNDER", "OFFICER"] }
+        role: { in: ["FOUNDER", "OFFICER", "PACER"] }
       },
       include: { club: true }
     });

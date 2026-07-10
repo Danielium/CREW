@@ -33,7 +33,7 @@ export default function FeedEvents({ userData }: { userData: any }) {
       });
   }, []);
 
-  const canCreate = userData?.clubMembers?.some((m: any) => m.status === "ACTIVE" && (m.role === "FOUNDER" || m.role === "OFFICER"));
+  const canCreate = userData?.clubMembers?.some((m: any) => m.status === "ACTIVE" && (m.role === "FOUNDER" || m.role === "OFFICER" || m.role === "PACER"));
 
   const handleDelete = async (id: string) => {
     if (confirm("Удалить это событие навсегда?")) {
