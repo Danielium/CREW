@@ -45,9 +45,7 @@ function MapController({ onMapClick, forceCenter }: any) {
 
   useEffect(() => {
     if (forceCenter) {
-      setTimeout(() => {
-        map.flyTo(forceCenter, 14, { duration: 1.5 });
-      }, 300);
+      map.flyTo(forceCenter, 14, { duration: 1.5 });
     }
   }, [forceCenter, map]);
 
