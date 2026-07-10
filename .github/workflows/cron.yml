@@ -10,5 +10,5 @@ jobs:
     steps:
       - name: Trigger Vercel Reminders API
         run: |
-          curl -f -X GET "https://crew-ruby.vercel.app/api/cron/reminders" \
+          curl -f -X GET "https://crew-gamma.vercel.app/api/cron/reminders" \
           -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
