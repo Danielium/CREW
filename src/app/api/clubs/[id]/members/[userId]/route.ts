@@ -57,6 +57,19 @@ export async function PATCH(req: Request, context: any) {
         where: { userId_clubId: { userId: memberId, clubId } }
       });
       return NextResponse.json({ success: true, status: "REJECTED" });
+    } else if (action === "setRole") {
+      const newRole = body.role;
+      if (!["MEMBER", "PACER"].includes(newRole)) {
+        return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+      }
+      if (targetMember.role === "FOUNDER") {
+        return NextResponse.json({ error: "Cannot change founder's role" }, { status: 400 });
+      }
+      await prisma.clubMember.update({
+        where: { userId_clubId: { userId: memberId, clubId } },
+        data: { role: newRole }
+      });
+      return NextResponse.json({ success: true, role: newRole });
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
