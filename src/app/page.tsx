@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Bell, MapPin, Clock, Users, X, Search, Activity, ArrowLeft, LocateFixed, Share } from "lucide-react";
 import { SwipeButton } from "@/components/SwipeButton";
@@ -25,6 +25,7 @@ function MapContent() {
   const [touchOffset, setTouchOffset] = useState(0);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const lastFocusedId = useRef<string | null>(null);
   const [showClubJoinModal, setShowClubJoinModal] = useState(false);
   const [isJoiningClub, setIsJoiningClub] = useState(false);
 
@@ -48,7 +49,8 @@ function MapContent() {
     
     if (focusId && proposals.length > 0) {
       const p = proposals.find(pr => pr.id === focusId);
-      if (p && (!selectedProposal || selectedProposal.id !== focusId)) {
+      if (p && lastFocusedId.current !== focusId) {
+        lastFocusedId.current = focusId;
         setForceCenter([p.lat, p.lng]);
         handleSelectProposal(p);
       }
