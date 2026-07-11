@@ -96,7 +96,7 @@ export default function FeedEvents({ userData }: { userData: any }) {
           try { paces = JSON.parse(ev.pace || "[]"); } catch (e) { paces = ev.pace ? [ev.pace] : []; }
           if (!Array.isArray(paces)) paces = [ev.pace];
 
-          let paceDisplay = "-";
+          let paceDisplay = "Любой";
           if (paces.length === 1) {
             paceDisplay = paces[0];
           } else if (paces.length > 1) {

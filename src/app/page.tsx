@@ -496,28 +496,28 @@ function MapContent() {
         <div className="w-12 h-1.5 bg-muted/50 rounded-full mx-auto mb-6 cursor-pointer" onClick={closeSheet} />
         {selectedProposal && selectedProposal.type === "CLUB" ? (
           <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-black font-black text-xl overflow-hidden shadow-[0_0_15px_rgba(204,255,0,0.3)]">
-                {selectedProposal.event.club?.name?.charAt(0).toUpperCase()}
+            <div className="flex items-start justify-between w-full mb-4 gap-2">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-black font-black text-xl overflow-hidden shadow-[0_0_15px_rgba(204,255,0,0.3)] shrink-0">
+                  {selectedProposal.event.club?.name?.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Клубная пробежка</span>
+                  <h2 className="text-2xl font-black uppercase tracking-tight leading-none mt-0.5">{selectedProposal.event.title}</h2>
+                  <span className="text-sm font-medium text-muted mt-0.5">{selectedProposal.event.club?.name}</span>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Клубная пробежка</span>
-                <div className="flex items-center justify-between gap-4">
-                  <h2 className="text-2xl font-black uppercase tracking-tight leading-none">{selectedProposal.event.title}</h2>
-                  <button 
-                    onClick={() => {
-                      const botAppUrl = process.env.NEXT_PUBLIC_BOT_APP_URL;
+              <button 
+                onClick={() => {
+                  const botAppUrl = process.env.NEXT_PUBLIC_BOT_APP_URL;
                   const link = botAppUrl ? `${botAppUrl}?startapp=focus_${selectedProposal.id}` : `${window.location.origin}/?focus=${selectedProposal.id}`;
                   navigator.clipboard.writeText(link);
-                      alert("Ссылка скопирована!");
-                    }}
-                    className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary active:scale-95 transition-transform shrink-0"
-                  >
-                    <Share size={18} />
-                  </button>
-                </div>
-                <span className="text-sm font-medium text-muted">{selectedProposal.event.club?.name}</span>
-              </div>
+                  alert("Ссылка скопирована!");
+                }}
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary active:scale-95 transition-transform shrink-0 mt-1"
+              >
+                <Share size={18} />
+              </button>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-2">
@@ -539,7 +539,13 @@ function MapContent() {
                   <Activity size={16} />
                   <span className="text-xs uppercase font-bold tracking-wider">Темп</span>
                 </div>
-                <span className="font-bold text-lg">{selectedProposal.event.pace ? selectedProposal.event.pace.replace(/[\[\]"']/g, '').replace(/,/g, ' - ') : "—"}</span>
+                <span className="font-bold text-lg">
+                  {(() => {
+                    const rawPace = selectedProposal.event.pace;
+                    const paceArr = Array.isArray(rawPace) ? rawPace : (typeof rawPace === 'string' ? rawPace.replace(/[\[\]"']/g, '').split(',').filter(Boolean) : []);
+                    return paceArr.length > 0 ? paceArr.join(' - ') : "Любой";
+                  })()}
+                </span>
                 <span className="text-xs text-muted">Дистанция: {selectedProposal.event.distance ? `${selectedProposal.event.distance} км` : "—"}</span>
               </div>
             </div>
