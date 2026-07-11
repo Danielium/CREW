@@ -42,7 +42,9 @@ export default function ClubProfilePage() {
       if (data.member) {
         globalCache.clubs = null;
         globalCache.userData = null;
-        globalCache.events = null;
+        fetch('/api/events').then(r => r.json()).then(d => {
+          if (d.events) globalCache.events = d.events;
+        }).catch(() => {});
         router.push("/club");
       } else {
         alert(data.error || "Ошибка при вступлении в клуб");
@@ -80,7 +82,9 @@ export default function ClubProfilePage() {
       if (res.ok) {
         globalCache.clubs = null;
         globalCache.userData = null;
-        globalCache.events = null;
+        fetch('/api/events').then(r => r.json()).then(d => {
+          if (d.events) globalCache.events = d.events;
+        }).catch(() => {});
         fetchClub(); // refresh
       } else {
         alert("Ошибка при удалении участника.");
@@ -97,7 +101,9 @@ export default function ClubProfilePage() {
       if (res.ok) {
         globalCache.clubs = null;
         globalCache.userData = null;
-        globalCache.events = null;
+        fetch('/api/events').then(r => r.json()).then(d => {
+          if (d.events) globalCache.events = d.events;
+        }).catch(() => {});
         router.push("/");
       } else {
         const data = await res.json();
@@ -115,7 +121,9 @@ export default function ClubProfilePage() {
       if (res.ok) {
         globalCache.clubs = null;
         globalCache.userData = null;
-        globalCache.events = null;
+        fetch('/api/events').then(r => r.json()).then(d => {
+          if (d.events) globalCache.events = d.events;
+        }).catch(() => {});
         router.push("/");
       } else {
         alert("Ошибка при распускании клуба.");

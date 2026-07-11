@@ -40,8 +40,9 @@ export default function FeedEvents({ userData }: { userData: any }) {
       try {
         const res = await fetch(`/api/events/${id}`, { method: 'DELETE' });
         if (res.ok) {
-          setEvents(events.filter(e => e.id !== id));
-          globalCache.events = null;
+          const newEvents = events.filter(e => e.id !== id);
+          setEvents(newEvents);
+          globalCache.events = newEvents;
         } else {
           const data = await res.json();
           alert(data.error || "Ошибка при удалении события");

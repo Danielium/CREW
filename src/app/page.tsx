@@ -212,7 +212,9 @@ function MapContent() {
       const res = await fetch(`/api/events/${selectedProposal.event.id}/join`, { method: "POST" });
       if (res.ok) {
         const { globalCache } = await import("@/lib/cache");
-        globalCache.events = null;
+        fetch('/api/events').then(r => r.json()).then(d => {
+          if (d.events) globalCache.events = d.events;
+        }).catch(() => {});
         fetchProposals();
       } else {
         throw new Error("Failed to join");
@@ -256,7 +258,9 @@ function MapContent() {
         const { globalCache } = await import("@/lib/cache");
         globalCache.clubs = null;
         globalCache.userData = null;
-        globalCache.events = null;
+        fetch('/api/events').then(r => r.json()).then(d => {
+          if (d.events) globalCache.events = d.events;
+        }).catch(() => {});
         
         fetchProposals();
         closeSheet();

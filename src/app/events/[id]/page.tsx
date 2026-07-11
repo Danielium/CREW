@@ -56,7 +56,9 @@ export default function EventDetailsPage() {
       });
       if (res.ok) {
         const { globalCache } = await import("@/lib/cache");
-        globalCache.events = null;
+        fetch('/api/events').then(r => r.json()).then(d => {
+          if (d.events) globalCache.events = d.events;
+        }).catch(() => {});
         setEvent((prev: any) => ({
           ...prev,
           attendees: prev.attendees.filter((u: any) => u.id !== userId)
