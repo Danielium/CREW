@@ -92,6 +92,8 @@ export default function CreateEventPage() {
       const data = await res.json();
       
       if (res.ok) {
+        const { globalCache } = await import("@/lib/cache");
+        globalCache.events = null;
         router.push("/");
       } else {
         alert(data.error || "Ошибка при создании события");
