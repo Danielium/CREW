@@ -19,6 +19,10 @@ export default function ClubAdminPage() {
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editNameValue, setEditNameValue] = useState("");
+  const [isSavingName, setIsSavingName] = useState(false);
 
   useEffect(() => {
     fetchClub();
@@ -55,11 +59,38 @@ export default function ClubAdminPage() {
       const data = await res.json();
       if (data.club) {
         setClub(data.club);
+        setEditNameValue(data.club.name);
       }
     } catch (e) {
       console.error(e);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSaveName = async () => {
+    if (!editNameValue.trim() || editNameValue === club.name) {
+      setIsEditingName(false);
+      return;
+    }
+    setIsSavingName(true);
+    try {
+      const res = await fetch(`/api/clubs/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editNameValue.trim() })
+      });
+      if (res.ok) {
+        setClub({ ...club, name: editNameValue.trim() });
+        setIsEditingName(false);
+      } else {
+        alert("Ошибка при сохранении названия");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Сетевая ошибка");
+    } finally {
+      setIsSavingName(false);
     }
   };
 
@@ -148,12 +179,11 @@ export default function ClubAdminPage() {
       <div className="pt-24 px-6 pb-6 flex flex-col gap-4">
         <div>
           <h1 className="text-3xl font-black uppercase tracking-tight drop-shadow-sm">Управление</h1>
-          <p className="text-xs text-primary font-bold tracking-widest uppercase">{club.name}</p>
         </div>
 
-        {/* Logo Edit Section */}
+        {/* Logo and Name Edit Section */}
         <div className="flex items-center gap-4 mt-2">
-          <div className="relative group cursor-pointer" onClick={() => {
+          <div className="relative group cursor-pointer shrink-0" onClick={() => {
             if (club?.logoConfig) localStorage.setItem("clubLogoConfig", club.logoConfig);
             router.push(`/club/logo-builder?admin=true&clubId=${id}`);
           }}>
@@ -172,8 +202,29 @@ export default function ClubAdminPage() {
               return null;
             })()}
           </div>
-          <div className="text-sm text-muted">
-            Нажмите на логотип, чтобы изменить дизайн
+          
+          <div className="flex-1 min-w-0">
+            {isEditingName ? (
+              <div className="flex items-center gap-2">
+                <input 
+                  type="text" 
+                  value={editNameValue} 
+                  onChange={(e) => setEditNameValue(e.target.value)}
+                  className="w-full bg-black/50 border border-white/20 rounded-xl px-3 py-2 text-lg font-black uppercase focus:outline-none focus:border-primary"
+                  autoFocus
+                />
+                <button onClick={handleSaveName} disabled={isSavingName} className="p-2 bg-primary text-black rounded-xl shrink-0">
+                  {isSavingName ? <Loader2 size={20} className="animate-spin" /> : <Check size={20} />}
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 cursor-pointer group/name" onClick={() => setIsEditingName(true)}>
+                <h2 className="text-2xl font-black tracking-tight uppercase truncate leading-none">{club.name}</h2>
+                <button className="text-muted group-hover/name:text-primary transition-colors">
+                  <Edit2 size={16} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

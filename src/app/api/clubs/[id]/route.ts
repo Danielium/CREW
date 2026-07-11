@@ -130,3 +130,37 @@ export async function DELETE(req: Request, context: any) {
   }
 }
 
+export async function PATCH(req: Request, context: any) {
+  try {
+    const params = await context.params;
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const currentUserId = (session.user as any).id;
+    const clubId = params.id;
+
+    const currentMember = await prisma.clubMember.findUnique({
+      where: { userId_clubId: { userId: currentUserId, clubId } }
+    });
+
+    if (!currentMember || currentMember.role !== "FOUNDER" || currentMember.status !== "ACTIVE") {
+      return NextResponse.json({ error: "Only founders can edit club" }, { status: 403 });
+    }
+
+    const { name } = await req.json();
+    if (!name || name.trim().length === 0) {
+      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    }
+
+    const updatedClub = await prisma.club.update({
+      where: { id: clubId },
+      data: { name: name.trim() }
+    });
+
+    return NextResponse.json({ club: updatedClub });
+  } catch (error: any) {
+    console.error("Update club error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
+
