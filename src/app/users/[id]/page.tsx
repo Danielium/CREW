@@ -175,9 +175,32 @@ export default function PublicProfilePage() {
 
   if (!userData) {
     return (
-      <div className="flex flex-col min-h-[100dvh] items-center justify-center bg-background text-foreground">
+      <div className="flex flex-col min-h-[100dvh] items-center justify-center bg-background text-foreground pt-safe">
         <p>Пользователь не найден</p>
         <button onClick={() => router.back()} className="mt-4 text-primary underline">Назад</button>
+      </div>
+    );
+  }
+
+  if (userData.isPrivate) {
+    return (
+      <div className="flex flex-col min-h-[100dvh] bg-background text-foreground pt-safe pb-24 relative z-10 animate-in fade-in duration-500">
+        <div className="flex justify-between items-center px-4 pt-4 pb-4">
+          <button onClick={() => window.history.back()} className="p-2 -ml-2 rounded-full text-foreground hover:bg-border transition-colors">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+        </div>
+        <div className="flex flex-col items-center mt-10">
+          <div className="w-28 h-28 rounded-full border-4 border-[#000] overflow-hidden bg-card flex items-center justify-center shadow-lg">
+            {renderAvatar(userData.image)}
+          </div>
+          <h1 className="text-3xl font-black mt-4 uppercase text-center">{userData.name}</h1>
+          <div className="mt-12 flex flex-col items-center text-muted p-8 bg-card/50 rounded-[28px] border border-white/5 mx-4 shadow-inner text-center">
+            <Lock size={40} className="mb-4 opacity-50" />
+            <h2 className="text-xl font-bold text-foreground mb-2">Закрытый профиль</h2>
+            <p className="text-sm">Этот пользователь ограничил доступ к своей статистике и пробежкам.</p>
+          </div>
+        </div>
       </div>
     );
   }
