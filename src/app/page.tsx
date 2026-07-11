@@ -254,6 +254,7 @@ function MapContent() {
         const { globalCache } = await import("@/lib/cache");
         globalCache.clubs = null;
         globalCache.userData = null;
+        globalCache.events = null;
         
         fetchProposals();
         closeSheet();
