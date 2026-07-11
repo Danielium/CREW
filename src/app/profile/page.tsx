@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, Star, Trophy, Users, Edit3, Lock, Sunrise, LogOut, LogIn, X, Loader2, Camera, Check } from "lucide-react";
+import { Settings, Star, Trophy, Users, Edit3, Lock, Sunrise, Sun, Moon, LogOut, LogIn, X, Loader2, Camera, Check } from "lucide-react";
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
@@ -412,40 +412,48 @@ export default function ProfileTab() {
 
         {/* Recent Runs List */}
         <div className="mb-24 mt-8">
-          <h3 className="font-bold text-lg mb-6 text-foreground">Последние действия</h3>
+          <h3 className="font-black text-2xl uppercase tracking-tight mb-6 text-foreground">Последние действия</h3>
           <div className="flex flex-col gap-4 max-h-[500px] overflow-y-auto pb-4" style={{ scrollbarWidth: 'none' }}>
             {filteredRuns.length > 0 ? (
               <>
-                {(showAllRuns ? filteredRuns : filteredRuns.slice(0, 2)).map((run: any) => (
-                  <div key={run.id} className="bg-card border border-border rounded-[24px] p-5 shadow-sm shrink-0">
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary overflow-hidden shrink-0">
-                        <Sunrise size={24} />
+                {(showAllRuns ? filteredRuns : filteredRuns.slice(0, 2)).map((run: any) => {
+                  const hour = new Date(run.startTime).getHours();
+                  let Icon = Moon;
+                  if (run.event) Icon = Users;
+                  else if (hour >= 5 && hour < 12) Icon = Sunrise;
+                  else if (hour >= 12 && hour < 18) Icon = Sun;
+
+                  return (
+                    <div key={run.id} className="bg-card/40 backdrop-blur-md border border-white/5 rounded-[24px] p-5 shadow-sm shrink-0">
+                      <div className="flex items-center gap-4 mb-6">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary overflow-hidden shrink-0 shadow-[0_0_15px_rgba(204,255,0,0.15)]">
+                          <Icon size={24} />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm text-foreground">
+                            {new Date(run.startTime).toLocaleDateString("ru-RU", { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                          </p>
+                          <p className="text-sm text-muted mt-0.5">{run.event ? run.event.title : "Свободная пробежка"}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-sm text-foreground">
-                          {new Date(run.startTime).toLocaleDateString("ru-RU", { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                        </p>
-                        <p className="text-sm text-muted mt-0.5">{run.event ? run.event.title : "Свободная пробежка"}</p>
+                      
+                      <div className="grid grid-cols-3 gap-2 w-full">
+                        <div className="flex flex-col">
+                          <span className="text-xl font-black">{run.distance.toFixed(2).replace('.', ',')}</span>
+                          <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">КМ</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xl font-black">{formatPace(run.avgPace)}</span>
+                          <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Средн. темп</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xl font-black">{formatTime(run.durationSec)}</span>
+                          <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Время</span>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="grid grid-cols-3 gap-2 w-full">
-                      <div className="flex flex-col">
-                        <span className="text-xl font-black">{run.distance.toFixed(2).replace('.', ',')}</span>
-                        <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">КМ</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xl font-black">{formatPace(run.avgPace)}</span>
-                        <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Средн. темп</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xl font-black">{formatTime(run.durationSec)}</span>
-                        <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Время</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {!showAllRuns && filteredRuns.length > 2 && (
                   <button 
                     onClick={() => setShowAllRuns(true)}
