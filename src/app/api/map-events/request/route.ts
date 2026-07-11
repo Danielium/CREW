@@ -92,7 +92,11 @@ export async function PATCH(req: Request) {
 
     const request = await prisma.runJoinRequest.findUnique({
       where: { id: requestId },
-      include: { proposal: true }
+      include: { 
+        proposal: {
+          include: { creator: true }
+        } 
+      }
     });
 
     if (!request) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -106,7 +110,10 @@ export async function PATCH(req: Request) {
     if (status === "ACCEPTED") {
       const { sendTelegramMessageToUser } = await import('@/lib/telegram');
       const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' мск';
-      const text = `✅ <b>Заявка принята!</b>\n\nСоздатель пробежки одобрил вашу заявку на <i>${runDate}</i>.\nВы можете связаться с ним через список участников.`;
+      const creatorName = request.proposal.creator.name || "Создатель пробежки";
+      const creatorTg = request.proposal.creator.telegramUsername ? ` (@${request.proposal.creator.telegramUsername})` : "";
+      
+      const text = `✅ <b>Заявка принята!</b>\n\n${creatorName}${creatorTg} одобрил(а) вашу заявку на совместную пробежку <i>${runDate}</i>.\nСвяжитесь для уточнения деталей.`;
       
       const botAppUrl = process.env.NEXT_PUBLIC_BOT_APP_URL;
       const replyMarkup = botAppUrl ? {
