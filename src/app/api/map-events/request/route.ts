@@ -111,8 +111,7 @@ export async function PATCH(req: Request) {
       const { sendTelegramMessageToUser } = await import('@/lib/telegram');
       const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' мск';
       const creatorName = request.proposal.creator.name || "Создатель пробежки";
-      let tgUser = request.proposal.creator.telegramUsername || "";
-      if (tgUser && !tgUser.startsWith('@')) tgUser = '@' + tgUser;
+      const tgUser = request.proposal.creator.telegramUsername || "";
       const creatorInfo = tgUser ? `${creatorName} ${tgUser}` : creatorName;
       
       const text = `✅ <b>Заявка принята!</b>\n\n${creatorInfo} одобрил(а) вашу заявку на совместную пробежку <i>${runDate}</i>.\nСвяжитесь для уточнения деталей.`;
