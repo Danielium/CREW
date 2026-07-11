@@ -82,7 +82,7 @@ export async function POST(req: Request) {
     try {
       const { sendTelegramMessageToUser } = await import('@/lib/telegram');
       const members = await prisma.clubMember.findMany({
-        where: { clubId: activeClubMember.clubId, status: "ACTIVE", userId: { not: userId } },
+        where: { clubId: activeClubMember.clubId, status: "ACTIVE" },
         select: { userId: true }
       });
       
