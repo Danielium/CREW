@@ -78,14 +78,17 @@ export default function FeedTab() {
   const [commentImagePreviews, setCommentImagePreviews] = useState<Record<string, string | null>>({});
   
   // Current User State (for Avatar)
-  const [currentUser, setCurrentUser] = useState<{ id: string; name: string | null; image: string | null } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; name: string | null; image: string | null } | null>(globalCache.userData || null);
 
   useEffect(() => {
     if (session?.user) {
       fetch(`/api/users/${(session.user as any).id}`)
         .then(res => res.json())
         .then(data => {
-          if (data.user) setCurrentUser(data.user);
+          if (data.user) {
+            setCurrentUser(data.user);
+            globalCache.userData = data.user;
+          }
         })
         .catch(console.error);
     }
