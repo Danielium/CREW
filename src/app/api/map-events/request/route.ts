@@ -103,6 +103,23 @@ export async function PATCH(req: Request) {
       data: { status }
     });
 
+    if (status === "ACCEPTED") {
+      const { sendTelegramMessageToUser } = await import('@/lib/telegram');
+      const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' мск';
+      const text = `✅ <b>Заявка принята!</b>\n\nСоздатель пробежки одобрил вашу заявку на <i>${runDate}</i>.\nВы можете связаться с ним через список участников.`;
+      
+      const botAppUrl = process.env.NEXT_PUBLIC_BOT_APP_URL;
+      const replyMarkup = botAppUrl ? {
+        inline_keyboard: [
+          [
+            { text: "Открыть пробежку", url: `${botAppUrl}?startapp=focus_${request.proposal.id}` }
+          ]
+        ]
+      } : undefined;
+
+      sendTelegramMessageToUser(request.userId, text, replyMarkup).catch(console.error);
+    }
+
     return NextResponse.json({ success: true, request: updated });
   } catch (error: any) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
