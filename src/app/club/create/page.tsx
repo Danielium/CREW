@@ -82,6 +82,7 @@ export default function CreateClubPage() {
       if (data.club) {
         globalCache.clubs = null;
         globalCache.userData = null;
+        localStorage.removeItem("clubLogoConfig");
         router.push("/club");
       } else {
         alert(data.error || "Ошибка при создании клуба");
