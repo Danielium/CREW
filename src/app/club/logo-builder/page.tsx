@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { ArrowLeft, Check, Zap, Flame, Skull, Sword, Shield, Mountain, Anchor, Crown, Star, Heart, Activity, Target, Trophy, Ghost, Crosshair, HelpCircle } from "lucide-react";
 import ClubBadge, { ShapeType, PatternType } from "@/components/ClubBadge";
+import { ImageCropperModal } from "@/components/ImageCropperModal";
 
 const SHAPES: { id: ShapeType; name: string }[] = [
   { id: "square", name: "Квадрат" },
@@ -47,6 +48,7 @@ export default function LogoBuilder() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const [activeTab, setActiveTab] = useState<"shape" | "pattern" | "color" | "icon" | "photo">("shape");
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
 
   // Hide BottomNav on mount and load existing config
   useEffect(() => {
@@ -74,58 +76,25 @@ export default function LogoBuilder() {
     };
   }, []);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setCropImageSrc(event.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
-    setIsUploading(true);
-    try {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          const MAX_SIZE = 300;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > height) {
-            if (width > MAX_SIZE) {
-              height *= MAX_SIZE / width;
-              width = MAX_SIZE;
-            }
-          } else {
-            if (height > MAX_SIZE) {
-              width *= MAX_SIZE / height;
-              height = MAX_SIZE;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx?.drawImage(img, 0, 0, width, height);
-
-          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
-          setImageUrl(compressedBase64);
-          setIsUploading(false);
-        };
-        img.onerror = () => {
-          alert("Ошибка чтения картинки");
-          setIsUploading(false);
-        };
-        img.src = reader.result as string;
-      };
-      reader.onerror = () => {
-        alert("Ошибка файла");
-        setIsUploading(false);
-      };
-      reader.readAsDataURL(file);
-    } catch (e) {
-      console.error(e);
-      alert("Ошибка загрузки");
-      setIsUploading(false);
-    }
+  const handleCropComplete = (file: File, url: string) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageUrl(reader.result as string);
+      setCropImageSrc(null);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSave = () => {
@@ -139,13 +108,8 @@ export default function LogoBuilder() {
       
       {/* Header */}
       <div className="flex justify-between items-center px-4 pt-safe pb-4 bg-card border-b border-border">
-        <button 
-          onClick={() => window.history.back()}
-          className="p-2 -ml-2 rounded-full text-foreground hover:bg-border transition-colors"
-        >
-          <ArrowLeft size={24} />
-        </button>
-        <h1 className="text-xl font-bold">Эмблема</h1>
+        <div></div>
+        <h1 className="text-xl font-bold text-center absolute left-1/2 -translate-x-1/2">Эмблема</h1>
         <button 
           onClick={handleSave}
           className="p-2 -mr-2 rounded-full text-primary hover:bg-border transition-colors"
@@ -291,7 +255,7 @@ export default function LogoBuilder() {
             {imageUrl ? (
               <>
                 <button onClick={() => fileInputRef.current?.click()} className="py-4 px-8 rounded-2xl bg-muted text-foreground font-bold uppercase tracking-wider text-sm active:scale-95 transition-transform">
-                  {isUploading ? "Загрузка..." : "Изменить фото"}
+                  Изменить фото
                 </button>
                 <button onClick={() => setImageUrl(undefined)} className="py-4 px-8 rounded-2xl bg-red-500/10 text-red-500 font-bold uppercase tracking-wider text-sm active:scale-95 transition-transform">
                   Удалить фото
@@ -299,13 +263,21 @@ export default function LogoBuilder() {
               </>
             ) : (
               <button onClick={() => fileInputRef.current?.click()} className="py-4 px-8 rounded-2xl bg-primary text-black font-bold uppercase tracking-wider text-sm active:scale-95 transition-transform">
-                {isUploading ? "Загрузка..." : "Загрузить фото"}
+                Загрузить фото
               </button>
             )}
           </div>
         )}
 
       </div>
+
+      {cropImageSrc && (
+        <ImageCropperModal 
+          imageSrc={cropImageSrc}
+          onCropComplete={handleCropComplete}
+          onClose={() => setCropImageSrc(null)}
+        />
+      )}
 
     </div>
   );
