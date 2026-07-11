@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, Star, Trophy, Users, Edit3, Lock, Sunrise, Sun, Moon, LogOut, LogIn, X, Loader2, Camera, Check } from "lucide-react";
+import { Settings, Star, Trophy, Users, Edit3, Lock, Sunrise, Sun, Moon, CloudSun, LogOut, LogIn, X, Loader2, Camera, Check } from "lucide-react";
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
@@ -420,7 +420,7 @@ export default function ProfileTab() {
                   const hour = new Date(run.startTime).getHours();
                   let Icon = Moon;
                   if (run.event) Icon = Users;
-                  else if (hour >= 5 && hour < 12) Icon = Sunrise;
+                  else if (hour >= 5 && hour < 12) Icon = CloudSun;
                   else if (hour >= 12 && hour < 18) Icon = Sun;
 
                   return (
@@ -431,7 +431,7 @@ export default function ProfileTab() {
                         </div>
                         <div>
                           <p className="font-medium text-sm text-foreground">
-                            {new Date(run.startTime).toLocaleDateString("ru-RU", { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                            {new Date(run.startTime).toLocaleString("ru-RU", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                           </p>
                           <p className="text-sm text-muted mt-0.5">{run.event ? run.event.title : "Свободная пробежка"}</p>
                         </div>
