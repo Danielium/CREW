@@ -185,11 +185,6 @@ export default function PublicProfilePage() {
   if (userData.isPrivate) {
     return (
       <div className="flex flex-col min-h-[100dvh] bg-background text-foreground pt-safe pb-24 relative z-10 animate-in fade-in duration-500">
-        <div className="flex justify-between items-center px-4 pt-4 pb-4">
-          <button onClick={() => window.history.back()} className="p-2 -ml-2 rounded-full text-foreground hover:bg-border transition-colors">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-          </button>
-        </div>
         <div className="flex flex-col items-center mt-10">
           <div className="w-28 h-28 rounded-full border-4 border-[#000] overflow-hidden bg-card flex items-center justify-center shadow-lg">
             {renderAvatar(userData.image)}
