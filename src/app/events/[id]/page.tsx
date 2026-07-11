@@ -55,6 +55,8 @@ export default function EventDetailsPage() {
         body: JSON.stringify({ userId })
       });
       if (res.ok) {
+        const { globalCache } = await import("@/lib/cache");
+        globalCache.events = null;
         setEvent((prev: any) => ({
           ...prev,
           attendees: prev.attendees.filter((u: any) => u.id !== userId)

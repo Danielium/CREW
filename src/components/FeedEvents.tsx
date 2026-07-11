@@ -41,6 +41,7 @@ export default function FeedEvents({ userData }: { userData: any }) {
         const res = await fetch(`/api/events/${id}`, { method: 'DELETE' });
         if (res.ok) {
           setEvents(events.filter(e => e.id !== id));
+          globalCache.events = null;
         } else {
           const data = await res.json();
           alert(data.error || "Ошибка при удалении события");
@@ -58,7 +59,10 @@ export default function FeedEvents({ userData }: { userData: any }) {
         fetch('/api/events', { cache: 'no-store' })
           .then(r => r.json())
           .then(data => {
-            if (data.events) setEvents(data.events);
+            if (data.events) {
+              setEvents(data.events);
+              globalCache.events = data.events;
+            }
           });
       }
     } catch (e) {

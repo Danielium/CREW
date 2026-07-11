@@ -215,6 +215,7 @@ export default function ProfileTab() {
       const data = await res.json();
       if (data.user) {
         setUserData(data.user);
+        globalCache.userData = data.user;
         // Force session update so the name updates across the app (navbar etc)
         // We DO NOT pass image to updateSession because large base64 strings cause 413 Payload Too Large in NextAuth session cookies
         await updateSession({ name: data.user.name });

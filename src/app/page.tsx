@@ -211,6 +211,8 @@ function MapContent() {
     try {
       const res = await fetch(`/api/events/${selectedProposal.event.id}/join`, { method: "POST" });
       if (res.ok) {
+        const { globalCache } = await import("@/lib/cache");
+        globalCache.events = null;
         fetchProposals();
       } else {
         throw new Error("Failed to join");
