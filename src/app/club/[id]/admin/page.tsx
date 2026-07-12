@@ -283,33 +283,46 @@ export default function ClubAdminPage() {
               {pendingMembers.map((member: any) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between p-3 pl-4 bg-black/20 border border-white/5 rounded-2xl hover:bg-black/30 transition-colors"
+                  className="relative flex flex-col gap-4 p-4 bg-black/20 border border-white/5 rounded-2xl hover:bg-black/30 transition-colors"
                 >
+                  {member.user.telegramUsername && (
+                    <a
+                      href={`https://t.me/${member.user.telegramUsername.replace('@', '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20 transition-colors z-10"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.19-.08-.05-.19-.02-.27 0-.11.03-1.84 1.18-5.2 3.45-.49.34-.93.5-1.33.49-.44-.01-1.28-.25-1.9-.45-.76-.25-1.36-.38-1.31-.8.03-.22.32-.44.88-.67 3.46-1.51 5.76-2.5 6.9-2.98 3.28-1.37 3.96-1.61 4.41-1.62.1 0 .32.02.43.1.1.07.13.17.14.27.01.07.01.17 0 .27z"/>
+                      </svg>
+                    </a>
+                  )}
+                  
                   <div className="flex items-center gap-3">
                     {member.user.image ? (
                       <img
                         src={member.user.image}
                         alt=""
-                        className="w-10 h-10 rounded-full object-cover border border-white/10"
+                        className="w-12 h-12 rounded-full object-cover border border-white/10"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-card border border-white/10 flex items-center justify-center text-muted text-xs font-bold">
+                      <div className="w-12 h-12 rounded-full bg-card border border-white/10 flex items-center justify-center text-muted text-base font-bold">
                         {(member.user.name || "?")[0].toUpperCase()}
                       </div>
                     )}
                     <div>
-                      <p className="font-bold text-sm">{member.user.name || "Аноним"}</p>
-                      <p className="text-[10px] text-primary uppercase tracking-widest font-bold">
+                      <p className="font-bold text-base pr-8">{member.user.name || "Аноним"}</p>
+                      <p className="text-xs text-primary uppercase tracking-widest font-bold mt-1">
                         {member.user.totalDistance.toFixed(1)} км
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full pt-1 border-t border-white/5 mt-1">
                     <button
                       onClick={() => handleMemberAction(member.userId, "approve")}
                       disabled={processingIds.has(member.userId)}
-                      className="w-10 h-10 rounded-xl bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center hover:bg-green-500/20 transition-all active:scale-95 disabled:opacity-50"
+                      className="flex-1 h-10 rounded-xl bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center hover:bg-green-500/20 transition-all active:scale-95 disabled:opacity-50"
                     >
                       {processingIds.has(member.userId) ? (
                         <Loader2 size={16} className="animate-spin" />
@@ -320,7 +333,7 @@ export default function ClubAdminPage() {
                     <button
                       onClick={() => handleMemberAction(member.userId, "reject")}
                       disabled={processingIds.has(member.userId)}
-                      className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center hover:bg-red-500/20 transition-all active:scale-95 disabled:opacity-50"
+                      className="flex-1 h-10 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center hover:bg-red-500/20 transition-all active:scale-95 disabled:opacity-50"
                     >
                       <UserX size={18} />
                     </button>
