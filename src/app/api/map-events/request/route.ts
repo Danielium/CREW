@@ -56,7 +56,7 @@ export async function POST(req: Request) {
         const cleanName = request.user.telegramUsername.replace('@', '');
         // If it's a fallback ID (e.g. @id1234), we don't show it as a username
         if (!cleanName.startsWith('id') || isNaN(Number(cleanName.substring(2)))) {
-          tgMention = ` (@${cleanName})`;
+          tgMention = ` @${cleanName}`;
         }
       }
       const text = `🏃 <b>Новая заявка на пробежку!</b>\n\nАтлет <b>${request.user.name || "Аноним"}</b>${tgMention} хочет присоединиться к вашей пробежке, запланированной на <i>${runDate}</i>.\n\nЧто делаем?`;
