@@ -91,19 +91,7 @@ export default function RequestsInbox() {
               <div className="text-center text-muted py-10">Новых запросов пока нет</div>
             ) : (
               data.incomingPending.map((req: any) => (
-                <div key={req.id} className="relative bg-card border border-border rounded-2xl p-4 flex flex-col gap-4">
-                  {req.user.telegramUsername && (
-                    <a
-                      href={`https://t.me/${req.user.telegramUsername.replace('@', '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20 transition-colors z-10"
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.19-.08-.05-.19-.02-.27 0-.11.03-1.84 1.18-5.2 3.45-.49.34-.93.5-1.33.49-.44-.01-1.28-.25-1.9-.45-.76-.25-1.36-.38-1.31-.8.03-.22.32-.44.88-.67 3.46-1.51 5.76-2.5 6.9-2.98 3.28-1.37 3.96-1.61 4.41-1.62.1 0 .32.02.43.1.1.07.13.17.14.27.01.07.01.17 0 .27z"/>
-                      </svg>
-                    </a>
-                  )}
+                <div key={req.id} className="bg-card border border-border rounded-2xl p-4 flex flex-col gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-muted overflow-hidden flex-shrink-0">
                       {req.user.image ? (
@@ -116,6 +104,15 @@ export default function RequestsInbox() {
                       <h3 className="font-bold">{req.user.name}</h3>
                       <p className="text-xs text-muted">Пробежал: {(req.user.totalDistance || 0).toFixed(1)} км</p>
                     </div>
+                    {req.user.telegramUsername && (
+                      <div className="flex gap-2">
+                        <Link href={`https://t.me/${req.user.telegramUsername.replace('@', '')}`} target="_blank">
+                          <button className="w-12 h-12 bg-[#0088cc] text-white rounded-full flex items-center justify-center active:scale-95 transition-transform flex-shrink-0">
+                            <Send size={20} className="relative right-0.5" />
+                          </button>
+                        </Link>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="bg-background rounded-xl p-3 flex justify-between items-center text-sm">
