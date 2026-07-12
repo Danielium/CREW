@@ -47,7 +47,7 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
             <Link href={isMe ? '/profile' : `/users/${user.id}`} key={user.id}>
               <div className={`flex items-center justify-between p-3.5 rounded-[16px] ${isMe ? 'bg-primary text-black font-semibold' : 'bg-card border border-border hover:bg-muted/50 text-foreground transition-colors'}`}>
                   <div className="flex items-center gap-4">
-                      <span className={`w-5 text-center text-lg font-black italic tracking-tighter ${isMe ? '' : 'text-muted/70'}`}>{index + 1}</span>
+                      <span className={`w-6 text-center text-2xl font-black italic tracking-tighter ${isMe ? '' : 'text-muted/70'}`}>{index + 1}</span>
                       {user.image ? (
                           <img src={user.image} className="w-10 h-10 rounded-full object-cover border border-background/20 bg-muted" alt={user.name} />
                       ) : (
@@ -57,7 +57,7 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
                       )}
                       <span className="font-medium text-sm truncate max-w-[120px]">{user.name}</span>
                   </div>
-                  <span className="text-xl font-black italic tracking-tighter">{user.totalDistance.toFixed(1)}<span className="ml-1 text-[10px] font-black not-italic tracking-normal opacity-80 uppercase">км</span></span>
+                  <span className="text-xl font-black italic tracking-tighter">{user.totalDistance.toFixed(1)}<span className="ml-1.5 text-[10px] font-black not-italic tracking-normal opacity-80 uppercase">км</span></span>
               </div>
             </Link>
           );
