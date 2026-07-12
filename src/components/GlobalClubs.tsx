@@ -143,9 +143,9 @@ export default function GlobalClubs({ inClub }: { inClub?: boolean }) {
                   club.rank === 1 ? 'bg-primary border-primary text-black shadow-primary/30' : 
                   club.rank === 2 ? 'bg-slate-300 border-slate-300 text-black shadow-slate-300/30' : 
                   club.rank === 3 ? 'bg-amber-700 border-amber-700 text-white shadow-amber-700/30' : 
-                  'bg-black/50 border-white/10 text-muted-foreground'
+                  'bg-black/50 border-white/20 text-white/70'
                 }`}>
-                  {club.rank}
+                  <span className="pr-1">{club.rank}</span>
                 </div>
                 {(() => {
                   try {
