@@ -12,7 +12,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       where: { id: id },
       include: {
         members: {
-          include: { user: { select: { id: true, name: true, telegramUsername: true, image: true, totalDistance: true } } },
+          include: { user: { select: { id: true, name: true, image: true, totalDistance: true } } },
           orderBy: { clubDistance: 'desc' }
         },
         events: {
@@ -95,25 +95,6 @@ export async function POST(req: Request, context: any) {
         status
       }
     });
-
-    if (status === "PENDING") {
-      try {
-        const { sendTelegramMessageToUser } = await import('@/lib/telegram');
-        const founders = await prisma.clubMember.findMany({
-          where: { clubId: params.id, role: "FOUNDER", status: "ACTIVE" },
-          select: { userId: true }
-        });
-        const currentUser = await prisma.user.findUnique({ where: { id: (session.user as any).id } });
-        const tgLink = currentUser?.telegramUsername ? `\n\nTelegram: @${currentUser.telegramUsername}` : "";
-        const botAppUrl = process.env.NEXT_PUBLIC_BOT_APP_URL || "";
-        const link = botAppUrl ? `\n\n📍 Жми, чтобы открыть управление клубом: ${botAppUrl}?startapp=club_${params.id}` : "";
-        const text = `👋 <b>Новая заявка в клуб!</b>\n\nПользователь <b>${currentUser?.name || "Аноним"}</b> хочет вступить в твой клуб <b>${club.name}</b>.${tgLink}${link}`;
-        
-        await Promise.allSettled(founders.map(f => sendTelegramMessageToUser(f.userId, text)));
-      } catch (e) {
-        console.error("Failed to notify founders", e);
-      }
-    }
 
     return NextResponse.json({ member, status });
   } catch (error) {
