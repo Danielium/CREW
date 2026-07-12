@@ -182,7 +182,7 @@ export default function ClubProfilePage() {
           </div>
           <div className="flex items-center gap-4 text-xs text-muted font-medium uppercase tracking-wider">
             <span className="flex items-center gap-1"><Users size={14}/> {club.members.filter((m: any)=>m.status==="ACTIVE").length} Атлетов</span>
-            <span className="flex items-center gap-1"><Map size={14}/> {Math.floor(club.totalClubDistance)} км пробега</span>
+            <span className="flex items-center gap-1"><Map size={14}/> {club.totalClubDistance.toFixed(1)} км пробега</span>
           </div>
         </div>
       </div>
