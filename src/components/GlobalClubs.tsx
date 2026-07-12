@@ -139,7 +139,7 @@ export default function GlobalClubs({ inClub }: { inClub?: boolean }) {
           <Link href={`/club/${club.id}`} key={club.id}>
             <div className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[24px] p-5 flex items-center justify-between hover:border-primary/50 hover:bg-black/20 transition-all shadow-lg group">
               <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm border-2 flex-shrink-0 shadow-lg ${
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xl italic tracking-tighter border-2 flex-shrink-0 shadow-lg ${
                   club.rank === 1 ? 'bg-primary border-primary text-black shadow-primary/30' : 
                   club.rank === 2 ? 'bg-slate-300 border-slate-300 text-black shadow-slate-300/30' : 
                   club.rank === 3 ? 'bg-amber-700 border-amber-700 text-white shadow-amber-700/30' : 
