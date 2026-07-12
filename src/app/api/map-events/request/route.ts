@@ -51,24 +51,28 @@ export async function POST(req: Request) {
       const { sendTelegramMessageToUser } = await import('@/lib/telegram');
       
       const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' мск';
-      let tgMention = "";
+      let tgButton: any = null;
       if (request.user.telegramUsername) {
         const cleanName = request.user.telegramUsername.replace('@', '');
         // If it's a fallback ID (e.g. @id1234), we don't show it as a username
         if (!cleanName.startsWith('id') || isNaN(Number(cleanName.substring(2)))) {
-          tgMention = ` @${cleanName}`;
+          tgButton = [{ text: "💬 Написать атлету", url: `https://t.me/${cleanName}` }];
         }
       }
-      const text = `🏃 <b>Новая заявка на пробежку!</b>\n\nАтлет <b>${request.user.name || "Аноним"}</b>${tgMention} хочет присоединиться к вашей пробежке, запланированной на <i>${runDate}</i>.\n\nЧто делаем?`;
+      const text = `🏃 <b>Новая заявка на пробежку!</b>\n\nАтлет <b>${request.user.name || "Аноним"}</b> хочет присоединиться к вашей пробежке, запланированной на <i>${runDate}</i>.\n\nЧто делаем?`;
       
-      const replyMarkup = {
-        inline_keyboard: [
-          [
-            { text: "✅ Принять", callback_data: `accept_req_${request.id}` },
-            { text: "❌ Отклонить", callback_data: `reject_req_${request.id}` }
-          ]
+      const inline_keyboard = [
+        [
+          { text: "✅ Принять", callback_data: `accept_req_${request.id}` },
+          { text: "❌ Отклонить", callback_data: `reject_req_${request.id}` }
         ]
-      };
+      ];
+      
+      if (tgButton) {
+        inline_keyboard.unshift(tgButton);
+      }
+      
+      const replyMarkup = { inline_keyboard };
 
       // Best effort send
       sendTelegramMessageToUser(request.proposal.creatorId, text, replyMarkup).catch(console.error);
