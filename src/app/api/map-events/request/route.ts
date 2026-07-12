@@ -51,7 +51,14 @@ export async function POST(req: Request) {
       const { sendTelegramMessageToUser } = await import('@/lib/telegram');
       
       const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' мск';
-      const tgLink = request.user.telegramUsername ? `\n\nTelegram: @${request.user.telegramUsername}` : "";
+      let tgLink = "";
+      if (request.user.telegramUsername) {
+        const cleanName = request.user.telegramUsername.replace('@', '');
+        // If it's a fallback ID (e.g. @id1234), we don't show it as a username
+        if (!cleanName.startsWith('id') || isNaN(Number(cleanName.substring(2)))) {
+          tgLink = `\n\nTelegram: @${cleanName}`;
+        }
+      }
       const text = `🏃 <b>Новая заявка на пробежку!</b>\n\nАтлет <b>${request.user.name || "Аноним"}</b> хочет присоединиться к вашей пробежке, запланированной на <i>${runDate}</i>.${tgLink}\n\nЧто делаем?`;
       
       const replyMarkup = {
