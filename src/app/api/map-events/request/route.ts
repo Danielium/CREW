@@ -50,9 +50,9 @@ export async function POST(req: Request) {
     if (request.proposal.creatorId !== userId) {
       const { sendTelegramMessageToUser } = await import('@/lib/telegram');
       
-      // We don't expose requester's TG username here for privacy until accepted, but we can show their name
       const runDate = new Date(request.proposal.startTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' мск';
-      const text = `🏃 <b>Новая заявка на пробежку!</b>\n\nАтлет <b>${request.user.name || "Аноним"}</b> хочет присоединиться к вашей пробежке, запланированной на <i>${runDate}</i>.\n\nЧто делаем?`;
+      const tgLink = request.user.telegramUsername ? `\n\nTelegram: @${request.user.telegramUsername}` : "";
+      const text = `🏃 <b>Новая заявка на пробежку!</b>\n\nАтлет <b>${request.user.name || "Аноним"}</b> хочет присоединиться к вашей пробежке, запланированной на <i>${runDate}</i>.${tgLink}\n\nЧто делаем?`;
       
       const replyMarkup = {
         inline_keyboard: [
@@ -148,7 +148,7 @@ export async function GET(req: Request) {
         status: "PENDING"
       },
       include: {
-        user: { select: { name: true, image: true, totalDistance: true } }, // Do NOT reveal tg username until accepted!
+        user: { select: { name: true, image: true, telegramUsername: true, totalDistance: true } },
         proposal: true
       },
       orderBy: { createdAt: 'desc' }
