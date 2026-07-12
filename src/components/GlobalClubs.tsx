@@ -163,7 +163,7 @@ export default function GlobalClubs({ inClub }: { inClub?: boolean }) {
                 </div>
               </div>
               <div className="text-right flex flex-col items-end justify-center">
-                <p className="text-2xl font-black tracking-tighter text-white/90 drop-shadow-md">{club.totalClubDistance.toFixed(1)}</p>
+                <p className="text-2xl font-black italic tracking-tighter text-white/90 drop-shadow-md">{club.totalClubDistance.toFixed(1)}</p>
                 <p className="text-[9px] text-primary uppercase font-black tracking-widest mt-0.5">КМ</p>
               </div>
             </div>
