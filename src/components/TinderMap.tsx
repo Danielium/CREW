@@ -81,7 +81,7 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
   };
 
   return (
-    <div className="w-full h-[100dvh] absolute top-0 left-0 z-0">
+    <div className="w-full h-full absolute top-0 left-0 z-0">
       <MapContainer
         center={defaultCenter}
         zoom={14}

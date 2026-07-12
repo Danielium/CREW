@@ -43,8 +43,7 @@ export default function RootLayout({
           <div 
             className="w-full max-w-[480px] bg-background relative shadow-2xl overflow-hidden flex flex-col mx-auto"
             style={{ 
-              height: "var(--tg-viewport-stable-height, 100dvh)",
-              paddingBottom: "var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px))"
+              height: "var(--tg-viewport-stable-height, 100dvh)"
             }}
           >
             <SplashLoader>
