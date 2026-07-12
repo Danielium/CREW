@@ -151,6 +151,30 @@ function MapContent() {
       const data = await res.json();
       if (data.proposals) {
         setProposals(data.proposals);
+        
+        // Check if focused run is missing (expired)
+        const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
+        const startParam = tg?.initDataUnsafe?.start_param;
+        let focusId = null;
+        if (typeof window !== 'undefined') {
+          focusId = new URLSearchParams(window.location.search).get('focus');
+        }
+        if (startParam && startParam.startsWith('focus_')) {
+          focusId = startParam.replace('focus_', '');
+        }
+
+        if (focusId && lastFocusedId.current !== focusId) {
+          const p = data.proposals.find((pr: any) => pr.id === focusId);
+          if (!p) {
+            lastFocusedId.current = focusId; // prevent infinite alert loop
+            if (tg && tg.showAlert) {
+              tg.showAlert("Эта пробежка уже прошла! 🏁");
+            } else if (typeof window !== 'undefined') {
+              alert("Эта пробежка уже прошла! 🏁");
+            }
+          }
+        }
+
         // Also update selected proposal if it's currently open
         setSelectedProposal((prev: any) => {
           if (!prev) return null;

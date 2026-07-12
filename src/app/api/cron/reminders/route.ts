@@ -43,11 +43,19 @@ export async function GET(req: Request) {
       const botAppUrl = process.env.NEXT_PUBLIC_BOT_APP_URL || "";
       const link = botAppUrl ? `${botAppUrl}?startapp=focus_${proposal.id}` : "";
       
-      const text = `⏳ <b>Скоро старт!</b>\n\nСовместная пробежка, на которую вы записались, начнется в ${eventDate}.\n\n📍 Проверьте место встречи на карте: ${link}`;
+      const text = `⏳ <b>Скоро старт!</b>\n\nСовместная пробежка, на которую вы записались, начнется в ${eventDate}.`;
+
+      const replyMarkup = botAppUrl ? {
+        inline_keyboard: [
+          [
+            { text: "📍 На карте", url: `${botAppUrl}?startapp=focus_${proposal.id}` }
+          ]
+        ]
+      } : undefined;
 
       const usersToNotify = [proposal.creatorId, ...proposal.requests.map(r => r.userId)];
       
-      await Promise.allSettled(usersToNotify.map(uid => sendTelegramMessageToUser(uid, text)));
+      await Promise.allSettled(usersToNotify.map(uid => sendTelegramMessageToUser(uid, text, replyMarkup)));
       notificationsSent += usersToNotify.length;
 
       await prisma.runProposal.update({
@@ -76,11 +84,19 @@ export async function GET(req: Request) {
       const botAppUrl = process.env.NEXT_PUBLIC_BOT_APP_URL || "";
       const link = botAppUrl ? `${botAppUrl}?startapp=focus_${event.id}` : "";
       
-      const text = `⏳ <b>Скоро старт!</b>\n\nКлубная пробежка <i>${event.title}</i> начнется в ${eventDate}.\n\n📍 Проверьте маршрут и место встречи: ${link}`;
+      const text = `⏳ <b>Скоро старт!</b>\n\nКлубная пробежка <i>${event.title}</i> начнется в ${eventDate}.`;
+
+      const replyMarkup = botAppUrl ? {
+        inline_keyboard: [
+          [
+            { text: "📍 На карте", url: `${botAppUrl}?startapp=focus_${event.id}` }
+          ]
+        ]
+      } : undefined;
 
       const usersToNotify = event.attendees.map(a => a.id);
       
-      await Promise.allSettled(usersToNotify.map(uid => sendTelegramMessageToUser(uid, text)));
+      await Promise.allSettled(usersToNotify.map(uid => sendTelegramMessageToUser(uid, text, replyMarkup)));
       notificationsSent += usersToNotify.length;
 
       await prisma.event.update({
