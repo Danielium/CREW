@@ -47,10 +47,9 @@
 }
 
 /* Safe area padding utilities for Telegram Web Apps */
-/* Uses TG's own variable when available; falls back to system safe-area + TG header height (56px) */
 .pt-safe {
-  padding-top: max(var(--tg-content-safe-area-inset-top, 0px), calc(env(safe-area-inset-top, 0px) + 56px)) !important;
+  padding-top: max(var(--tg-content-safe-area-inset-top, 0px), calc(env(safe-area-inset-top, 0px) + 80px)) !important;
 }
 .top-safe {
-  top: max(var(--tg-content-safe-area-inset-top, 0px), calc(env(safe-area-inset-top, 0px) + 56px)) !important;
+  top: max(var(--tg-content-safe-area-inset-top, 0px), calc(env(safe-area-inset-top, 0px) + 80px)) !important;
 }
