@@ -57,7 +57,7 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
                       )}
                       <span className="font-medium text-sm truncate max-w-[120px]">{user.name}</span>
                   </div>
-                  <span className="text-sm font-bold font-mono">{user.totalDistance.toFixed(1)} <span className="text-[10px] uppercase">км</span></span>
+                  <span className="text-xl font-black italic tracking-tighter">{user.totalDistance.toFixed(1)} <span className="text-[10px] font-bold not-italic tracking-normal opacity-80 uppercase">км</span></span>
               </div>
             </Link>
           );
