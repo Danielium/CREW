@@ -401,7 +401,6 @@ function MapContent() {
 
   const handleLocationFound = (coords: [number, number]) => {
     setUserLocation(coords);
-    setForceCenter(coords);
   };
 
   const [activePinIndex, setActivePinIndex] = useState(-1);
