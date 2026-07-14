@@ -13,6 +13,11 @@ export default function UserLocationMarker({
   const [position, setPosition] = useState<[number, number] | null>(null);
   const map = useMap();
   const hasFlownForTrigger = useRef(0);
+  const onLocationFoundRef = useRef(onLocationFound);
+
+  useEffect(() => {
+    onLocationFoundRef.current = onLocationFound;
+  }, [onLocationFound]);
 
   // On button press (triggerLocate > 0): request geo
   useEffect(() => {
@@ -25,7 +30,7 @@ export default function UserLocationMarker({
     const saveAndShow = (lat: number, lng: number) => {
       const coords: [number, number] = [lat, lng];
       setPosition(coords);
-      if (onLocationFound) onLocationFound(coords);
+      if (onLocationFoundRef.current) onLocationFoundRef.current(coords);
 
       // Only fly once per triggerLocate button press
       if (hasFlownForTrigger.current !== triggerLocate) {
