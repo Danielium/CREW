@@ -106,7 +106,7 @@ export default function RequestsInbox() {
                     </div>
                     <div className="flex gap-2">
                       {req.user.telegramUsername && (
-                        <Link href={`https://t.me/${req.user.telegramUsername.replace('@', '')}`} target="_blank">
+                        <Link href={`https://telegram.me/${req.user.telegramUsername.replace('@', '')}`} target="_blank">
                           <button className="w-12 h-12 bg-[#0088cc] text-white rounded-full flex items-center justify-center active:scale-95 transition-transform flex-shrink-0">
                             <Send size={20} className="relative right-0.5" />
                           </button>
@@ -163,7 +163,7 @@ export default function RequestsInbox() {
                       
                       <div className="flex gap-2">
                         {otherUser.telegramUsername && (
-                          <Link href={`https://t.me/${otherUser.telegramUsername.replace('@', '')}`} target="_blank">
+                          <Link href={`https://telegram.me/${otherUser.telegramUsername.replace('@', '')}`} target="_blank">
                             <button className="w-12 h-12 bg-[#0088cc] text-white rounded-full flex items-center justify-center active:scale-95 transition-transform flex-shrink-0">
                               <Send size={20} className="relative right-0.5" />
                             </button>
