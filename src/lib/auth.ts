@@ -77,7 +77,7 @@ export const authOptions: NextAuthOptions = {
                 data: {
                   telegramUsername: tUsername,
                   name: credentials.name || tUsername,
-                  image: credentials.image || null,
+                  image: credentials.image ? credentials.image.replace('t.me', 'telegram.me') : null,
                   password: dummyPassword,
                 }
               });
@@ -85,7 +85,9 @@ export const authOptions: NextAuthOptions = {
               // Update name and image if provided by TG this time
               const updateData: any = {};
               if (credentials.name && credentials.name !== user.name) updateData.name = credentials.name;
-              if (credentials.image && credentials.image !== user.image) updateData.image = credentials.image;
+              
+              const incomingImage = credentials.image ? credentials.image.replace('t.me', 'telegram.me') : null;
+              if (incomingImage && incomingImage !== user.image) updateData.image = incomingImage;
               
               if (Object.keys(updateData).length > 0) {
                 user = await prisma.user.update({

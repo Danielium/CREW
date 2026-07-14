@@ -49,7 +49,7 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
                   <div className="flex items-center gap-4">
                       <span className={`w-6 text-center text-2xl font-black italic tracking-tighter ${isMe ? '' : 'text-muted/70'}`}>{index + 1}</span>
                       {user.image ? (
-                          <img src={user.image} className="w-10 h-10 rounded-full object-cover border border-background/20 bg-muted" alt={user.name} />
+                          <img src={user.image} className="w-10 h-10 rounded-full object-cover border border-background/20 bg-muted" alt={user.name} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'U')}&background=random&color=fff`; }} />
                       ) : (
                           <div className="w-10 h-10 rounded-full border border-background/20 bg-muted flex items-center justify-center">
                             <User size={16} className={isMe ? "text-black" : "text-foreground"} />
