@@ -19,6 +19,7 @@ export default function UserLocationMarker({
     if (!triggerLocate) return; // don't run on initial mount (triggerLocate = 0)
 
     let watchId: number | null = null;
+    let tgInterval: NodeJS.Timeout | null = null;
     let settled = false; // prevent race: only the first source wins the flyTo
 
     const saveAndShow = (lat: number, lng: number) => {
@@ -57,7 +58,7 @@ export default function UserLocationMarker({
         (err) => { console.warn("Geo error:", err.code); },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
-      // Live updates (watchPosition doesn't need getCurrentPosition prefix when we already have one)
+      // Live updates
       startBrowserWatch();
     };
 
@@ -66,37 +67,22 @@ export default function UserLocationMarker({
       const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
       if (tg?.LocationManager) {
         const runTgGeo = () => {
-          let tgResolved = false;
-          const fallbackTimeout = setTimeout(() => {
-            if (!tgResolved) {
-              tgResolved = true;
-              requestBrowserGeo();
+          const fetchTg = () => {
+            try {
+              tg.LocationManager.getLocation((data: any) => {
+                if (data && typeof data.latitude === 'number' && typeof data.longitude === 'number') {
+                  saveAndShow(data.latitude, data.longitude);
+                  settled = true;
+                }
+              });
+            } catch(e) {
+              console.warn("TG Geo error:", e);
             }
-          }, 3000);
-
-          try {
-            tg.LocationManager.getLocation((data: any) => {
-              if (tgResolved) return;
-              tgResolved = true;
-              clearTimeout(fallbackTimeout);
-
-              if (data && typeof data.latitude === 'number' && typeof data.longitude === 'number') {
-                // TG gave us a position — use it, then start watch-only for live updates
-                saveAndShow(data.latitude, data.longitude);
-                settled = true;
-                startBrowserWatch(); // only watch, no duplicate getCurrentPosition
-              } else {
-                // TG failed — fall back to full browser geo
-                requestBrowserGeo();
-              }
-            });
-          } catch(e) {
-            if (!tgResolved) {
-              tgResolved = true;
-              clearTimeout(fallbackTimeout);
-              requestBrowserGeo();
-            }
-          }
+          };
+          
+          fetchTg(); // Initial fetch
+          // Poll every 5 seconds for live updates (TG doesn't have watchPosition)
+          tgInterval = setInterval(fetchTg, 5000);
         };
 
         if (!tg.LocationManager.isInited) {
@@ -120,6 +106,9 @@ export default function UserLocationMarker({
     return () => {
       if (watchId !== null && navigator.geolocation) {
         navigator.geolocation.clearWatch(watchId);
+      }
+      if (tgInterval !== null) {
+        clearInterval(tgInterval);
       }
     };
   }, [triggerLocate]); // eslint-disable-line react-hooks/exhaustive-deps
