@@ -64,6 +64,7 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, o
   const [search, setSearch] = useState("");
   const [activeSearch, setActiveSearch] = useState<string | null>(null);
   const [triggerLocate, setTriggerLocate] = useState(0);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   
   const mapRef = useRef<L.Map | null>(null);
@@ -223,7 +224,11 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, o
   const handleLocate = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setTriggerLocate(prev => prev + 1);
+    if (userLocation && mapRef.current) {
+      mapRef.current.flyTo(userLocation, 14);
+    } else {
+      setTriggerLocate(prev => prev + 1);
+    }
   };
 
   // Default center (Moscow)
@@ -288,7 +293,7 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, o
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
           
-          <UserLocationMarker triggerLocate={triggerLocate} />
+          <UserLocationMarker triggerLocate={triggerLocate} onLocationFound={(loc) => setUserLocation(loc)} />
           
           <RouteEvents 
             onMapClick={handleMapClick} 

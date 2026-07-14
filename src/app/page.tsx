@@ -392,7 +392,11 @@ function MapContent() {
 
   const handleLocateMe = () => {
     triggerHaptic('light');
-    setTriggerLocate(prev => prev + 1);
+    if (userLocation) {
+      setForceCenter([...userLocation]);
+    } else {
+      setTriggerLocate(prev => prev + 1);
+    }
   };
 
   const handleLocationFound = (coords: [number, number]) => {
