@@ -388,21 +388,16 @@ function MapContent() {
   };
 
   const [triggerLocate, setTriggerLocate] = useState(0);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
   const handleLocateMe = () => {
     triggerHaptic('light');
     setTriggerLocate(prev => prev + 1);
+  };
 
-    // INSTANT FEEDBACK
-    const saved = localStorage.getItem('lastKnownLocation');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.length === 2) {
-          setForceCenter([parsed[0], parsed[1]]);
-        }
-      } catch (e) {}
-    }
+  const handleLocationFound = (coords: [number, number]) => {
+    setUserLocation(coords);
+    setForceCenter(coords);
   };
 
   const [activePinIndex, setActivePinIndex] = useState(-1);
@@ -411,14 +406,8 @@ function MapContent() {
   useEffect(() => {
     if (proposals.length === 0) return;
     
-    const saved = localStorage.getItem('lastKnownLocation');
-    let userLoc = [55.7558, 37.6173]; // fallback
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.length === 2) userLoc = parsed;
-      } catch (e) {}
-    }
+    const MOSCOW: [number, number] = [55.7558, 37.6173];
+    const userLoc = userLocation ?? MOSCOW;
 
     const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
       const R = 6371; 
@@ -438,7 +427,7 @@ function MapContent() {
 
     setSortedProposals(sorted);
     setActivePinIndex(-1); // Reset active pin when proposals change
-  }, [proposals]);
+  }, [proposals, userLocation]);
 
   const cyclePins = (direction: 1 | -1) => {
     if (sortedProposals.length === 0) return;
@@ -457,7 +446,7 @@ function MapContent() {
 
   return (
     <div className="absolute inset-0 bg-black text-foreground flex flex-col overflow-hidden">
-      <TinderMap proposals={proposals} onSelectProposal={handleSelectProposal} onMapClick={handleMapClick} forceCenter={forceCenter} triggerLocate={triggerLocate} />
+      <TinderMap proposals={proposals} onSelectProposal={handleSelectProposal} onMapClick={handleMapClick} forceCenter={forceCenter} triggerLocate={triggerLocate} onLocationFound={handleLocationFound} />
 
       {/* Top UI Overlay */}
       <div className="absolute top-0 left-0 w-full px-6 pb-6 pt-safe flex items-center pointer-events-none z-10 gap-3">

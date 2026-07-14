@@ -7,23 +7,11 @@ import dynamic from "next/dynamic";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 
-const getInitialCenter = (): [number, number] => {
-  if (typeof window !== 'undefined') {
-    try {
-      const saved = localStorage.getItem('lastKnownLocation');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.length === 2) return parsed;
-      }
-    } catch (e) {}
-  }
-  return [55.7558, 37.6173];
-};
 
 function CreateProposalInner() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [position, setPosition] = useState<[number, number]>(getInitialCenter());
+  const [position, setPosition] = useState<[number, number]>([55.7558, 37.6173]);
   const [paceFrom, setPaceFrom] = useState("");
   const [paceTo, setPaceTo] = useState("");
   const [isPaceToModified, setIsPaceToModified] = useState(false);
@@ -99,11 +87,16 @@ function CreateProposalInner() {
         // Fallbacks
         const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
         if (tg?.LocationManager) {
-          tg.LocationManager.init(() => {
+          const doGetLocation = () => {
             tg.LocationManager.getLocation((data: any) => {
               if (data) setPosition([data.latitude, data.longitude]);
             });
-          });
+          };
+          if (!tg.LocationManager.isInited) {
+            tg.LocationManager.init(() => doGetLocation());
+          } else {
+            doGetLocation();
+          }
         } else if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             (pos) => setPosition([pos.coords.latitude, pos.coords.longitude]),

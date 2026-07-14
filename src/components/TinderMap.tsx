@@ -54,26 +54,14 @@ function MapController({ onMapClick, forceCenter }: any) {
 
 
 
-const getInitialCenter = (): [number, number] => {
-  if (typeof window !== 'undefined') {
-    try {
-      const saved = localStorage.getItem('lastKnownLocation');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.length === 2) return parsed;
-      }
-    } catch (e) {}
-  }
-  return [55.7558, 37.6173];
-};
+const DEFAULT_CENTER: [number, number] = [55.7558, 37.6173]; // Moscow fallback
 
-export default function TinderMap({ proposals, onSelectProposal, onMapClick, forceCenter, triggerLocate }: { proposals: any[], onSelectProposal: (p: any) => void, onMapClick?: (latlng: any) => void, forceCenter?: [number, number] | null, triggerLocate?: number }) {
+export default function TinderMap({ proposals, onSelectProposal, onMapClick, forceCenter, triggerLocate, onLocationFound }: { proposals: any[], onSelectProposal: (p: any) => void, onMapClick?: (latlng: any) => void, forceCenter?: [number, number] | null, triggerLocate?: number, onLocationFound?: (latlng: [number, number]) => void }) {
   const [initialCenter, setInitialCenter] = useState<[number, number] | null>(null);
   const [hasFlown, setHasFlown] = useState(false);
-  const [defaultCenter] = useState<[number, number]>(getInitialCenter());
 
   const handleSetInitialLocation = (latlng: [number, number]) => {
-    localStorage.setItem('lastKnownLocation', JSON.stringify(latlng));
+    if (onLocationFound) onLocationFound(latlng);
     if (!hasFlown) {
       setInitialCenter(latlng);
       setHasFlown(true);
@@ -83,7 +71,7 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
   return (
     <div className="w-full h-full absolute top-0 left-0 z-0">
       <MapContainer
-        center={defaultCenter}
+        center={DEFAULT_CENTER}
         zoom={14}
         style={{ width: "100%", height: "100%" }}
         zoomControl={false}
