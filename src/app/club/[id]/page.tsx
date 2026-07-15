@@ -251,47 +251,7 @@ export default function ClubProfilePage() {
           </div>
         )}
 
-        {/* Members Leaderboard Preview */}
-        {isActiveMember && (
-          <div>
-            <div className="flex justify-between items-end mb-4">
-              <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Участники</h3>
-            </div>
-            
-            <div className="flex flex-col gap-2">
-              {club.members.filter((m: any)=>m.status==="ACTIVE").slice(0, 5).map((member: any, i: number) => (
-                <Link key={member.id} href={`/users/${member.userId}`} className="flex items-center justify-between p-3 bg-card border border-border rounded-2xl hover:border-primary transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 font-black text-muted bg-background rounded-full flex items-center justify-center text-xs border border-border">
-                      {i + 1}
-                    </div>
-                    <div>
-                      <div className="font-bold text-sm flex items-center gap-2">
-                        {member.user.name || "Аноним"}
-                        {member.role === "FOUNDER" && <Star size={12} className="text-primary" fill="currentColor" />}
-                        {member.role === "PACER" && <Target size={12} className="text-blue-400" />}
-                      </div>
-                      <div className="text-[10px] text-muted uppercase tracking-wider">{member.role}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                    <div className="font-bold font-mono text-right">{(member.clubDistance || 0).toFixed(1)} <span className="text-[10px] text-muted">КМ</span></div>
-                    {isFounder && member.userId !== (session?.user as any)?.id && (
-                      <div className="flex gap-1" onClick={(e) => e.preventDefault()}>
-                        <button onClick={() => handleToggleRole(member.userId, member.role)} className="p-2 text-blue-500 hover:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-colors ml-2 border border-blue-500/20 rounded-xl relative z-10" title={member.role === "PACER" ? "Убрать пейсера" : "Сделать пейсером"}>
-                          <Target size={14} />
-                        </button>
-                        <button onClick={() => handleRemoveMember(member.userId)} className="p-2 text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors border border-red-500/20 rounded-xl relative z-10" title="Удалить участника">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
+
 
         {/* Danger Zone */}
         {isActiveMember && (

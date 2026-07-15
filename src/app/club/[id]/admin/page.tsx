@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronLeft, Copy, Check, Loader2, UserCheck, UserX, Users, Shield, Key, Edit2 } from "lucide-react";
+import { ChevronLeft, Copy, Check, Loader2, UserCheck, UserX, Users, Shield, Key, Edit2, Target, Trash2 } from "lucide-react";
+import { globalCache } from "@/lib/cache";
 import Link from "next/link";
 import ClubBadge from "@/components/ClubBadge";
 import React from "react";
@@ -126,6 +127,58 @@ export default function ClubAdminPage() {
       } else {
         const data = await res.json();
         alert(data.error || "Ошибка");
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setProcessingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
+    }
+  };
+
+  const handleToggleRole = async (userId: string, currentRole: string) => {
+    if (!confirm(currentRole === "PACER" ? "Убрать статус пейсера?" : "Назначить пейсером?")) return;
+    setProcessingIds((prev) => new Set(prev).add(userId));
+    try {
+      const res = await fetch(`/api/clubs/${id}/members/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "setRole", role: currentRole === "PACER" ? "MEMBER" : "PACER" })
+      });
+      if (res.ok) {
+        globalCache.clubs = null;
+        fetchClub();
+      } else {
+        alert("Ошибка при изменении роли.");
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setProcessingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
+    }
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    if (!confirm("Вы уверены, что хотите удалить этого участника из клуба?")) return;
+    setProcessingIds((prev) => new Set(prev).add(userId));
+    try {
+      const res = await fetch(`/api/clubs/${id}/members/${userId}`, { method: "DELETE" });
+      if (res.ok) {
+        globalCache.clubs = null;
+        globalCache.userData = null;
+        fetch('/api/events').then(r => r.json()).then(d => {
+          if (d.events) globalCache.events = d.events;
+        }).catch(() => {});
+        fetchClub(); // refresh
+      } else {
+        alert("Ошибка при удалении участника.");
       }
     } catch (e) {
       console.error(e);
@@ -370,10 +423,33 @@ export default function ClubAdminPage() {
                     <p className="text-[9px] text-muted uppercase tracking-widest font-bold">{member.role}</p>
                   </div>
                 </div>
-                <span className="font-mono font-bold text-sm text-muted-foreground">
-                  {member.user.totalDistance.toFixed(1)}{" "}
-                  <span className="text-[10px] opacity-50 font-sans">КМ</span>
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono font-bold text-sm text-muted-foreground">
+                    {(member.clubDistance || 0).toFixed(1)}{" "}
+                    <span className="text-[10px] opacity-50 font-sans">КМ</span>
+                  </span>
+                  
+                  {member.userId !== (session?.user as any)?.id && (
+                    <div className="flex gap-1" onClick={(e) => e.preventDefault()}>
+                      <button 
+                        onClick={() => handleToggleRole(member.userId, member.role)} 
+                        disabled={processingIds.has(member.userId)}
+                        className="p-2 text-blue-500 hover:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-colors border border-blue-500/20 rounded-xl disabled:opacity-50" 
+                        title={member.role === "PACER" ? "Убрать пейсера" : "Сделать пейсером"}
+                      >
+                        {processingIds.has(member.userId) ? <Loader2 size={14} className="animate-spin" /> : <Target size={14} />}
+                      </button>
+                      <button 
+                        onClick={() => handleRemoveMember(member.userId)} 
+                        disabled={processingIds.has(member.userId)}
+                        className="p-2 text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors border border-red-500/20 rounded-xl disabled:opacity-50" 
+                        title="Удалить участника"
+                      >
+                        {processingIds.has(member.userId) ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
