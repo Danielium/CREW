@@ -147,14 +147,27 @@ export async function PATCH(req: Request, context: any) {
       return NextResponse.json({ error: "Only founders can edit club" }, { status: 403 });
     }
 
-    const { name } = await req.json();
-    if (!name || name.trim().length === 0) {
-      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    const { name, description } = await req.json();
+    
+    const updateData: any = {};
+    if (name !== undefined) {
+      if (name.trim().length === 0) {
+        return NextResponse.json({ error: "Name cannot be empty" }, { status: 400 });
+      }
+      updateData.name = name.trim();
+    }
+    
+    if (description !== undefined) {
+      updateData.description = description.trim();
+    }
+    
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: "No fields to update" }, { status: 400 });
     }
 
     const updatedClub = await prisma.club.update({
       where: { id: clubId },
-      data: { name: name.trim() }
+      data: updateData
     });
 
     return NextResponse.json({ club: updatedClub });
