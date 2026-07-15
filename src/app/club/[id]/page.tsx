@@ -56,6 +56,43 @@ export default function ClubProfilePage() {
     }
   };
 
+  const handleToggleRole = async (userId: string, currentRole: string) => {
+    if (!confirm(currentRole === "PACER" ? "Убрать статус пейсера?" : "Назначить пейсером?")) return;
+    try {
+      const res = await fetch(`/api/clubs/${id}/members/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "setRole", role: currentRole === "PACER" ? "MEMBER" : "PACER" })
+      });
+      if (res.ok) {
+        globalCache.clubs = null;
+        fetchClub();
+      } else {
+        alert("Ошибка при изменении роли.");
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    if (!confirm("Вы уверены, что хотите удалить этого участника из клуба?")) return;
+    try {
+      const res = await fetch(`/api/clubs/${id}/members/${userId}`, { method: "DELETE" });
+      if (res.ok) {
+        globalCache.clubs = null;
+        globalCache.userData = null;
+        fetch('/api/events').then(r => r.json()).then(d => {
+          if (d.events) globalCache.events = d.events;
+        }).catch(() => {});
+        fetchClub(); // refresh
+      } else {
+        alert("Ошибка при удалении участника.");
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const handleLeaveClub = async () => {
     if (!confirm("Вы уверены, что хотите покинуть клуб?")) return;
@@ -239,6 +276,16 @@ export default function ClubProfilePage() {
                   </div>
                   <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
                     <div className="font-bold font-mono text-right">{(member.clubDistance || 0).toFixed(1)} <span className="text-[10px] text-muted">КМ</span></div>
+                    {isFounder && member.userId !== (session?.user as any)?.id && (
+                      <div className="flex gap-1" onClick={(e) => e.preventDefault()}>
+                        <button onClick={() => handleToggleRole(member.userId, member.role)} className="p-2 text-blue-500 hover:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-colors ml-2 border border-blue-500/20 rounded-xl relative z-10" title={member.role === "PACER" ? "Убрать пейсера" : "Сделать пейсером"}>
+                          <Target size={14} />
+                        </button>
+                        <button onClick={() => handleRemoveMember(member.userId)} className="p-2 text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors border border-red-500/20 rounded-xl relative z-10" title="Удалить участника">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </Link>
               ))}
