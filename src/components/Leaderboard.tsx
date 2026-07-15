@@ -39,9 +39,16 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
         body: JSON.stringify({ action: "setRole", role: currentRole === "PACER" ? "MEMBER" : "PACER" })
       });
       if (res.ok) {
-        globalCache.clubs = null;
-        // The page needs to reload or refetch leaderboard
-        window.location.reload();
+        globalCache.clubs = null; // Next time club page is opened, it refetches
+        // Update local state without reloading
+        const newRole = currentRole === "PACER" ? "MEMBER" : "PACER";
+        setUsers(prev => {
+          const newUsers = prev.map(u => u.id === userId ? { ...u, role: newRole } : u);
+          if (globalCache.leaderboard[cacheKey]) {
+            globalCache.leaderboard[cacheKey] = newUsers;
+          }
+          return newUsers;
+        });
       } else {
         alert("Ошибка при изменении роли.");
       }
@@ -63,8 +70,14 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
       const res = await fetch(`/api/clubs/${clubId}/members/${userId}`, { method: "DELETE" });
       if (res.ok) {
         globalCache.clubs = null;
-        delete globalCache.leaderboard[cacheKey]; // force refetch
-        window.location.reload();
+        // Update local state without reloading
+        setUsers(prev => {
+          const newUsers = prev.filter(u => u.id !== userId);
+          if (globalCache.leaderboard[cacheKey]) {
+            globalCache.leaderboard[cacheKey] = newUsers;
+          }
+          return newUsers;
+        });
       } else {
         alert("Ошибка при удалении участника.");
       }
