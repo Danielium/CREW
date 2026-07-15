@@ -301,7 +301,7 @@ export default function ClubProfilePage() {
           <div className="flex-1 bg-card/50 backdrop-blur-md rounded-3xl p-5 border border-white/5 flex flex-col justify-center shadow-lg">
             <span className="text-[10px] text-muted uppercase tracking-wider font-bold mb-1">Километраж</span>
             <span className="text-3xl font-black uppercase tracking-tighter text-primary leading-none flex items-baseline gap-1">
-              {club.totalClubDistance.toFixed(0)} <span className="text-sm opacity-70">КМ</span>
+              {club.totalClubDistance.toFixed(1)} <span className="text-sm opacity-70">КМ</span>
             </span>
           </div>
         </div>
