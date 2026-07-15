@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Loader2, User, Target, Trash2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Loader2, User, Target, Trash2, MoreVertical } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
@@ -13,6 +13,19 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
   const [users, setUsers] = useState<any[]>(globalCache.leaderboard[cacheKey] || []);
   const [isLoading, setIsLoading] = useState(!globalCache.leaderboard[cacheKey]);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const isFounder = clubId && globalCache.userData?.clubMembers?.some((m: any) => m.clubId === clubId && m.role === "FOUNDER");
 
@@ -115,26 +128,46 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
                         )}
                       </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 relative">
                     <span className="text-xl font-black italic tracking-tighter">{user.totalDistance.toFixed(1)}<span className="ml-1.5 text-[10px] font-black not-italic tracking-normal opacity-80 uppercase">км</span></span>
                     {isFounder && !isMe && (
-                      <div className="flex gap-1" onClick={(e) => e.preventDefault()}>
+                      <div className="relative" onClick={(e) => e.preventDefault()} ref={openMenuId === user.id ? menuRef : null}>
                         <button 
-                          onClick={(e) => { e.preventDefault(); handleToggleRole(user.id, user.role || "MEMBER"); }} 
-                          disabled={processingIds.has(user.id)}
-                          className="p-2 text-blue-500 hover:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-colors border border-blue-500/20 rounded-xl disabled:opacity-50" 
-                          title={user.role === "PACER" ? "Убрать пейсера" : "Сделать пейсером"}
+                          onClick={(e) => { 
+                            e.preventDefault(); 
+                            setOpenMenuId(openMenuId === user.id ? null : user.id); 
+                          }} 
+                          className="p-1 text-muted hover:text-white transition-colors"
                         >
-                          {processingIds.has(user.id) ? <Loader2 size={14} className="animate-spin" /> : <Target size={14} />}
+                          {processingIds.has(user.id) ? <Loader2 size={18} className="animate-spin text-primary" /> : <MoreVertical size={18} />}
                         </button>
-                        <button 
-                          onClick={(e) => { e.preventDefault(); handleRemoveMember(user.id); }} 
-                          disabled={processingIds.has(user.id)}
-                          className="p-2 text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors border border-red-500/20 rounded-xl disabled:opacity-50" 
-                          title="Удалить участника"
-                        >
-                          {processingIds.has(user.id) ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                        </button>
+                        
+                        {openMenuId === user.id && (
+                          <div className="absolute right-0 top-full mt-1 w-48 bg-[#1a1a1c] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col p-1">
+                            <button 
+                              onClick={(e) => { 
+                                e.preventDefault(); 
+                                handleToggleRole(user.id, user.role || "MEMBER");
+                                setOpenMenuId(null);
+                              }} 
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium hover:bg-white/5 rounded-lg transition-colors text-left"
+                            >
+                              <Target size={14} className="text-blue-500" />
+                              {user.role === "PACER" ? "Снять пейсера" : "Сделать пейсером"}
+                            </button>
+                            <button 
+                              onClick={(e) => { 
+                                e.preventDefault(); 
+                                handleRemoveMember(user.id);
+                                setOpenMenuId(null);
+                              }} 
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium hover:bg-white/5 rounded-lg transition-colors text-left text-red-400"
+                            >
+                              <Trash2 size={14} />
+                              Удалить участника
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
