@@ -22,6 +22,10 @@ export default function ClubProfilePage() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editNameValue, setEditNameValue] = useState("");
   const [isSavingName, setIsSavingName] = useState(false);
+  
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [editDescriptionValue, setEditDescriptionValue] = useState("");
+  const [isSavingDescription, setIsSavingDescription] = useState(false);
 
   const fetchClub = async () => {
     try {
@@ -30,6 +34,7 @@ export default function ClubProfilePage() {
       if (data.club) {
         setClub(data.club);
         setEditNameValue(data.club.name);
+        setEditDescriptionValue(data.club.description || "");
       }
     } catch (e) {
       console.error(e);
@@ -109,6 +114,33 @@ export default function ClubProfilePage() {
       alert("Сетевая ошибка");
     } finally {
       setIsSavingName(false);
+    }
+  };
+
+  const handleSaveDescription = async () => {
+    const trimmed = editDescriptionValue.trim();
+    if (trimmed === club.description) {
+      setIsEditingDescription(false);
+      return;
+    }
+    setIsSavingDescription(true);
+    try {
+      const res = await fetch(`/api/clubs/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description: trimmed })
+      });
+      if (res.ok) {
+        setClub({ ...club, description: trimmed });
+        setIsEditingDescription(false);
+      } else {
+        alert("Ошибка при сохранении описания");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Сетевая ошибка");
+    } finally {
+      setIsSavingDescription(false);
     }
   };
 
@@ -308,8 +340,37 @@ export default function ClubProfilePage() {
 
         {/* About */}
         <div>
-          <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-2">Описание</h3>
-          <p className="text-lg font-medium leading-relaxed whitespace-pre-wrap">{club.description || "Без описания"}</p>
+          <div className="flex items-center gap-2 mb-2 group/desc cursor-pointer" onClick={() => isFounder && setIsEditingDescription(true)}>
+            <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Описание</h3>
+            {isFounder && !isEditingDescription && (
+              <button className="text-muted group-hover/desc:text-primary transition-colors">
+                <Edit2 size={12} />
+              </button>
+            )}
+          </div>
+          {isEditingDescription && isFounder ? (
+            <div className="flex flex-col gap-2">
+              <textarea 
+                value={editDescriptionValue} 
+                onChange={(e) => setEditDescriptionValue(e.target.value)}
+                className="w-full bg-black/50 border border-white/20 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:border-primary min-h-[100px] resize-none"
+                autoFocus
+              />
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setIsEditingDescription(false)} className="px-4 py-2 bg-white/10 text-white rounded-xl text-xs font-bold uppercase">
+                  Отмена
+                </button>
+                <button onClick={handleSaveDescription} disabled={isSavingDescription} className="px-4 py-2 bg-primary text-black rounded-xl flex items-center gap-2 text-xs font-bold uppercase">
+                  {isSavingDescription ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                  Сохранить
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-lg font-medium leading-relaxed whitespace-pre-wrap" onClick={() => isFounder && setIsEditingDescription(true)}>
+              {club.description || <span className="text-muted italic text-sm">Нет описания</span>}
+            </p>
+          )}
         </div>
 
         {/* Join CTA for Non-members */}
