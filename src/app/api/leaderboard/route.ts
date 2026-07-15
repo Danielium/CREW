@@ -22,7 +22,8 @@ export async function GET(request: Request) {
       // Map it to match the expected users format, but override totalDistance with clubDistance for the UI to display
       const topUsers = topMembers.map(m => ({
         ...m.user,
-        totalDistance: m.clubDistance 
+        totalDistance: m.clubDistance,
+        role: m.role
       }));
       return NextResponse.json({ users: topUsers });
     }
