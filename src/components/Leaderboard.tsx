@@ -50,7 +50,7 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
       const res = await fetch(`/api/clubs/${clubId}/members/${userId}`, { method: "DELETE" });
       if (res.ok) {
         globalCache.clubs = null;
-        globalCache.leaderboard[cacheKey] = null; // force refetch
+        delete globalCache.leaderboard[cacheKey]; // force refetch
         window.location.reload();
       } else {
         alert("Ошибка при удалении участника.");
