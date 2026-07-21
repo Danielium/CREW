@@ -1,15 +1,22 @@
 import { X } from "lucide-react";
 import { getRankStyle } from "./AvatarProgress";
 
-const ranks = [
+export const ranks = [
   { distance: 0, label: "0 - 49 км", name: "Неон" },
   { distance: 50, label: "50 - 249 км", name: "Белый" },
   { distance: 250, label: "250 - 999 км", name: "Бирюзовый" },
   { distance: 1000, label: "1000 - 2499 км", name: "Синий" },
   { distance: 2500, label: "2500 - 4999 км", name: "Серебряный" },
   { distance: 5000, label: "5000 - 14999 км", name: "Золотой" },
-  { distance: 15000, label: "15000+ км", name: "Темная материя" },
+  { distance: 15000, label: "15000+ км", name: "Мастер" },
 ];
+
+export const getRankName = (distance: number) => {
+  for (let i = ranks.length - 1; i >= 0; i--) {
+    if (distance >= ranks[i].distance) return ranks[i].name;
+  }
+  return ranks[0].name;
+};
 
 export function RankInfoModal({ onClose }: { onClose: () => void }) {
   return (

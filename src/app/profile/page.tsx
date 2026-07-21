@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, Star, Trophy, Users, Edit3, Lock, Sunrise, Sun, Moon, CloudSun, LogOut, LogIn, X, Loader2, Camera, Check } from "lucide-react";
+import { Settings, Star, Trophy, Users, Edit3, Lock, Sunrise, Sun, Moon, CloudSun, LogOut, LogIn, X, Loader2, Camera, Check, Info } from "lucide-react";
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
 import AvatarProgress from "@/components/AvatarProgress";
-import { RankInfoModal } from "@/components/RankInfoModal";
+import { RankInfoModal, getRankName } from "@/components/RankInfoModal";
 
 import { globalCache } from "@/lib/cache";
 
@@ -290,6 +290,14 @@ export default function ProfileTab() {
             }}
           />
           <h1 className="text-3xl font-black mt-4 uppercase text-center">{userData?.name || session?.user?.name || "Гость"}</h1>
+          {session?.user && (
+            <button 
+              onClick={() => setShowRankInfo(true)}
+              className="mt-1.5 px-3 py-1 bg-card border border-border rounded-full text-[10px] font-bold text-muted hover:text-foreground flex items-center justify-center gap-1.5 transition-colors uppercase tracking-widest"
+            >
+              {getRankName(userData?.totalDistance || 0)} <Info size={12} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -672,19 +680,6 @@ export default function ProfileTab() {
                     onChange={handleFileUpload}
                     className="hidden"
                   />
-                </label>
-              </div>
-
-              {/* Rank Info Button */}
-              <button 
-                onClick={() => setShowRankInfo(true)}
-                className="w-full flex items-center justify-between bg-background border border-border hover:bg-border transition-colors rounded-2xl px-4 py-4 mt-4 text-foreground cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <Trophy size={18} className="text-primary" />
-                  <span className="font-bold text-sm text-foreground">Узнать про цвета рангов</span>
-                </div>
-              </button>
             </div>
 
             <button 

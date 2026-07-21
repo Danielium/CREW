@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Lock, Sunrise, Loader2, Users } from "lucide-react";
+import { Lock, Sunrise, Loader2, Users, Info } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import AvatarProgress from "@/components/AvatarProgress";
+import { RankInfoModal, getRankName } from "@/components/RankInfoModal";
 
 export default function PublicProfilePage() {
   const { id } = useParams();
@@ -20,10 +21,11 @@ export default function PublicProfilePage() {
   const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear());
   
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showRankInfo, setShowRankInfo] = useState(false);
   const [showAllRuns, setShowAllRuns] = useState(false);
 
   useEffect(() => {
-    if (showDatePicker) {
+    if (showDatePicker || showRankInfo) {
       window.dispatchEvent(new Event("hideNav"));
     } else {
       window.dispatchEvent(new Event("showNav"));
@@ -189,6 +191,13 @@ export default function PublicProfilePage() {
         <div className="flex flex-col items-center mt-10">
           <AvatarProgress user={userData} size={112} strokeWidth={6} />
           <h1 className="text-3xl font-black mt-4 uppercase text-center">{userData.name}</h1>
+          <button 
+            onClick={() => setShowRankInfo(true)}
+            className="mt-1.5 px-3 py-1 bg-card border border-border rounded-full text-[10px] font-bold text-muted hover:text-foreground flex items-center justify-center gap-1.5 transition-colors uppercase tracking-widest"
+          >
+            {getRankName(userData.totalDistance || 0)} <Info size={12} />
+          </button>
+          
           <div className="mt-12 flex flex-col items-center text-muted p-8 bg-card/50 rounded-[28px] border border-white/5 mx-4 shadow-inner text-center">
             <Lock size={40} className="mb-4 opacity-50" />
             <h2 className="text-xl font-bold text-foreground mb-2">Закрытый профиль</h2>
@@ -208,6 +217,12 @@ export default function PublicProfilePage() {
         <div className="flex flex-col items-center mt-8">
           <AvatarProgress user={userData} size={112} strokeWidth={6} />
           <h1 className="text-3xl font-black mt-4 uppercase text-center">{userData?.name || "Гость"}</h1>
+          <button 
+            onClick={() => setShowRankInfo(true)}
+            className="mt-1.5 px-3 py-1 bg-card border border-border rounded-full text-[10px] font-bold text-muted hover:text-foreground flex items-center justify-center gap-1.5 transition-colors uppercase tracking-widest"
+          >
+            {getRankName(userData?.totalDistance || 0)} <Info size={12} />
+          </button>
         </div>
       </div>
 
@@ -542,6 +557,10 @@ export default function PublicProfilePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {showRankInfo && (
+        <RankInfoModal onClose={() => setShowRankInfo(false)} />
       )}
     </div>
   );
