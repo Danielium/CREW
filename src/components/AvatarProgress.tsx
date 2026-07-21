@@ -20,12 +20,12 @@ interface AvatarProgressProps {
 
 export const getRankGradient = (distance: number) => {
   if (distance >= 15000) return { id: "grad-darkmatter", start: "#1A1A1A", end: "#CCFF00" }; 
-  if (distance >= 5000) return { id: "grad-silver", start: "#CCFF00", end: "#94A3B8" }; 
-  if (distance >= 2500) return { id: "grad-gold", start: "#CCFF00", end: "#FFB800" }; 
+  if (distance >= 5000) return { id: "grad-gold", start: "#CCFF00", end: "#FFB800" }; 
+  if (distance >= 2500) return { id: "grad-silver", start: "#CCFF00", end: "#94A3B8" }; 
   if (distance >= 1000) return { id: "grad-ice", start: "#CCFF00", end: "#3B82F6" }; 
   if (distance >= 250) return { id: "grad-cyan", start: "#CCFF00", end: "#00E5FF" }; 
-  if (distance >= 50) return { id: "grad-neon", start: "#CCFF00", end: "#CCFF00" }; 
-  return { id: "grad-white", start: "#FFFFFF", end: "#FFFFFF" }; 
+  if (distance >= 50) return { id: "grad-white", start: "#FFFFFF", end: "#FFFFFF" }; 
+  return { id: "grad-neon", start: "#CCFF00", end: "#CCFF00" }; 
 };
 
 export default function AvatarProgress({
