@@ -191,12 +191,6 @@ export default function PublicProfilePage() {
         <div className="flex flex-col items-center mt-10">
           <AvatarProgress user={userData} size={112} strokeWidth={6} />
           <h1 className="text-3xl font-black mt-4 uppercase text-center">{userData.name}</h1>
-          <button 
-            onClick={() => setShowRankInfo(true)}
-            className="mt-1.5 px-3 py-1 bg-card border border-border rounded-full text-[10px] font-bold text-muted hover:text-foreground flex items-center justify-center gap-1.5 transition-colors uppercase tracking-widest"
-          >
-            {getRankName(userData.totalDistance || 0)} <Info size={12} />
-          </button>
           
           <div className="mt-12 flex flex-col items-center text-muted p-8 bg-card/50 rounded-[28px] border border-white/5 mx-4 shadow-inner text-center">
             <Lock size={40} className="mb-4 opacity-50" />
@@ -217,12 +211,6 @@ export default function PublicProfilePage() {
         <div className="flex flex-col items-center mt-8">
           <AvatarProgress user={userData} size={112} strokeWidth={6} />
           <h1 className="text-3xl font-black mt-4 uppercase text-center">{userData?.name || "Гость"}</h1>
-          <button 
-            onClick={() => setShowRankInfo(true)}
-            className="mt-1.5 px-3 py-1 bg-card border border-border rounded-full text-[10px] font-bold text-muted hover:text-foreground flex items-center justify-center gap-1.5 transition-colors uppercase tracking-widest"
-          >
-            {getRankName(userData?.totalDistance || 0)} <Info size={12} />
-          </button>
         </div>
       </div>
 
@@ -289,10 +277,18 @@ export default function PublicProfilePage() {
               {timeRange !== "ALL" && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>}
             </button>
             
-            <h2 className="text-[80px] leading-[0.8] font-black italic tracking-tighter -ml-1">
+            <h2 className="text-[80px] leading-[0.8] font-black italic tracking-tighter -ml-1 flex items-start gap-2">
               {filteredDistance.toFixed(2).replace('.', ',')}
             </h2>
-            <p className="text-xs text-muted font-bold tracking-widest uppercase mt-3 mb-6">Километров</p>
+            <div className="flex items-center gap-2 mt-3 mb-6">
+              <p className="text-xs text-muted font-bold tracking-widest uppercase">Километров</p>
+              <button 
+                onClick={() => setShowRankInfo(true)}
+                className="text-muted hover:text-foreground transition-colors"
+              >
+                <Info size={14} />
+              </button>
+            </div>
             
             <div className="grid grid-cols-3 gap-2 w-full">
               <div className="flex flex-col">

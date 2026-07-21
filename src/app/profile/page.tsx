@@ -290,14 +290,6 @@ export default function ProfileTab() {
             }}
           />
           <h1 className="text-3xl font-black mt-4 uppercase text-center">{userData?.name || session?.user?.name || "Гость"}</h1>
-          {session?.user && (
-            <button 
-              onClick={() => setShowRankInfo(true)}
-              className="mt-1.5 px-3 py-1 bg-card border border-border rounded-full text-[10px] font-bold text-muted hover:text-foreground flex items-center justify-center gap-1.5 transition-colors uppercase tracking-widest"
-            >
-              {getRankName(userData?.totalDistance || 0)} <Info size={12} />
-            </button>
-          )}
         </div>
       </div>
 
@@ -355,10 +347,18 @@ export default function ProfileTab() {
             {timeRange !== "ALL" && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>}
           </button>
           
-          <h2 className="text-[80px] leading-[0.8] font-black italic tracking-tighter -ml-1">
+          <h2 className="text-[80px] leading-[0.8] font-black italic tracking-tighter -ml-1 flex items-start gap-2">
             {filteredDistance.toFixed(2).replace('.', ',')}
           </h2>
-          <p className="text-xs text-muted font-bold tracking-widest uppercase mt-3 mb-6">Километров</p>
+          <div className="flex items-center gap-2 mt-3 mb-6">
+            <p className="text-xs text-muted font-bold tracking-widest uppercase">Километров</p>
+            <button 
+              onClick={() => setShowRankInfo(true)}
+              className="text-muted hover:text-foreground transition-colors"
+            >
+              <Info size={14} />
+            </button>
+          </div>
           
           <div className="grid grid-cols-3 gap-2 w-full">
             <div className="flex flex-col">
