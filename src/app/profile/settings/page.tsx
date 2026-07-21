@@ -3,6 +3,7 @@ import { ArrowLeft, Bell, Globe, Shield, LogOut, ChevronRight, X, Loader2, Activ
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
+import { globalCache } from "@/lib/cache";
 
 export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
@@ -24,7 +25,7 @@ export default function SettingsPage() {
   const [isLoadingIntegrations, setIsLoadingIntegrations] = useState(true);
   const [isSyncingStrava, setIsSyncingStrava] = useState(false);
   const [isDisconnectingStrava, setIsDisconnectingStrava] = useState(false);
-  const [weeklyGoal, setWeeklyGoal] = useState<number>(15);
+  const [weeklyGoal, setWeeklyGoal] = useState<number>(globalCache.userData?.weeklyGoal ?? 15);
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -100,6 +101,9 @@ export default function SettingsPage() {
   
   const handleWeeklyGoalBlur = async () => {
     try {
+      if (globalCache.userData) {
+        globalCache.userData.weeklyGoal = weeklyGoal;
+      }
       await fetch("/api/users/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
