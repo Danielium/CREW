@@ -127,7 +127,10 @@ export default function SettingsPage() {
         body: JSON.stringify({ weeklyGoal: finalGoal })
       });
       setGoalSaved(true);
-      setTimeout(() => setGoalSaved(false), 2000);
+      if (typeof window !== "undefined") {
+        (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
+      }
+      setTimeout(() => setGoalSaved(false), 1000);
     } catch (e) {
       console.error("Failed to update weekly goal", e);
     } finally {
@@ -257,22 +260,20 @@ export default function SettingsPage() {
                   <p className="text-[10px] text-muted">Цель для кольца активности</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                {isSavingGoal ? (
-                  <Loader2 size={14} className="animate-spin text-muted" />
-                ) : goalSaved ? (
-                  <Check size={14} className="text-green-500" />
-                ) : null}
-                <input
-                  type="number"
-                  min="1"
-                  max="1000"
-                  value={weeklyGoal}
-                  onChange={handleWeeklyGoalChange}
-                  onBlur={handleWeeklyGoalBlur}
-                  className="w-16 bg-background border border-border rounded-lg px-2 py-1 text-center font-bold outline-none focus:border-primary transition-colors"
-                />
-              </div>
+              <input
+                type="number"
+                min="1"
+                max="1000"
+                value={weeklyGoal}
+                onChange={handleWeeklyGoalChange}
+                onBlur={handleWeeklyGoalBlur}
+                disabled={isSavingGoal}
+                className={`w-16 rounded-lg px-2 py-1 text-center font-bold outline-none transition-all duration-500 ${
+                  goalSaved 
+                    ? 'bg-primary/20 border-primary shadow-[0_0_10px_rgba(204,255,0,0.3)] text-primary border' 
+                    : 'bg-background border border-border focus:border-primary text-foreground'
+                }`}
+              />
             </div>
 
             <div 
