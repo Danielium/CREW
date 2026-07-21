@@ -155,7 +155,7 @@ export async function GET(req: Request) {
         status: "PENDING"
       },
       include: {
-        user: { select: { name: true, image: true, telegramUsername: true, totalDistance: true } },
+        user: { select: { id: true, name: true, image: true, telegramUsername: true, totalDistance: true } },
         proposal: true
       },
       orderBy: { createdAt: 'desc' }
@@ -168,7 +168,7 @@ export async function GET(req: Request) {
         status: "ACCEPTED"
       },
       include: {
-        user: { select: { name: true, image: true, telegramUsername: true } },
+        user: { select: { id: true, name: true, image: true, telegramUsername: true } },
         proposal: true
       },
       orderBy: { createdAt: 'desc' }
@@ -183,7 +183,7 @@ export async function GET(req: Request) {
       include: {
         proposal: {
           include: {
-            creator: { select: { name: true, image: true, telegramUsername: true } }
+            creator: { select: { id: true, name: true, image: true, telegramUsername: true } }
           }
         }
       },
