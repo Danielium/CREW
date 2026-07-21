@@ -23,7 +23,7 @@ export const getRankColor = (distance: number) => {
   if (distance >= 5000) return "#FACC15"; // Gold
   if (distance >= 2500) return "#94A3B8"; // Silver
   if (distance >= 1000) return "#3B82F6"; // Blue
-  if (distance >= 250) return "#06B6D4"; // Cyan
+  if (distance >= 250) return "#00E5FF"; // Cyan
   if (distance >= 50) return "#FFFFFF"; // White
   return "#CCFF00"; // Neon
 };
