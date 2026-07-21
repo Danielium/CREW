@@ -680,6 +680,8 @@ export default function ProfileTab() {
                     onChange={handleFileUpload}
                     className="hidden"
                   />
+                </label>
+              </div>
             </div>
 
             <button 
