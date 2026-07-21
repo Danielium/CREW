@@ -111,7 +111,10 @@ export default function SettingsPage() {
   };
   
   const handleWeeklyGoalBlur = async () => {
-    const finalGoal = typeof weeklyGoal === 'number' ? weeklyGoal : parseInt(weeklyGoal as string) || 15;
+    let parsed = typeof weeklyGoal === 'number' ? weeklyGoal : parseInt(weeklyGoal as string);
+    if (isNaN(parsed)) parsed = 15;
+    const finalGoal = Math.max(1, parsed);
+    
     if (finalGoal !== weeklyGoal) {
       setWeeklyGoal(finalGoal);
     }
