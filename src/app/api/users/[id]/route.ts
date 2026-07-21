@@ -46,6 +46,7 @@ export async function GET(
 
     if (!isOwner) {
       delete (user as any).accounts;
+      delete (user as any).notifyClubEvents; // Hide preferences from public
     } else if (user.accounts) {
       // Strip sensitive tokens
       (user as any).accounts = user.accounts.map(acc => ({ provider: acc.provider }));

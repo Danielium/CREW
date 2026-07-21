@@ -19,6 +19,7 @@ model User {
   goal          String?
   isPrivate     Boolean      @default(false)
   totalDistance Float        @default(0)
+  notifyClubEvents Boolean   @default(true)
   createdAt     DateTime     @default(now())
   
   accounts      Account[]

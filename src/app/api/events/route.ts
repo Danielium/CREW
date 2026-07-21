@@ -78,12 +78,12 @@ export async function POST(req: Request) {
         attendees: { connect: [{ id: userId }] }
       }
     });
-    // Notify active club members
+    // Notify active club members who have notifications enabled
     try {
       const { sendTelegramMessageToUser } = await import('@/lib/telegram');
       const members = await prisma.clubMember.findMany({
         where: { clubId: activeClubMember.clubId, status: "ACTIVE" },
-        select: { userId: true }
+        select: { userId: true, user: { select: { notifyClubEvents: true } } }
       });
       
       const eventDate = new Date(event.date).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' мск';
@@ -91,7 +91,8 @@ export async function POST(req: Request) {
       const link = botAppUrl ? `${botAppUrl}?startapp=focus_${event.id}` : "";
       const text = `🔥 <b>Новая пробежка!</b>\n\nТвой клуб <b>${activeClubMember.club.name}</b> создал новое событие: <i>${event.title}</i> (${eventDate}).\n\n📍 Жми, чтобы увидеть на карте и присоединиться: ${link}`;
       
-      await Promise.allSettled(members.map(m => sendTelegramMessageToUser(m.userId, text)));
+      const targetMembers = members.filter(m => m.user.notifyClubEvents !== false && m.userId !== userId); // don't notify creator
+      await Promise.allSettled(targetMembers.map(m => sendTelegramMessageToUser(m.userId, text)));
     } catch (e) {
       console.error("Failed to notify club members", e);
     }

@@ -41,9 +41,14 @@ export default function SettingsPage() {
       fetch(`/api/users/${(session.user as any).id}`)
         .then(res => res.json())
         .then(data => {
-          if (data.user?.accounts) {
-            const hasStrava = data.user.accounts.some((acc: any) => acc.provider === 'strava');
-            setIsStravaConnected(hasStrava);
+          if (data.user) {
+            if (data.user.accounts) {
+              const hasStrava = data.user.accounts.some((acc: any) => acc.provider === 'strava');
+              setIsStravaConnected(hasStrava);
+            }
+            if (data.user.notifyClubEvents !== undefined) {
+              setNotifications(prev => ({ ...prev, clan: data.user.notifyClubEvents }));
+            }
           }
           setIsLoadingIntegrations(false);
         })
@@ -62,8 +67,21 @@ export default function SettingsPage() {
     }
   }, [showPrivacyModal]);
 
-  const toggleNotif = (key: keyof typeof notifications) => {
-    setNotifications(prev => ({...prev, [key]: !prev[key]}));
+  const toggleNotif = async (key: keyof typeof notifications) => {
+    const newValue = !notifications[key];
+    setNotifications(prev => ({...prev, [key]: newValue}));
+    
+    if (key === 'clan') {
+      try {
+        await fetch("/api/users/profile", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ notifyClubEvents: newValue })
+        });
+      } catch (e) {
+        console.error("Failed to update notification settings", e);
+      }
+    }
   };
 
   const handleSavePrivacy = (value: string) => {
