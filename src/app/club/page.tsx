@@ -31,10 +31,10 @@ export default function ClubTab() {
         .then(data => {
           if (data.user) {
             setUserData(data.user);
+            if (!globalCache.userData && data.user.clubMembers && data.user.clubMembers.length > 0) {
+              setActiveTab("События");
+            }
             globalCache.userData = data.user;
-          }
-          if (data?.user?.clubMembers && data.user.clubMembers.length > 0) {
-            setActiveTab("События");
           }
           setIsLoadingUser(false);
         })
