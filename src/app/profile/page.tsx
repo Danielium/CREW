@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
 import AvatarProgress from "@/components/AvatarProgress";
+import { RankInfoModal } from "@/components/RankInfoModal";
 
 import { globalCache } from "@/lib/cache";
 
@@ -16,6 +17,7 @@ export default function ProfileTab() {
   
   // Edit Profile Modal State
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showRankInfo, setShowRankInfo] = useState(false);
   const [editName, setEditName] = useState("");
   const [editAvatar, setEditAvatar] = useState("");
   const [editIsPrivate, setEditIsPrivate] = useState(false);
@@ -673,19 +675,16 @@ export default function ProfileTab() {
                 </label>
               </div>
 
-              {/* Privacy Toggle */}
-              <div className="flex items-center justify-between bg-background border border-border rounded-2xl px-4 py-3 mt-4">
-                <div className="flex flex-col">
-                  <span className="font-bold text-sm text-foreground">Закрытый профиль</span>
-                  <span className="text-[10px] text-muted">Скрыть статистику от других</span>
+              {/* Rank Info Button */}
+              <button 
+                onClick={() => setShowRankInfo(true)}
+                className="w-full flex items-center justify-between bg-background border border-border hover:bg-border transition-colors rounded-2xl px-4 py-4 mt-4 text-foreground cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <Trophy size={18} className="text-primary" />
+                  <span className="font-bold text-sm text-foreground">Узнать про цвета рангов</span>
                 </div>
-                <button
-                  onClick={() => setEditIsPrivate(!editIsPrivate)}
-                  className={`w-12 h-6 rounded-full p-1 transition-colors ${editIsPrivate ? 'bg-primary' : 'bg-border'} relative flex items-center shrink-0`}
-                >
-                  <div className={`w-4 h-4 rounded-full bg-black transition-transform ${editIsPrivate ? 'translate-x-6' : 'translate-x-0'}`} />
-                </button>
-              </div>
+              </button>
             </div>
 
             <button 
@@ -707,6 +706,10 @@ export default function ProfileTab() {
           onCropComplete={handleCropComplete}
           onClose={() => setCropImageSrc(null)}
         />
+      )}
+
+      {showRankInfo && (
+        <RankInfoModal onClose={() => setShowRankInfo(false)} />
       )}
 
     </div>
