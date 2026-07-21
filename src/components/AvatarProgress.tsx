@@ -18,14 +18,14 @@ interface AvatarProgressProps {
   onClick?: () => void;
 }
 
-export const getRankGradient = (distance: number) => {
-  if (distance >= 15000) return { id: "grad-darkmatter", start: "#1E1B4B", end: "#000000" }; // Deep space / dark indigo to black
-  if (distance >= 5000) return { id: "grad-gold", start: "#FDE047", end: "#B45309" }; // Bright gold to deep bronze
-  if (distance >= 2500) return { id: "grad-silver", start: "#F1F5F9", end: "#475569" }; // Bright silver to dark steel
-  if (distance >= 1000) return { id: "grad-ice", start: "#93C5FD", end: "#1D4ED8" }; // Light ice blue to deep blue
-  if (distance >= 250) return { id: "grad-cyan", start: "#67E8F9", end: "#0E7490" }; // Bright cyan to deep teal
-  if (distance >= 50) return { id: "grad-white", start: "#FFFFFF", end: "#9CA3AF" }; // Pure white to gray
-  return { id: "grad-neon", start: "#CCFF00", end: "#84A300" }; // Bright neon to darker neon
+export const getRankColor = (distance: number) => {
+  if (distance >= 15000) return "#4338CA"; // Dark matter (Indigo)
+  if (distance >= 5000) return "#FACC15"; // Gold
+  if (distance >= 2500) return "#94A3B8"; // Silver
+  if (distance >= 1000) return "#3B82F6"; // Blue
+  if (distance >= 250) return "#06B6D4"; // Cyan
+  if (distance >= 50) return "#FFFFFF"; // White
+  return "#CCFF00"; // Neon
 };
 
 export default function AvatarProgress({
@@ -40,7 +40,7 @@ export default function AvatarProgress({
   const weeklyDistance = user.weeklyDistance || 0;
   const weeklyGoal = user.weeklyGoal || 15;
 
-  const gradient = getRankGradient(totalDistance);
+  const color = getRankColor(totalDistance);
   const progressPercent = Math.min(100, Math.max(0, (weeklyDistance / weeklyGoal) * 100));
 
   const center = size / 2;
@@ -58,12 +58,6 @@ export default function AvatarProgress({
     >
       {/* Background SVG for the ring track */}
       <svg className="absolute inset-0 w-full h-full transform -rotate-90" width={size} height={size}>
-        <defs>
-          <linearGradient id={gradient.id} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={gradient.start} />
-            <stop offset="100%" stopColor={gradient.end} />
-          </linearGradient>
-        </defs>
         {/* Track */}
         <circle
           cx={center}
@@ -79,7 +73,7 @@ export default function AvatarProgress({
           cy={center}
           r={radius}
           fill="none"
-          stroke={`url(#${gradient.id})`}
+          stroke={color}
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           strokeDashoffset={offset}
