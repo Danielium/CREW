@@ -1,5 +1,5 @@
 "use client";
-import { ArrowLeft, Bell, Globe, Shield, LogOut, ChevronRight, X, Loader2, Activity, Trophy } from "lucide-react";
+import { ArrowLeft, Bell, Globe, Shield, LogOut, ChevronRight, X, Loader2, Activity, Trophy, Check } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
@@ -27,7 +27,9 @@ export default function SettingsPage() {
   const [isLoadingIntegrations, setIsLoadingIntegrations] = useState(true);
   const [isSyncingStrava, setIsSyncingStrava] = useState(false);
   const [isDisconnectingStrava, setIsDisconnectingStrava] = useState(false);
-  const [weeklyGoal, setWeeklyGoal] = useState<number>(globalCache.userData?.weeklyGoal ?? 15);
+  const [weeklyGoal, setWeeklyGoal] = useState<string | number>(globalCache.userData?.weeklyGoal ?? 15);
+  const [isSavingGoal, setIsSavingGoal] = useState(false);
+  const [goalSaved, setGoalSaved] = useState(false);
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -97,22 +99,39 @@ export default function SettingsPage() {
   };
 
   const handleWeeklyGoalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseInt(e.target.value) || 0;
-    setWeeklyGoal(val);
+    const val = e.target.value;
+    if (val === "") {
+      setWeeklyGoal("");
+      return;
+    }
+    const num = parseInt(val);
+    if (!isNaN(num)) {
+      setWeeklyGoal(num);
+    }
   };
   
   const handleWeeklyGoalBlur = async () => {
+    const finalGoal = typeof weeklyGoal === 'number' ? weeklyGoal : parseInt(weeklyGoal as string) || 15;
+    if (finalGoal !== weeklyGoal) {
+      setWeeklyGoal(finalGoal);
+    }
+    setIsSavingGoal(true);
+    setGoalSaved(false);
     try {
       if (globalCache.userData) {
-        globalCache.userData.weeklyGoal = weeklyGoal;
+        globalCache.userData.weeklyGoal = finalGoal;
       }
       await fetch("/api/users/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ weeklyGoal: weeklyGoal })
+        body: JSON.stringify({ weeklyGoal: finalGoal })
       });
+      setGoalSaved(true);
+      setTimeout(() => setGoalSaved(false), 2000);
     } catch (e) {
       console.error("Failed to update weekly goal", e);
+    } finally {
+      setIsSavingGoal(false);
     }
   };
 
@@ -238,15 +257,22 @@ export default function SettingsPage() {
                   <p className="text-[10px] text-muted">Цель для кольца активности</p>
                 </div>
               </div>
-              <input
-                type="number"
-                min="1"
-                max="1000"
-                value={weeklyGoal}
-                onChange={handleWeeklyGoalChange}
-                onBlur={handleWeeklyGoalBlur}
-                className="w-16 bg-background border border-border rounded-lg px-2 py-1 text-center font-bold outline-none focus:border-primary transition-colors"
-              />
+              <div className="flex items-center gap-2">
+                {isSavingGoal ? (
+                  <Loader2 size={14} className="animate-spin text-muted" />
+                ) : goalSaved ? (
+                  <Check size={14} className="text-green-500" />
+                ) : null}
+                <input
+                  type="number"
+                  min="1"
+                  max="1000"
+                  value={weeklyGoal}
+                  onChange={handleWeeklyGoalChange}
+                  onBlur={handleWeeklyGoalBlur}
+                  className="w-16 bg-background border border-border rounded-lg px-2 py-1 text-center font-bold outline-none focus:border-primary transition-colors"
+                />
+              </div>
             </div>
 
             <div 
@@ -254,7 +280,7 @@ export default function SettingsPage() {
               onClick={() => setShowRankInfo(true)}
             >
               <div className="flex items-center gap-3">
-                <Trophy size={20} className="text-primary" />
+                <Trophy size={20} className="text-muted" />
                 <div>
                   <p className="font-bold">О системе рангов</p>
                   <p className="text-[10px] text-muted">Цвета колец вокруг аватарки</p>
