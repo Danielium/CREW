@@ -1,9 +1,10 @@
 "use client";
-import { ArrowLeft, Bell, Globe, Shield, LogOut, ChevronRight, X, Loader2, Activity } from "lucide-react";
+import { ArrowLeft, Bell, Globe, Shield, LogOut, ChevronRight, X, Loader2, Activity, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { globalCache } from "@/lib/cache";
+import { RankInfoModal } from "@/components/RankInfoModal";
 
 export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
@@ -15,6 +16,7 @@ export default function SettingsPage() {
   
   const [privacy, setPrivacy] = useState("CLUB");
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showRankInfo, setShowRankInfo] = useState(false);
   const [touchStartY, setTouchStartY] = useState(0);
   const [touchOffset, setTouchOffset] = useState(0);
 
@@ -248,6 +250,20 @@ export default function SettingsPage() {
             </div>
 
             <div 
+              className="flex items-center justify-between p-4 cursor-pointer hover:bg-border/50 transition-colors"
+              onClick={() => setShowRankInfo(true)}
+            >
+              <div className="flex items-center gap-3">
+                <Trophy size={20} className="text-primary" />
+                <div>
+                  <p className="font-bold">О системе рангов</p>
+                  <p className="text-[10px] text-muted">Цвета колец вокруг аватарки</p>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-muted" />
+            </div>
+
+            <div 
               onClick={() => setShowPrivacyModal(true)}
               className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#222] transition-colors"
             >
@@ -418,6 +434,10 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* RANK INFO MODAL */}
+      {showRankInfo && (
+        <RankInfoModal onClose={() => setShowRankInfo(false)} />
+      )}
     </div>
   );
 }
