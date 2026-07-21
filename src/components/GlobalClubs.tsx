@@ -103,7 +103,7 @@ export default function GlobalClubs({ inClub }: { inClub?: boolean }) {
 
       {/* Search Input */}
       <div className="relative mb-8">
-        <div className="absolute left-5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+        <div className="absolute left-5 top-1/2 -translate-y-1/2 flex items-center justify-center z-10 pointer-events-none">
           <Search className="text-foreground" size={18} />
         </div>
         <input
