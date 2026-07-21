@@ -19,7 +19,15 @@ interface AvatarProgressProps {
 }
 
 export const getRankStyle = (distance: number) => {
-  if (distance >= 15000) return { type: "gradient", id: "grad-ultimate", start: "#CCFF00", end: "#4338CA" }; // Crew Neon to Indigo
+  if (distance >= 15000) return { 
+    type: "gradient", 
+    id: "grad-ultimate", 
+    stops: [
+      { offset: "0%", color: "#CCFF00" },
+      { offset: "50%", color: "#00E5FF" },
+      { offset: "100%", color: "#3B82F6" }
+    ]
+  };
   if (distance >= 5000) return { type: "solid", color: "#FACC15" }; // Gold
   if (distance >= 2500) return { type: "solid", color: "#94A3B8" }; // Silver
   if (distance >= 1000) return { type: "solid", color: "#3B82F6" }; // Blue
@@ -63,8 +71,9 @@ export default function AvatarProgress({
         {rankStyle.type === "gradient" && (
           <defs>
             <linearGradient id={rankStyle.id} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor={rankStyle.start} />
-              <stop offset="100%" stopColor={rankStyle.end} />
+              {rankStyle.stops.map((stop, idx) => (
+                <stop key={idx} offset={stop.offset} stopColor={stop.color} />
+              ))}
             </linearGradient>
           </defs>
         )}
