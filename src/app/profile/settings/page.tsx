@@ -67,12 +67,12 @@ export default function SettingsPage() {
   }, [session]);
 
   useEffect(() => {
-    if (showPrivacyModal) {
+    if (showPrivacyModal || showRankInfo) {
       window.dispatchEvent(new Event("hideNav"));
     } else {
       window.dispatchEvent(new Event("showNav"));
     }
-  }, [showPrivacyModal]);
+  }, [showPrivacyModal, showRankInfo]);
 
   const toggleNotif = async (key: keyof typeof notifications) => {
     const newValue = !notifications[key];
