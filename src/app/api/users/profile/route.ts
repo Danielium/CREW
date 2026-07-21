@@ -10,7 +10,7 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, image, isPrivate, notifyClubEvents } = await req.json();
+    const { name, image, isPrivate, notifyClubEvents, weeklyGoal } = await req.json();
 
     if (name !== undefined) {
       if (typeof name !== "string" || name.trim().length === 0) {
@@ -37,6 +37,7 @@ export async function PUT(req: Request) {
         image: image !== undefined ? image : undefined,
         isPrivate: isPrivate !== undefined ? isPrivate : undefined,
         notifyClubEvents: notifyClubEvents !== undefined ? notifyClubEvents : undefined,
+        weeklyGoal: weeklyGoal !== undefined ? weeklyGoal : undefined,
       },
     });
 

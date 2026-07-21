@@ -5,7 +5,7 @@ import { Settings, Star, Trophy, Users, Edit3, Lock, Sunrise, Sun, Moon, CloudSu
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
-
+import AvatarProgress from "@/components/AvatarProgress";
 
 import { globalCache } from "@/lib/cache";
 
@@ -274,27 +274,20 @@ export default function ProfileTab() {
         </div>
         
         <div className="flex flex-col items-center mt-4">
-          <div className="relative cursor-pointer group" onClick={() => {
-            if (session) {
-              setEditName(userData?.name || session.user?.name || "");
-              setEditAvatar(userData?.image || session.user?.image || "");
-              setEditIsPrivate(userData?.isPrivate || false);
-              setShowEditModal(true);
-            }
-          }}>
-            {/* Avatar Frame */}
-            <div className="absolute -inset-2 bg-gradient-to-tr from-[#CCFF00] to-transparent rounded-full animate-pulse opacity-50"></div>
-            <div className="w-28 h-28 rounded-full border-4 border-[#000] relative z-10 overflow-hidden bg-card flex items-center justify-center">
-              {renderAvatar(userData?.image || session?.user?.image)}
-            </div>
-            
-            <div className="absolute -bottom-2 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-black z-20 border-2 border-background shadow-lg transition-transform group-hover:scale-110">
-              <Edit3 size={14} />
-            </div>
-          </div>
-          
+          <AvatarProgress
+            user={userData || session?.user}
+            size={112}
+            strokeWidth={6}
+            onClick={() => {
+              if (session) {
+                setEditName(userData?.name || session.user?.name || "");
+                setEditAvatar(userData?.image || session.user?.image || "");
+                setEditIsPrivate(userData?.isPrivate || false);
+                setShowEditModal(true);
+              }
+            }}
+          />
           <h1 className="text-3xl font-black mt-4 uppercase text-center">{userData?.name || session?.user?.name || "Гость"}</h1>
-          
         </div>
       </div>
 

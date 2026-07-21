@@ -24,6 +24,7 @@ export default function SettingsPage() {
   const [isLoadingIntegrations, setIsLoadingIntegrations] = useState(true);
   const [isSyncingStrava, setIsSyncingStrava] = useState(false);
   const [isDisconnectingStrava, setIsDisconnectingStrava] = useState(false);
+  const [weeklyGoal, setWeeklyGoal] = useState<number>(15);
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -48,6 +49,9 @@ export default function SettingsPage() {
             }
             if (data.user.notifyClubEvents !== undefined) {
               setNotifications(prev => ({ ...prev, clan: data.user.notifyClubEvents }));
+            }
+            if (data.user.weeklyGoal !== undefined) {
+              setWeeklyGoal(data.user.weeklyGoal);
             }
           }
           setIsLoadingIntegrations(false);
@@ -87,6 +91,23 @@ export default function SettingsPage() {
   const handleSavePrivacy = (value: string) => {
     setPrivacy(value);
     localStorage.setItem("profilePrivacy", value);
+  };
+
+  const handleWeeklyGoalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value) || 0;
+    setWeeklyGoal(val);
+  };
+  
+  const handleWeeklyGoalBlur = async () => {
+    try {
+      await fetch("/api/users/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ weeklyGoal: weeklyGoal })
+      });
+    } catch (e) {
+      console.error("Failed to update weekly goal", e);
+    }
   };
 
   const handleStravaSync = async () => {
@@ -201,6 +222,25 @@ export default function SettingsPage() {
                   МИЛИ
                 </button>
               </div>
+            </div>
+
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <Activity size={20} className="text-muted" />
+                <div>
+                  <p className="font-bold">Недельная норма (км)</p>
+                  <p className="text-[10px] text-muted">Цель для кольца активности</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                min="1"
+                max="1000"
+                value={weeklyGoal}
+                onChange={handleWeeklyGoalChange}
+                onBlur={handleWeeklyGoalBlur}
+                className="w-16 bg-background border border-border rounded-lg px-2 py-1 text-center font-bold outline-none focus:border-primary transition-colors"
+              />
             </div>
 
             <div 

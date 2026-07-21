@@ -52,8 +52,24 @@ export async function GET(
       (user as any).accounts = user.accounts.map(acc => ({ provider: acc.provider }));
     }
 
+    // Calculate weekly distance
+    const startOfWeek = new Date();
+    startOfWeek.setHours(0, 0, 0, 0);
+    const day = startOfWeek.getDay();
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday (0)
+    startOfWeek.setDate(diff);
+
+    const weeklyRuns = await prisma.run.findMany({
+      where: {
+        userId: targetUserId,
+        startTime: { gte: startOfWeek }
+      },
+      select: { distance: true }
+    });
+    const weeklyDistance = weeklyRuns.reduce((sum, run) => sum + run.distance, 0);
+
     // Return full data
-    return NextResponse.json({ user });
+    return NextResponse.json({ user: { ...user, weeklyDistance } });
   } catch (error) {
     console.error("Fetch user error:", error);
     return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 });

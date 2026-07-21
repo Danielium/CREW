@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Lock, Sunrise, Loader2, Users } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
+import AvatarProgress from "@/components/AvatarProgress";
 
 export default function PublicProfilePage() {
   const { id } = useParams();
@@ -186,9 +187,7 @@ export default function PublicProfilePage() {
     return (
       <div className="flex flex-col min-h-[100dvh] bg-background text-foreground pt-safe pb-24 relative z-10 animate-in fade-in duration-500">
         <div className="flex flex-col items-center mt-10">
-          <div className="w-28 h-28 rounded-full border-4 border-[#000] overflow-hidden bg-card flex items-center justify-center shadow-lg">
-            {renderAvatar(userData.image)}
-          </div>
+          <AvatarProgress user={userData} size={112} strokeWidth={6} />
           <h1 className="text-3xl font-black mt-4 uppercase text-center">{userData.name}</h1>
           <div className="mt-12 flex flex-col items-center text-muted p-8 bg-card/50 rounded-[28px] border border-white/5 mx-4 shadow-inner text-center">
             <Lock size={40} className="mb-4 opacity-50" />
@@ -207,14 +206,7 @@ export default function PublicProfilePage() {
       {/* Header & Avatar */}
       <div className="px-4 mb-6 relative">
         <div className="flex flex-col items-center mt-8">
-          <div className="relative">
-            {/* Avatar Frame */}
-            <div className="absolute -inset-2 bg-gradient-to-tr from-[#CCFF00] to-transparent rounded-full opacity-30"></div>
-            <div className="w-28 h-28 rounded-full border-4 border-[#000] relative z-10 overflow-hidden bg-card flex items-center justify-center">
-              {renderAvatar(userData?.image)}
-            </div>
-          </div>
-          
+          <AvatarProgress user={userData} size={112} strokeWidth={6} />
           <h1 className="text-3xl font-black mt-4 uppercase text-center">{userData?.name || "Гость"}</h1>
         </div>
       </div>
