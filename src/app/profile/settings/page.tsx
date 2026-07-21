@@ -9,7 +9,6 @@ export default function SettingsPage() {
   const [metricSystem, setMetricSystem] = useState(true);
   const [notifications, setNotifications] = useState({
     clan: true,
-    friends: true,
     system: false
   });
   
@@ -221,20 +220,6 @@ export default function SettingsPage() {
                 className={`w-12 h-6 rounded-full transition-colors relative ${notifications.clan ? 'bg-primary text-black' : 'bg-border'}`}
               >
                 <div className={`w-5 h-5 bg-foreground rounded-full absolute top-0.5 transition-transform ${notifications.clan ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-3">
-                <Bell size={20} className="text-muted" />
-                <p className="font-bold">Новые подписчики</p>
-              </div>
-              {/* Toggle Switch */}
-              <button 
-                onClick={() => toggleNotif('friends')}
-                className={`w-12 h-6 rounded-full transition-colors relative ${notifications.friends ? 'bg-primary text-black' : 'bg-border'}`}
-              >
-                <div className={`w-5 h-5 bg-foreground rounded-full absolute top-0.5 transition-transform ${notifications.friends ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
               </button>
             </div>
 
