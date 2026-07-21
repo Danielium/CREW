@@ -19,13 +19,13 @@ interface AvatarProgressProps {
 }
 
 export const getRankGradient = (distance: number) => {
-  if (distance >= 15000) return { id: "grad-darkmatter", start: "#1A1A1A", end: "#CCFF00" }; 
-  if (distance >= 5000) return { id: "grad-gold", start: "#CCFF00", end: "#FFB800" }; 
-  if (distance >= 2500) return { id: "grad-silver", start: "#CCFF00", end: "#94A3B8" }; 
-  if (distance >= 1000) return { id: "grad-ice", start: "#CCFF00", end: "#3B82F6" }; 
-  if (distance >= 250) return { id: "grad-cyan", start: "#CCFF00", end: "#00E5FF" }; 
-  if (distance >= 50) return { id: "grad-white", start: "#FFFFFF", end: "#FFFFFF" }; 
-  return { id: "grad-neon", start: "#CCFF00", end: "#CCFF00" }; 
+  if (distance >= 15000) return { id: "grad-darkmatter", start: "#1E1B4B", end: "#000000" }; // Deep space / dark indigo to black
+  if (distance >= 5000) return { id: "grad-gold", start: "#FDE047", end: "#B45309" }; // Bright gold to deep bronze
+  if (distance >= 2500) return { id: "grad-silver", start: "#F1F5F9", end: "#475569" }; // Bright silver to dark steel
+  if (distance >= 1000) return { id: "grad-ice", start: "#93C5FD", end: "#1D4ED8" }; // Light ice blue to deep blue
+  if (distance >= 250) return { id: "grad-cyan", start: "#67E8F9", end: "#0E7490" }; // Bright cyan to deep teal
+  if (distance >= 50) return { id: "grad-white", start: "#FFFFFF", end: "#9CA3AF" }; // Pure white to gray
+  return { id: "grad-neon", start: "#CCFF00", end: "#84A300" }; // Bright neon to darker neon
 };
 
 export default function AvatarProgress({
