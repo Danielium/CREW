@@ -71,7 +71,7 @@ export default function AvatarProgress({
         {rankStyle.type === "gradient" && (
           <defs>
             <linearGradient id={rankStyle.id} x1="0%" y1="0%" x2="100%" y2="100%">
-              {rankStyle.stops.map((stop, idx) => (
+              {rankStyle.stops?.map((stop, idx) => (
                 <stop key={idx} offset={stop.offset} stopColor={stop.color} />
               ))}
             </linearGradient>
