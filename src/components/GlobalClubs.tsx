@@ -103,15 +103,15 @@ export default function GlobalClubs({ inClub }: { inClub?: boolean }) {
 
       {/* Search Input */}
       <div className="relative mb-8">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
-          <Search className="text-muted-foreground" size={14} />
+        <div className="absolute left-5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+          <Search className="text-muted-foreground" size={18} />
         </div>
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Поиск клубов..."
-          className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-[24px] pl-16 pr-12 py-5 text-sm placeholder:text-muted/50 outline-none focus:border-primary/50 transition-colors shadow-lg"
+          className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-[24px] pl-12 pr-12 py-5 text-sm placeholder:text-muted/50 outline-none focus:border-primary/50 transition-colors shadow-lg"
         />
         {searchQuery && (
           <button 
