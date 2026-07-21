@@ -18,14 +18,14 @@ interface AvatarProgressProps {
   onClick?: () => void;
 }
 
-export const getRankColor = (distance: number) => {
-  if (distance >= 15000) return "#4338CA"; // Dark matter (Indigo)
-  if (distance >= 5000) return "#FACC15"; // Gold
-  if (distance >= 2500) return "#94A3B8"; // Silver
-  if (distance >= 1000) return "#3B82F6"; // Blue
-  if (distance >= 250) return "#00E5FF"; // Cyan
-  if (distance >= 50) return "#FFFFFF"; // White
-  return "#CCFF00"; // Neon
+export const getRankStyle = (distance: number) => {
+  if (distance >= 15000) return { type: "gradient", id: "grad-ultimate", start: "#CCFF00", end: "#4338CA" }; // Crew Neon to Indigo
+  if (distance >= 5000) return { type: "solid", color: "#FACC15" }; // Gold
+  if (distance >= 2500) return { type: "solid", color: "#94A3B8" }; // Silver
+  if (distance >= 1000) return { type: "solid", color: "#3B82F6" }; // Blue
+  if (distance >= 250) return { type: "solid", color: "#00E5FF" }; // Cyan
+  if (distance >= 50) return { type: "solid", color: "#FFFFFF" }; // White
+  return { type: "solid", color: "#CCFF00" }; // Neon
 };
 
 export default function AvatarProgress({
@@ -40,7 +40,9 @@ export default function AvatarProgress({
   const weeklyDistance = user.weeklyDistance || 0;
   const weeklyGoal = user.weeklyGoal || 15;
 
-  const color = getRankColor(totalDistance);
+  const rankStyle = getRankStyle(totalDistance);
+  const strokeColor = rankStyle.type === "gradient" ? `url(#${rankStyle.id})` : rankStyle.color;
+  
   const progressPercent = Math.min(100, Math.max(0, (weeklyDistance / weeklyGoal) * 100));
 
   const center = size / 2;
@@ -58,6 +60,14 @@ export default function AvatarProgress({
     >
       {/* Background SVG for the ring track */}
       <svg className="absolute inset-0 w-full h-full transform -rotate-90" width={size} height={size}>
+        {rankStyle.type === "gradient" && (
+          <defs>
+            <linearGradient id={rankStyle.id} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={rankStyle.start} />
+              <stop offset="100%" stopColor={rankStyle.end} />
+            </linearGradient>
+          </defs>
+        )}
         {/* Track */}
         <circle
           cx={center}
@@ -73,7 +83,7 @@ export default function AvatarProgress({
           cy={center}
           r={radius}
           fill="none"
-          stroke={color}
+          stroke={strokeColor}
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           strokeDashoffset={offset}
