@@ -559,13 +559,6 @@ export default function PublicProfilePage() {
         </div>
       )}
 
-      {showAllRuns && (
-        <RunHistoryModal 
-          runs={filteredRuns} 
-          onClose={() => setShowAllRuns(false)} 
-          useMetric={useMetric}
-        />
-      )}
     </div>
   );
 }
