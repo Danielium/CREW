@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { Search, Heart, MessageSquare, MapPin, Send, Loader2, User, ImageIcon, X, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { triggerHaptic } from "@/lib/haptics";
+import RankAvatar from "@/components/RankAvatar";
 
 // Types based on Prisma
 type Post = {
@@ -334,8 +335,10 @@ export default function FeedTab() {
       {/* Composer (Tweet Box) */}
       <div className="px-4 py-4 border-b border-border bg-card/30">
         <div className="flex gap-3">
-          {(currentUser?.image || (session?.user as any)?.image) ? (
-            <img src={currentUser?.image || (session?.user as any)?.image} className="w-10 h-10 rounded-full object-cover border border-border shrink-0" />
+          {(currentUser || session?.user) ? (
+            <Link href="/profile">
+              <RankAvatar user={currentUser || (session?.user as any)} size={40} />
+            </Link>
           ) : (
             <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 border border-border">
               <User size={20} className="text-foreground" />
@@ -395,13 +398,7 @@ export default function FeedTab() {
               <div className="flex gap-3">
                 {/* Avatar */}
                 <Link href={`/users/${(post.user as any)?.id}`} onClick={(e) => e.stopPropagation()} className="shrink-0">
-                  {post.user?.image ? (
-                    <img src={post.user.image} alt="avatar" className="w-10 h-10 rounded-full border border-border shrink-0 object-cover" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 border border-border">
-                      <User size={20} className="text-foreground" />
-                    </div>
-                  )}
+                  <RankAvatar user={post.user} size={40} />
                 </Link>
                 
                 <div className="flex-1 min-w-0">
@@ -497,11 +494,7 @@ export default function FeedTab() {
                           commentsData[post.id].map(comment => (
                               <div key={comment.id} className="flex gap-3 pt-2 pb-1">
                                 <Link href={`/users/${comment.user.id}`} onClick={(e) => e.stopPropagation()} className="shrink-0">
-                                  {comment.user.image ? (
-                                    <img src={comment.user.image} className="w-10 h-10 rounded-full border border-border object-cover" />
-                                  ) : (
-                                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center border border-border"><User size={18} /></div>
-                                  )}
+                                  <RankAvatar user={comment.user} size={40} />
                                 </Link>
                                 <div className="flex-1 flex flex-col min-w-0">
                                   <div className="flex justify-between items-start mb-0.5">

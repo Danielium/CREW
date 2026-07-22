@@ -7,6 +7,7 @@ import { ChevronLeft, Copy, Check, Loader2, UserCheck, UserX, Users, Shield, Key
 import { globalCache } from "@/lib/cache";
 import Link from "next/link";
 import ClubBadge from "@/components/ClubBadge";
+import RankAvatar from "@/components/RankAvatar";
 import React from "react";
 
 export default function ClubAdminPage() {
@@ -339,17 +340,7 @@ export default function ClubAdminPage() {
                   className="flex items-center justify-between p-3 pl-4 bg-black/20 border border-white/5 rounded-2xl hover:bg-black/30 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    {member.user.image ? (
-                      <img
-                        src={member.user.image}
-                        alt=""
-                        className="w-10 h-10 rounded-full object-cover border border-white/10"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-card border border-white/10 flex items-center justify-center text-muted text-xs font-bold">
-                        {(member.user.name || "?")[0].toUpperCase()}
-                      </div>
-                    )}
+                    <RankAvatar user={member.user} size={40} />
                     <div>
                       <p className="font-bold text-sm">{member.user.name || "Аноним"}</p>
                       <p className="text-[10px] text-primary uppercase tracking-widest font-bold">
@@ -407,17 +398,7 @@ export default function ClubAdminPage() {
                 className="flex items-center justify-between p-3 bg-black/20 border border-white/5 rounded-2xl"
               >
                 <div className="flex items-center gap-3">
-                  {member.user.image ? (
-                    <img
-                      src={member.user.image}
-                      alt=""
-                      className="w-8 h-8 rounded-full object-cover border border-white/10"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-card border border-white/10 flex items-center justify-center text-muted text-xs font-bold">
-                      {(member.user.name || "?")[0].toUpperCase()}
-                    </div>
-                  )}
+                  <RankAvatar user={member.user} size={32} />
                   <div>
                     <p className="font-bold text-sm text-foreground/90">{member.user.name || "Аноним"}</p>
                     <p className="text-[9px] text-muted uppercase tracking-widest font-bold">{member.role}</p>

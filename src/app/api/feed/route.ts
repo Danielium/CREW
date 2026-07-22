@@ -13,7 +13,7 @@ export async function GET(request: Request) {
       take: 50,
       include: {
         user: {
-          select: { id: true, name: true, image: true }
+          select: { id: true, name: true, image: true, totalDistance: true }
         },
         run: true,
         _count: {
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
       include: {
         club: true,
         creator: true,
-        attendees: { select: { id: true, image: true, name: true } }
+        attendees: { select: { id: true, image: true, name: true, totalDistance: true } }
       }
     });
 
