@@ -18,7 +18,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         events: {
           where: { date: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
           orderBy: { date: 'asc' },
-          include: { attendees: { select: { id: true, image: true, name: true, totalDistance: true } } }
+          include: { attendees: { select: { id: true, image: true, name: true } } }
         }
       }
     });

@@ -13,7 +13,7 @@ export async function GET(
       where: { postId: id },
       include: {
         user: {
-          select: { id: true, name: true, image: true, totalDistance: true },
+          select: { id: true, name: true, image: true },
         },
       },
       orderBy: { createdAt: "asc" },

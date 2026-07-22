@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { triggerHaptic } from "@/lib/haptics";
-import RankAvatar from "@/components/RankAvatar";
 
 export default function RequestsInbox() {
   const router = useRouter();
@@ -95,7 +94,13 @@ export default function RequestsInbox() {
                 <div key={req.id} className="bg-card border border-border rounded-2xl p-4 flex flex-col gap-4">
                   <div className="flex items-center gap-3">
                     <Link href={`/users/${req.user.id}`} className="flex items-center gap-3 flex-1 overflow-hidden">
-                      <RankAvatar user={req.user} size={48} />
+                      <div className="w-12 h-12 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                        {req.user.image ? (
+                          <Image src={req.user.image} alt={req.user.name} width={48} height={48} className="object-cover w-full h-full" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xl font-bold">{req.user.name?.[0]}</div>
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold truncate">{req.user.name}</h3>
                         <p className="text-xs text-muted truncate">Пробежал: {(req.user.totalDistance || 0).toFixed(1)} км</p>
@@ -147,7 +152,13 @@ export default function RequestsInbox() {
                   <div key={match.id} className="bg-card border border-primary/30 rounded-2xl p-4 flex flex-col gap-4">
                     <div className="flex items-center gap-3">
                       <Link href={`/users/${otherUser.id}`} className="flex items-center gap-3 flex-1 overflow-hidden">
-                        <RankAvatar user={otherUser} size={48} />
+                        <div className="w-12 h-12 rounded-full bg-muted overflow-hidden flex-shrink-0 relative">
+                          {otherUser.image ? (
+                            <Image src={otherUser.image} alt={otherUser.name} width={48} height={48} className="object-cover w-full h-full" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xl font-bold">{otherUser.name?.[0]}</div>
+                          )}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-bold truncate">{otherUser.name}</h3>
                           <p className="text-xs text-primary font-mono truncate">{otherUser.telegramUsername || "Скрыт"}</p>
