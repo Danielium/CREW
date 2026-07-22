@@ -215,21 +215,6 @@ export default function CreateEventPage() {
           onAddressFound={(address) => setForm(prev => ({...prev, location: address}))}
         />
 
-        <div className="flex items-center justify-between p-4 bg-card border border-border rounded-2xl cursor-pointer" onClick={() => setForm(prev => ({...prev, showOnMap: !prev.showOnMap}))}>
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${form.showOnMap ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
-              {form.showOnMap ? <Eye size={20} /> : <EyeOff size={20} />}
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-sm">Показывать на общей карте</span>
-              <span className="text-xs text-muted-foreground">Если выключено, пробежку увидят только в клубе</span>
-            </div>
-          </div>
-          <div className={`w-12 h-6 rounded-full transition-colors relative flex items-center shrink-0 ${form.showOnMap ? 'bg-primary' : 'bg-border'}`}>
-            <div className={`w-5 h-5 bg-background rounded-full absolute transition-all ${form.showOnMap ? 'left-[26px]' : 'left-[2px]'}`}></div>
-          </div>
-        </div>
-
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Точка сбора</label>
           <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors">
@@ -242,6 +227,21 @@ export default function CreateEventPage() {
               value={form.location}
               onChange={(e) => setForm({...form, location: e.target.value})}
             />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between p-4 bg-card border border-border rounded-2xl cursor-pointer" onClick={() => setForm(prev => ({...prev, showOnMap: !prev.showOnMap}))}>
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${form.showOnMap ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
+              {form.showOnMap ? <Eye size={20} /> : <EyeOff size={20} />}
+            </div>
+            <div className="flex flex-col">
+              <span className="font-bold text-sm">Показывать на общей карте</span>
+              <span className="text-xs text-muted-foreground">Если выключено, пробежку увидят только в клубе</span>
+            </div>
+          </div>
+          <div className={`w-12 h-6 rounded-full transition-colors relative flex items-center shrink-0 ${form.showOnMap ? 'bg-primary' : 'bg-border'}`}>
+            <div className={`w-5 h-5 bg-background rounded-full absolute transition-all ${form.showOnMap ? 'left-[26px]' : 'left-[2px]'}`}></div>
           </div>
         </div>
 
