@@ -45,6 +45,25 @@ export default function CreateEventPage() {
     e.preventDefault();
     
     setIsLoading(true);
+
+    let finalRouteData = form.routeData;
+    if (form.showOnMap && (!finalRouteData || finalRouteData === "[]") && form.location) {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(form.location)}&accept-language=ru`);
+        const data = await res.json();
+        if (data && data.length > 0) {
+          const lat = parseFloat(data[0].lat);
+          const lng = parseFloat(data[0].lon);
+          finalRouteData = JSON.stringify([{ lat, lng }]);
+        } else {
+          alert("Не удалось найти точные координаты адреса. Пожалуйста, кликните на карте один раз, чтобы поставить точку сбора вручную.");
+          setIsLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.error("Geocoding failed", err);
+      }
+    }
     
     // Combine date and time safely in local timezone
     const [year, month, day] = form.date.split('-');
@@ -81,7 +100,7 @@ export default function CreateEventPage() {
           distance: form.distance,
           pace: paces,
           image: uploadedImageUrl,
-          routeData: form.routeData,
+          routeData: finalRouteData,
           showOnMap: form.showOnMap
         })
       });
