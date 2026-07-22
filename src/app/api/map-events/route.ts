@@ -97,6 +97,7 @@ export async function GET(req: Request) {
     const clubEvents = await prisma.event.findMany({
       where: {
         routeData: { not: null },
+        showOnMap: true,
         date: { gt: new Date() },
         OR: userId ? [
           { club: { joinType: "OPEN" } },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { ChevronLeft, Loader2, Calendar, MapPin, Activity, Clock, Image as ImageIcon, Plus } from "lucide-react";
+import { ChevronLeft, Loader2, Calendar, MapPin, Activity, Clock, Image as ImageIcon, Plus, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
@@ -22,7 +22,8 @@ export default function CreateEventPage() {
     time: "",
     distance: "",
     image: "",
-    routeData: null as string | null
+    routeData: null as string | null,
+    showOnMap: false
   });
   const [paceFrom, setPaceFrom] = useState("");
   const [paceTo, setPaceTo] = useState("");
@@ -43,11 +44,6 @@ export default function CreateEventPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!form.routeData) {
-      const confirmNoRoute = confirm("Вы не нарисовали маршрут на карте. Без маршрута событие не будет отображаться на карте для других бегунов. Продолжить создание?");
-      if (!confirmNoRoute) return;
-    }
-
     setIsLoading(true);
     
     // Combine date and time safely in local timezone
@@ -85,7 +81,8 @@ export default function CreateEventPage() {
           distance: form.distance,
           pace: paces,
           image: uploadedImageUrl,
-          routeData: form.routeData
+          routeData: form.routeData,
+          showOnMap: form.showOnMap
         })
       });
 
@@ -198,6 +195,21 @@ export default function CreateEventPage() {
           onRouteDataChange={(route) => setForm(prev => ({...prev, routeData: route}))} 
           onAddressFound={(address) => setForm(prev => ({...prev, location: address}))}
         />
+
+        <div className="flex items-center justify-between p-4 bg-card border border-border rounded-2xl cursor-pointer" onClick={() => setForm(prev => ({...prev, showOnMap: !prev.showOnMap}))}>
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${form.showOnMap ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
+              {form.showOnMap ? <Eye size={20} /> : <EyeOff size={20} />}
+            </div>
+            <div className="flex flex-col">
+              <span className="font-bold text-sm">Показывать на общей карте</span>
+              <span className="text-xs text-muted-foreground">Если выключено, пробежку увидят только в клубе</span>
+            </div>
+          </div>
+          <div className={`w-12 h-6 rounded-full transition-colors relative flex items-center shrink-0 ${form.showOnMap ? 'bg-primary' : 'bg-border'}`}>
+            <div className={`w-5 h-5 bg-background rounded-full absolute transition-all ${form.showOnMap ? 'left-[26px]' : 'left-[2px]'}`}></div>
+          </div>
+        </div>
 
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Точка сбора</label>

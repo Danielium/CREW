@@ -58,7 +58,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Только создатели и офицеры клуба могут создавать события" }, { status: 403 });
     }
 
-    const { title, description, location, date, distance, pace, image, routeData } = await req.json();
+    const { title, description, location, date, distance, pace, image, routeData, showOnMap } = await req.json();
 
     const checkInToken = crypto.randomBytes(3).toString('hex').toUpperCase();
 
@@ -72,6 +72,7 @@ export async function POST(req: Request) {
         pace: Array.isArray(pace) ? JSON.stringify(pace) : pace,
         image,
         routeData: typeof routeData === 'string' ? routeData : (routeData ? JSON.stringify(routeData) : null),
+        showOnMap: showOnMap !== undefined ? showOnMap : true,
         checkInToken,
         creatorId: userId,
         clubId: activeClubMember.clubId,

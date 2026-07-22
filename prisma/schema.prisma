@@ -99,6 +99,7 @@ model Event {
   pace          String?  // e.g. "5:00-5:30" or JSON array
   routeData     String?  // JSON stringified coordinates
   image         String?
+  showOnMap     Boolean  @default(true)
   checkInToken  String?  @unique
   reminderSent  Boolean  @default(false)
   createdAt     DateTime @default(now())
