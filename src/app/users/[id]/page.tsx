@@ -21,7 +21,6 @@ export default function PublicProfilePage() {
   const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear());
   
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showRankInfo, setShowRankInfo] = useState(false);
   const [showAllRuns, setShowAllRuns] = useState(false);
   const [useMetric, setUseMetric] = useState(true);
 
@@ -35,7 +34,7 @@ export default function PublicProfilePage() {
   }, []);
 
   useEffect(() => {
-    if (showDatePicker || showRankInfo) {
+    if (showDatePicker) {
       window.dispatchEvent(new Event("hideNav"));
     } else {
       window.dispatchEvent(new Event("showNav"));
@@ -560,8 +559,12 @@ export default function PublicProfilePage() {
         </div>
       )}
 
-      {showRankInfo && (
-        <RankInfoModal onClose={() => setShowRankInfo(false)} />
+      {showAllRuns && (
+        <RunHistoryModal 
+          runs={filteredRuns} 
+          onClose={() => setShowAllRuns(false)} 
+          useMetric={useMetric}
+        />
       )}
     </div>
   );

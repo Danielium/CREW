@@ -269,6 +269,22 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            <div 
+              onClick={() => setShowPrivacyModal(true)}
+              className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#222] transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Shield size={20} className="text-muted" />
+                <div>
+                  <p className="font-bold">Приватность профиля</p>
+                  <p className="text-[10px] text-muted">Кто видит ваши пробежки</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-primary font-bold">
+                {PRIVACY_LABELS[privacy] || "Только клуб"} <ChevronRight size={16} className="text-muted" />
+              </div>
+            </div>
+
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
                 <Activity size={20} className="text-muted" />
@@ -305,22 +321,6 @@ export default function SettingsPage() {
                 </div>
               </div>
               <ChevronRight size={16} className="text-muted" />
-            </div>
-
-            <div 
-              onClick={() => setShowPrivacyModal(true)}
-              className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#222] transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Shield size={20} className="text-muted" />
-                <div>
-                  <p className="font-bold">Приватность профиля</p>
-                  <p className="text-[10px] text-muted">Кто видит ваши пробежки</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-primary font-bold">
-                {PRIVACY_LABELS[privacy] || "Только клуб"} <ChevronRight size={16} className="text-muted" />
-              </div>
             </div>
             
           </div>

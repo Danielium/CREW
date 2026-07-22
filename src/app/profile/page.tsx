@@ -17,7 +17,6 @@ export default function ProfileTab() {
   
   // Edit Profile Modal State
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showRankInfo, setShowRankInfo] = useState(false);
   const [editName, setEditName] = useState("");
   const [editAvatar, setEditAvatar] = useState("");
   const [editIsPrivate, setEditIsPrivate] = useState(false);
@@ -722,11 +721,6 @@ export default function ProfileTab() {
           onClose={() => setCropImageSrc(null)}
         />
       )}
-
-      {showRankInfo && (
-        <RankInfoModal onClose={() => setShowRankInfo(false)} />
-      )}
-
     </div>
   );
 }
