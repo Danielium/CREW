@@ -23,6 +23,16 @@ export default function PublicProfilePage() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showRankInfo, setShowRankInfo] = useState(false);
   const [showAllRuns, setShowAllRuns] = useState(false);
+  const [useMetric, setUseMetric] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedMetric = localStorage.getItem("useMetric");
+      if (savedMetric !== null) {
+        setUseMetric(savedMetric === "true");
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (showDatePicker || showRankInfo) {
@@ -78,9 +88,10 @@ export default function PublicProfilePage() {
     return runDate >= filterStart && runDate <= filterEnd;
   }) || [];
 
-  const filteredDistance = filteredRuns.reduce((acc: number, r: any) => acc + (r.distance || 0), 0);
+  const totalDistanceKm = filteredRuns.reduce((acc: number, r: any) => acc + (r.distance || 0), 0);
+  const displayDistance = useMetric ? totalDistanceKm : totalDistanceKm * 0.621371;
   const filteredTime = filteredRuns.reduce((acc: number, r: any) => acc + (r.durationSec || 0), 0);
-  const filteredPace = filteredDistance > 0 ? (filteredTime / 60) / filteredDistance : 0;
+  const filteredPace = displayDistance > 0 ? (filteredTime / 60) / displayDistance : 0;
   
   const getDateLabel = () => {
     if (timeRange === "W") {
@@ -278,16 +289,10 @@ export default function PublicProfilePage() {
             </button>
             
             <h2 className="text-[80px] leading-[0.8] font-black italic tracking-tighter -ml-1 flex items-start gap-2">
-              {filteredDistance.toFixed(2).replace('.', ',')}
+              {displayDistance.toFixed(2).replace('.', ',')}
             </h2>
             <div className="flex items-center gap-2 mt-3 mb-6">
-              <p className="text-xs text-muted font-bold tracking-widest uppercase">Километров</p>
-              <button 
-                onClick={() => setShowRankInfo(true)}
-                className="text-muted hover:text-foreground transition-colors"
-              >
-                <Info size={14} />
-              </button>
+              <p className="text-xs text-muted font-bold tracking-widest uppercase">{useMetric ? "Километров" : "Миль"}</p>
             </div>
             
             <div className="grid grid-cols-3 gap-2 w-full">
@@ -297,7 +302,7 @@ export default function PublicProfilePage() {
               </div>
               <div className="flex flex-col">
                 <span className="text-2xl font-black">{formatPace(filteredPace)}</span>
-                <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Средн. темп</span>
+                <span className="text-[10px] text-muted uppercase font-bold tracking-wider mt-1">Средн. темп <span className="lowercase">{useMetric ? "/км" : "/милю"}</span></span>
               </div>
               <div className="flex flex-col">
                 <span className="text-2xl font-black">{formatTime(filteredTime)}</span>

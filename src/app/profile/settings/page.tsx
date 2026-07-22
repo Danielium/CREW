@@ -9,6 +9,15 @@ import { RankInfoModal } from "@/components/RankInfoModal";
 export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
   const [metricSystem, setMetricSystem] = useState(true);
+
+  const handleMetricSystem = (val: boolean) => {
+    setMetricSystem(val);
+    localStorage.setItem("useMetric", val.toString());
+    window.dispatchEvent(new Event("metricChanged"));
+    if (typeof window !== "undefined") {
+      (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged();
+    }
+  };
   const [notifications, setNotifications] = useState({
     clan: true,
     system: false
@@ -36,6 +45,11 @@ export default function SettingsPage() {
     setMounted(true);
     const savedPrivacy = localStorage.getItem("profilePrivacy");
     if (savedPrivacy) setPrivacy(savedPrivacy);
+
+    const savedMetric = localStorage.getItem("useMetric");
+    if (savedMetric !== null) {
+      setMetricSystem(savedMetric === "true");
+    }
 
     if (typeof window !== "undefined" && (window as any).Telegram?.WebApp?.initData) {
       setIsTgEnv(true);
@@ -241,13 +255,13 @@ export default function SettingsPage() {
               </div>
               <div className="flex bg-background border border-border rounded-full p-1">
                 <button 
-                  onClick={() => setMetricSystem(true)}
+                  onClick={() => handleMetricSystem(true)}
                   className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${metricSystem ? 'bg-primary text-black' : 'text-muted'}`}
                 >
                   КМ
                 </button>
                 <button 
-                  onClick={() => setMetricSystem(false)}
+                  onClick={() => handleMetricSystem(false)}
                   className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${!metricSystem ? 'bg-primary text-black' : 'text-muted'}`}
                 >
                   МИЛИ
