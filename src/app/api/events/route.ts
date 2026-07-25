@@ -93,7 +93,7 @@ export async function POST(req: Request) {
       const text = `🔥 <b>Новая пробежка!</b>\n\nТвой клуб <b>${activeClubMember.club.name}</b> создал новое событие: <i>${event.title}</i> (${eventDate}).\n\n📍 Жми, чтобы увидеть на карте и присоединиться: ${link}`;
       
       const targetMembers = members.filter(m => m.user.notifyClubEvents !== false);
-      await Promise.allSettled(targetMembers.map(m => sendTelegramMessageToUser(m.userId, text)));
+      Promise.allSettled(targetMembers.map(m => sendTelegramMessageToUser(m.userId, text))).catch(console.error);
     } catch (e) {
       console.error("Failed to notify club members", e);
     }

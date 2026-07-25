@@ -56,6 +56,9 @@ model Run {
   splits        String?  // JSON stringified array
   
   post          Post?
+
+  @@index([userId])
+  @@index([startTime])
 }
 
 model Club {
@@ -86,6 +89,8 @@ model ClubMember {
   club          Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
   
   @@unique([userId, clubId])
+  @@index([clubId, status])
+  @@index([userId, status])
 }
 
 model Event {
@@ -110,6 +115,9 @@ model Event {
   attendees     User[]   @relation("EventAttendees")
   checkedInUsers User[]  @relation("EventCheckedIn")
   runs          Run[]    @relation("EventRuns")
+
+  @@index([date])
+  @@index([clubId])
 }
 
 model RunProposal {
@@ -128,6 +136,9 @@ model RunProposal {
 
   creator         User     @relation("RunProposalCreator", fields: [creatorId], references: [id], onDelete: Cascade)
   requests        RunJoinRequest[] @relation("RunJoinRequests")
+
+  @@index([status, startTime])
+  @@index([creatorId])
 }
 
 model RunJoinRequest {
@@ -191,6 +202,9 @@ model Post {
   run           Run?     @relation(fields: [runId], references: [id], onDelete: SetNull)
   likes         Like[]
   comments      Comment[]
+
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
 }
 
 model Like {
@@ -203,6 +217,7 @@ model Like {
   post          Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
+  @@index([postId])
 }
 
 model Comment {
@@ -215,4 +230,6 @@ model Comment {
 
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   post          Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
 }
