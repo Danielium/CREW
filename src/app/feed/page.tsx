@@ -427,34 +427,6 @@ export default function FeedTab() {
                     </p>
                   )}
 
-                  {/* Run Widget (If attached) */}
-                  {post.type === "RUN" && post.run && (
-                    <div className="rounded-[16px] border border-border bg-card overflow-hidden mb-3">
-                      <div className="h-20 bg-muted/30 relative">
-                        {/* Fake map background for runs */}
-                        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#A0A0A0 1px, transparent 1px)', backgroundSize: '10px 10px' }}></div>
-                        <svg className="absolute inset-0 w-full h-full z-10" viewBox="0 0 100 100" preserveAspectRatio="none">
-                          <path d="M 10,80 Q 40,60 50,40 T 90,20" fill="none" stroke="#CCFF00" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
-                        </svg>
-                      </div>
-                      
-                      <div className="p-3 grid grid-cols-3 gap-2 divide-x divide-border">
-                        <div className="text-center">
-                          <p className="text-[10px] text-muted uppercase font-bold">Дистанция</p>
-                          <p className="font-black text-lg">{post.run.distance.toFixed(2)}<span className="text-[10px] text-muted font-normal ml-0.5">км</span></p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-[10px] text-muted uppercase font-bold">Темп</p>
-                          <p className="font-black text-lg">{formatPace(post.run.avgPace)}<span className="text-[10px] text-muted font-normal ml-0.5">/км</span></p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-[10px] text-muted uppercase font-bold">Время</p>
-                          <p className="font-black text-lg">{formatTime(post.run.durationSec)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Media (If attached) */}
                   {post.mediaUrl && (
                     <div className="mb-3 rounded-xl overflow-hidden border border-border bg-card">

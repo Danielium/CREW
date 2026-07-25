@@ -15,7 +15,6 @@ export async function GET(request: Request) {
         user: {
           select: { id: true, name: true, image: true }
         },
-        run: true,
         _count: {
           select: { likes: true, comments: true }
         },
