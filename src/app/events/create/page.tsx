@@ -86,8 +86,15 @@ export default function CreateEventPage() {
 
     try {
       const paces = [];
+      const timeToSec = (t: string) => {
+        const [m, s] = t.split(':').map(Number);
+        return (m || 0) * 60 + (s || 0);
+      };
+
       if (paceFrom) paces.push(paceFrom);
       if (paceTo && paceTo !== paceFrom) paces.push(paceTo);
+
+      paces.sort((a, b) => timeToSec(a) - timeToSec(b));
 
       const res = await fetch("/api/events", {
         method: "POST",
