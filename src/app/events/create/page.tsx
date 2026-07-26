@@ -5,6 +5,7 @@ import { ChevronLeft, Loader2, Calendar, MapPin, Activity, Clock, Image as Image
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
+import { uploadImage } from "@/lib/uploadImage";
 
 const MapRouteBuilder = dynamic(() => import('@/components/MapRouteBuilder'), {
   ssr: false,
@@ -73,14 +74,11 @@ export default function CreateEventPage() {
     let uploadedImageUrl = null;
     
     if (imageFile) {
-      try {
-        uploadedImageUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(imageFile);
-        });
-      } catch (err) {
-        console.error("Failed to upload image", err);
+      uploadedImageUrl = await uploadImage(imageFile);
+      if (!uploadedImageUrl) {
+        alert("Ошибка при загрузке изображения");
+        setIsLoading(false);
+        return;
       }
     }
 

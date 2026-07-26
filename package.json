@@ -11,6 +11,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1095.0",
     "@capacitor-community/background-geolocation": "^1.2.26",
     "@capacitor/android": "^8.4.1",
     "@capacitor/core": "^8.4.1",
@@ -21,6 +22,7 @@
     "@telegram-apps/sdk": "^3.11.8",
     "@types/leaflet": "^1.9.21",
     "bcryptjs": "^3.0.3",
+    "browser-image-compression": "^2.0.2",
     "clsx": "^2.1.1",
     "html-to-image": "^1.11.13",
     "leaflet": "^1.9.4",

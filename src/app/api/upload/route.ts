@@ -1,13 +1,20 @@
 import { NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
-import path from 'path';
-import crypto from 'crypto';
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { v4 as uuidv4 } from "uuid";
+
+const s3Client = new S3Client({
+  region: process.env.YANDEX_S3_REGION || "ru-central1",
+  endpoint: "https://storage.yandexcloud.net",
+  credentials: {
+    accessKeyId: process.env.YANDEX_S3_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.YANDEX_S3_SECRET_ACCESS_KEY!,
+  },
+});
 
 export async function POST(req: Request) {
   try {
-    // BUG-001 fix: require authentication for file uploads
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -20,7 +27,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    // Validation: Check file type and size (max 5MB)
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json({ error: "Invalid file type. Only JPEG, PNG, WEBP, and GIF are allowed." }, { status: 400 });
@@ -29,20 +35,23 @@ export async function POST(req: Request) {
     if (file.size > 5 * 1024 * 1024) {
       return NextResponse.json({ error: "File size exceeds 5MB limit" }, { status: 400 });
     }
-    
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    
-    // BUG-002 fix: use cryptographically secure random bytes for filename
-    const extension = file.type.split('/')[1] || 'jpeg';
-    const safeName = crypto.randomBytes(16).toString('hex');
-    const filename = `${Date.now()}-${safeName}.${extension}`;
-    
-    const uploadPath = path.join(process.cwd(), 'public', 'uploads', filename);
-    
-    await writeFile(uploadPath, buffer);
-    
-    return NextResponse.json({ url: `/uploads/${filename}` });
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const ext = file.type.split('/')[1] || 'jpeg';
+    const filename = `${uuidv4()}.${ext}`;
+
+    const command = new PutObjectCommand({
+      Bucket: process.env.YANDEX_S3_BUCKET_NAME,
+      Key: filename,
+      Body: buffer,
+      ContentType: file.type,
+    });
+
+    await s3Client.send(command);
+
+    const url = `https://storage.yandexcloud.net/${process.env.YANDEX_S3_BUCKET_NAME}/${filename}`;
+
+    return NextResponse.json({ url });
   } catch (error) {
     console.error("Upload Error:", error);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
