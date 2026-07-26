@@ -415,8 +415,8 @@ export default function FeedTab() {
 
                   {/* Media (If attached) */}
                   {post.mediaUrl && (
-                    <div className="mb-3 rounded-xl overflow-hidden border border-border bg-card">
-                      <img src={post.mediaUrl} alt="Post media" className="w-full h-auto object-cover max-h-[400px]" />
+                    <div className="mb-3 rounded-xl overflow-hidden border border-border bg-muted relative aspect-[4/5] w-full">
+                      <img src={post.mediaUrl} alt="Post media" className="absolute inset-0 w-full h-full object-cover" />
                     </div>
                   )}
 
@@ -480,8 +480,8 @@ export default function FeedTab() {
                                   </div>
                                   <p className="text-[15px] text-foreground whitespace-pre-wrap leading-snug">{comment.content}</p>
                                   {comment.mediaUrl && (
-                                    <div className="mt-3 rounded-xl overflow-hidden border border-border bg-card">
-                                      <img src={comment.mediaUrl} alt="Comment media" className="w-full h-auto object-cover max-h-[300px]" />
+                                    <div className="mt-3 rounded-xl overflow-hidden border border-border bg-muted relative aspect-[4/5] w-full max-w-[300px]">
+                                      <img src={comment.mediaUrl} alt="Comment media" className="absolute inset-0 w-full h-full object-cover" />
                                     </div>
                                   )}
                                 </div>
