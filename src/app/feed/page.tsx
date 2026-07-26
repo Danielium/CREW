@@ -31,7 +31,7 @@ import { uploadImage } from "@/lib/uploadImage";
 import { globalCache } from "@/lib/cache";
 
 export default function FeedTab() {
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
   const [posts, setPosts] = useState<Post[]>(globalCache.feedPosts || []);
   const [isLoading, setIsLoading] = useState(!globalCache.feedPosts);
   
@@ -61,6 +61,11 @@ export default function FeedTab() {
           if (data.user) {
             setCurrentUser(data.user);
             globalCache.userData = data.user;
+            
+            // Sync session if image is missing/outdated (fixes 2s avatar loading for existing sessions)
+            if ((session.user as any).image !== data.user.image) {
+              updateSession({ image: data.user.image, name: data.user.name });
+            }
           }
         })
         .catch(console.error);
