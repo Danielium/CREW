@@ -81,6 +81,11 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
       }
     }
 
+    if (event.image) {
+      const { deleteImageFromS3 } = await import("@/lib/uploadImage");
+      await deleteImageFromS3(event.image);
+    }
+
     await prisma.event.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {

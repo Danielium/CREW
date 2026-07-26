@@ -119,6 +119,12 @@ export async function DELETE(req: Request, context: any) {
       return NextResponse.json({ error: "Only active founders can disband the club" }, { status: 403 });
     }
 
+    const club = await prisma.club.findUnique({ where: { id: clubId }});
+    if (club?.logoUrl) {
+      const { deleteImageFromS3 } = await import("@/lib/uploadImage");
+      await deleteImageFromS3(club.logoUrl);
+    }
+
     await prisma.club.delete({
       where: { id: clubId }
     });
