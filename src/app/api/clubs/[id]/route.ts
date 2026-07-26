@@ -120,9 +120,16 @@ export async function DELETE(req: Request, context: any) {
     }
 
     const club = await prisma.club.findUnique({ where: { id: clubId }});
-    if (club?.logoUrl) {
-      const { deleteImageFromS3 } = await import("@/lib/uploadImage");
-      await deleteImageFromS3(club.logoUrl);
+    if (club?.logoConfig) {
+      try {
+        const parsed = JSON.parse(club.logoConfig);
+        if (parsed.imageUrl) {
+          const { deleteImageFromS3 } = await import("@/lib/uploadImage");
+          await deleteImageFromS3(parsed.imageUrl);
+        }
+      } catch (e) {
+        // ignore JSON parse error
+      }
     }
 
     await prisma.club.delete({
