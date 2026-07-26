@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 const s3Client = new S3Client({
   region: process.env.YANDEX_S3_REGION || "ru-central1",
   endpoint: "https://storage.yandexcloud.net",
+  forcePathStyle: true,
   credentials: {
     accessKeyId: process.env.YANDEX_S3_ACCESS_KEY_ID!,
     secretAccessKey: process.env.YANDEX_S3_SECRET_ACCESS_KEY!,
