@@ -63,7 +63,8 @@ export default function FeedTab() {
             globalCache.userData = data.user;
             
             // Sync session if image is missing/outdated (fixes 2s avatar loading for existing sessions)
-            if ((session.user as any).image !== data.user.image) {
+            // CRITICAL: NEVER pass base64 to NextAuth session or it will exceed Vercel header limits!
+            if ((session.user as any).image !== data.user.image && data.user.image && !data.user.image.startsWith('data:image')) {
               updateSession({ image: data.user.image, name: data.user.name });
             }
           }

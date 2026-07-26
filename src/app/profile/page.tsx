@@ -247,7 +247,11 @@ export default function ProfileTab() {
         setUserData(data.user);
         globalCache.userData = data.user;
         // Force session update so the name and avatar update across the app
-        await updateSession({ name: data.user.name, image: data.user.image });
+        const sessionUpdate: any = { name: data.user.name };
+        if (data.user.image && !data.user.image.startsWith('data:image')) {
+          sessionUpdate.image = data.user.image;
+        }
+        await updateSession(sessionUpdate);
         setShowEditModal(false);
       } else {
         alert("Ошибка при сохранении профиля: " + (data.error || JSON.stringify(data)));
