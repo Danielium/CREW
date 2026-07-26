@@ -206,6 +206,7 @@ export const authOptions: NextAuthOptions = {
               id: user.id,
               email: user.telegramUsername,
               name: user.name,
+              image: user.image,
             };
           }
 
@@ -227,6 +228,7 @@ export const authOptions: NextAuthOptions = {
             id: user.id,
             telegramUsername: user.telegramUsername,
             name: user.name,
+            image: user.image,
           } as any;
         } catch (error) {
           console.error("Auth error:", error);
@@ -236,10 +238,15 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.telegramUsername = (user as any).telegramUsername;
+        token.image = user.image;
+      }
+      if (trigger === "update" && session) {
+        if (session.name) token.name = session.name;
+        if (session.image !== undefined) token.image = session.image;
       }
       return token;
     },
@@ -247,6 +254,7 @@ export const authOptions: NextAuthOptions = {
       if (token && session.user) {
         (session.user as any).id = token.id;
         (session.user as any).telegramUsername = token.telegramUsername;
+        session.user.image = token.image as string | null | undefined;
       }
       return session;
     }

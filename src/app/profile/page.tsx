@@ -246,9 +246,8 @@ export default function ProfileTab() {
       if (data.user) {
         setUserData(data.user);
         globalCache.userData = data.user;
-        // Force session update so the name updates across the app (navbar etc)
-        // We DO NOT pass image to updateSession because large base64 strings cause 413 Payload Too Large in NextAuth session cookies
-        await updateSession({ name: data.user.name });
+        // Force session update so the name and avatar update across the app
+        await updateSession({ name: data.user.name, image: data.user.image });
         setShowEditModal(false);
       } else {
         alert("Ошибка при сохранении профиля: " + (data.error || JSON.stringify(data)));
