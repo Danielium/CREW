@@ -73,21 +73,96 @@ export const authOptions: NextAuthOptions = {
 
             if (!user) {
               const dummyPassword = await bcrypt.hash(crypto.randomBytes(5).toString('hex'), 10);
+              const incomingImage = credentials.image ? credentials.image.replace('t.me', 'telegram.me') : null;
+              
               user = await prisma.user.create({
                 data: {
                   telegramUsername: tUsername,
                   name: credentials.name || tUsername,
-                  image: credentials.image ? credentials.image.replace('t.me', 'telegram.me') : null,
+                  image: null, 
+                  telegramPhotoUrl: incomingImage,
                   password: dummyPassword,
                 }
               });
+
+              if (incomingImage) {
+                try {
+                  const res = await fetch(incomingImage);
+                  if (res.ok) {
+                    const arrayBuffer = await res.arrayBuffer();
+                    const buffer = Buffer.from(arrayBuffer);
+                    
+                    const { S3Client, PutObjectCommand } = await import("@aws-sdk/client-s3");
+                    const s3Client = new S3Client({
+                      region: process.env.YANDEX_S3_REGION || "ru-central1",
+                      endpoint: "https://storage.yandexcloud.net",
+                      credentials: {
+                        accessKeyId: process.env.YANDEX_S3_ACCESS_KEY_ID!,
+                        secretAccessKey: process.env.YANDEX_S3_SECRET_ACCESS_KEY!,
+                      },
+                    });
+                    
+                    const filename = `avatars/${user.id}.jpg`;
+                    
+                    await s3Client.send(new PutObjectCommand({
+                      Bucket: process.env.YANDEX_S3_BUCKET_NAME,
+                      Key: filename,
+                      Body: buffer,
+                      ContentType: "image/jpeg",
+                    }));
+                    
+                    const finalImageUrl = `https://storage.yandexcloud.net/${process.env.YANDEX_S3_BUCKET_NAME}/${filename}?v=${Date.now()}`;
+                    
+                    user = await prisma.user.update({
+                      where: { id: user.id },
+                      data: { image: finalImageUrl }
+                    });
+                  }
+                } catch (e) {
+                  console.error("Failed to sync avatar to S3:", e);
+                }
+              }
             } else {
               // Update name and image if provided by TG this time
               const updateData: any = {};
               if (credentials.name && credentials.name !== user.name) updateData.name = credentials.name;
               
               const incomingImage = credentials.image ? credentials.image.replace('t.me', 'telegram.me') : null;
-              if (incomingImage && incomingImage !== user.image) updateData.image = incomingImage;
+              
+              // Only download and re-upload if the Telegram temporary URL has changed
+              if (incomingImage && incomingImage !== user.telegramPhotoUrl) {
+                try {
+                  const res = await fetch(incomingImage);
+                  if (res.ok) {
+                    const arrayBuffer = await res.arrayBuffer();
+                    const buffer = Buffer.from(arrayBuffer);
+                    
+                    const { S3Client, PutObjectCommand } = await import("@aws-sdk/client-s3");
+                    const s3Client = new S3Client({
+                      region: process.env.YANDEX_S3_REGION || "ru-central1",
+                      endpoint: "https://storage.yandexcloud.net",
+                      credentials: {
+                        accessKeyId: process.env.YANDEX_S3_ACCESS_KEY_ID!,
+                        secretAccessKey: process.env.YANDEX_S3_SECRET_ACCESS_KEY!,
+                      },
+                    });
+                    
+                    const filename = `avatars/${user.id}.jpg`;
+                    
+                    await s3Client.send(new PutObjectCommand({
+                      Bucket: process.env.YANDEX_S3_BUCKET_NAME,
+                      Key: filename,
+                      Body: buffer,
+                      ContentType: "image/jpeg",
+                    }));
+                    
+                    updateData.telegramPhotoUrl = incomingImage;
+                    updateData.image = `https://storage.yandexcloud.net/${process.env.YANDEX_S3_BUCKET_NAME}/${filename}?v=${Date.now()}`;
+                  }
+                } catch (e) {
+                  console.error("Failed to sync avatar to S3:", e);
+                }
+              }
               
               if (Object.keys(updateData).length > 0) {
                 user = await prisma.user.update({

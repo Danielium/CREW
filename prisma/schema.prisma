@@ -16,6 +16,7 @@ model User {
   name          String?
   telegramUsername String?      @unique
   image         String?
+  telegramPhotoUrl String?
   password      String?
   goal          String?
   isPrivate     Boolean      @default(false)
