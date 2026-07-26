@@ -36,9 +36,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "File size exceeds 5MB limit" }, { status: 400 });
     }
 
+    const urlParams = new URL(req.url).searchParams;
+    const prefix = urlParams.get("prefix") || "";
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const ext = file.type.split('/')[1] || 'jpeg';
-    const filename = `${uuidv4()}.${ext}`;
+    const filename = `${prefix}${uuidv4()}.${ext}`;
 
     const command = new PutObjectCommand({
       Bucket: process.env.YANDEX_S3_BUCKET_NAME,

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronLeft, Loader2, Calendar, MapPin, Activity, Clock, Image as ImageIcon, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
+import { uploadImage } from "@/lib/uploadImage";
 import dynamic from 'next/dynamic';
 
 const MapRouteBuilder = dynamic(() => import('@/components/MapRouteBuilder'), {
@@ -88,14 +89,13 @@ export default function EditEventPage() {
     let uploadedImageUrl = form.image;
     
     if (imageFile) {
-      try {
-        uploadedImageUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(imageFile);
-        });
-      } catch (err) {
-        console.error("Failed to upload image", err);
+      const uploadedUrl = await uploadImage(imageFile);
+      if (uploadedUrl) {
+        uploadedImageUrl = uploadedUrl;
+      } else {
+        alert("Ошибка при загрузке изображения");
+        setIsLoading(false);
+        return;
       }
     }
 

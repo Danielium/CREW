@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Settings, Star, Trophy, Users, Edit3, Lock, Sunrise, Sun, Moon, CloudSun, LogOut, LogIn, X, Loader2, Camera, Check, Info } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { uploadImage } from "@/lib/uploadImage";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
 import AvatarProgress from "@/components/AvatarProgress";
@@ -225,11 +227,14 @@ export default function ProfileTab() {
       let finalAvatarUrl = editAvatar;
 
       if (croppedFile) {
-        finalAvatarUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(croppedFile);
-        });
+        const uploadedUrl = await uploadImage(croppedFile, "avatars/custom_");
+        if (uploadedUrl) {
+          finalAvatarUrl = uploadedUrl;
+        } else {
+          alert("Ошибка при загрузке аватара");
+          setIsSaving(false);
+          return;
+        }
       }
 
       const res = await fetch("/api/users/profile", {

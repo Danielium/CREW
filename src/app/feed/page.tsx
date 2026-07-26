@@ -27,34 +27,7 @@ type CommentType = {
   mediaUrl?: string | null;
 };
 
-const compressImage = async (file: File): Promise<string> => {
-  return new Promise<string>((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        let width = img.width;
-        let height = img.height;
-        const maxDim = 1080;
-        if (width > height && width > maxDim) {
-          height *= maxDim / width;
-          width = maxDim;
-        } else if (height > maxDim) {
-          width *= maxDim / height;
-          height = maxDim;
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx?.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL("image/jpeg", 0.7));
-      };
-      img.src = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  });
-};
+import { uploadImage } from "@/lib/uploadImage";
 import { globalCache } from "@/lib/cache";
 
 export default function FeedTab() {
@@ -140,8 +113,14 @@ export default function FeedTab() {
       let uploadedMediaUrl = null;
       if (attachedImageFile) {
         setIsUploadingImage(true);
-        uploadedMediaUrl = await compressImage(attachedImageFile);
+        uploadedMediaUrl = await uploadImage(attachedImageFile);
         setIsUploadingImage(false);
+        
+        if (!uploadedMediaUrl) {
+          alert("Ошибка при загрузке изображения");
+          setIsPosting(false);
+          return;
+        }
       }
 
       const res = await fetch('/api/posts', {
@@ -224,7 +203,13 @@ export default function FeedTab() {
     try {
       let uploadedMediaUrl = null;
       if (attachedFile) {
-        uploadedMediaUrl = await compressImage(attachedFile);
+        uploadedMediaUrl = await uploadImage(attachedFile);
+        
+        if (!uploadedMediaUrl) {
+          alert("Ошибка при загрузке изображения комментария");
+          setIsPostingComment(false);
+          return;
+        }
       }
 
       const res = await fetch(`/api/posts/${postId}/comments`, {

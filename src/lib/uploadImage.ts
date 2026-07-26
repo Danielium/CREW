@@ -1,6 +1,6 @@
 import imageCompression from 'browser-image-compression';
 
-export async function uploadImage(file: File): Promise<string | null> {
+export async function uploadImage(file: File, prefix?: string): Promise<string | null> {
   try {
     const options = {
       maxSizeMB: 1,
@@ -13,7 +13,8 @@ export async function uploadImage(file: File): Promise<string | null> {
     const formData = new FormData();
     formData.append("file", compressedFile);
 
-    const response = await fetch("/api/upload", {
+    const uploadUrl = prefix ? `/api/upload?prefix=${encodeURIComponent(prefix)}` : "/api/upload";
+    const response = await fetch(uploadUrl, {
       method: "POST",
       body: formData,
     });

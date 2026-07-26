@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { ArrowLeft, Check, Zap, Flame, Skull, Sword, Shield, Mountain, Anchor, Crown, Star, Heart, Activity, Target, Trophy, Ghost, Crosshair, HelpCircle } from "lucide-react";
 import ClubBadge, { ShapeType, PatternType } from "@/components/ClubBadge";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
+import { uploadImage } from "@/lib/uploadImage";
 
 const SHAPES: { id: ShapeType; name: string }[] = [
   { id: "square", name: "Квадрат" },
@@ -88,13 +89,18 @@ export default function LogoBuilder() {
     reader.readAsDataURL(file);
   };
 
-  const handleCropComplete = (file: File, url: string) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImageUrl(reader.result as string);
-      setCropImageSrc(null);
-    };
-    reader.readAsDataURL(file);
+  const handleCropComplete = async (file: File, url: string) => {
+    // Show a temporary preview while uploading
+    setImageUrl(url);
+    setCropImageSrc(null);
+    
+    // Upload to S3 in background and update URL
+    const uploadedUrl = await uploadImage(file);
+    if (uploadedUrl) {
+      setImageUrl(uploadedUrl);
+    } else {
+      alert("Ошибка при загрузке логотипа");
+    }
   };
 
   const handleSave = () => {
