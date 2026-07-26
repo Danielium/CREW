@@ -130,7 +130,10 @@ export const authOptions: NextAuthOptions = {
               const incomingImage = credentials.image ? credentials.image.replace('t.me', 'telegram.me') : null;
               
               // Only download and re-upload if the Telegram temporary URL has changed
-              if (incomingImage && incomingImage !== user.telegramPhotoUrl) {
+              // OR if the user's current image is not yet on our S3 (legacy user migration)
+              const isAlreadyOnS3 = user.image && user.image.includes("storage.yandexcloud.net");
+              
+              if (incomingImage && (incomingImage !== user.telegramPhotoUrl || !isAlreadyOnS3)) {
                 try {
                   const res = await fetch(incomingImage);
                   if (res.ok) {
