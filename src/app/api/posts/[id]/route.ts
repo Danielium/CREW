@@ -41,10 +41,12 @@ export async function DELETE(
       await deleteImageFromS3(post.mediaUrl);
     }
 
-    for (const comment of comments) {
-      if (comment.mediaUrl) {
-        await deleteImageFromS3(comment.mediaUrl);
-      }
+    const deletePromises = comments
+      .filter(c => c.mediaUrl)
+      .map(c => deleteImageFromS3(c.mediaUrl));
+      
+    if (deletePromises.length > 0) {
+      await Promise.allSettled(deletePromises);
     }
 
     await prisma.post.delete({
