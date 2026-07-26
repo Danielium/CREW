@@ -29,10 +29,22 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Fetch comments to delete their images
+    const comments = await prisma.comment.findMany({
+      where: { postId: id },
+      select: { mediaUrl: true }
+    });
+
     const { deleteImageFromS3 } = await import("@/lib/uploadImage");
     
     if (post.mediaUrl) {
       await deleteImageFromS3(post.mediaUrl);
+    }
+
+    for (const comment of comments) {
+      if (comment.mediaUrl) {
+        await deleteImageFromS3(comment.mediaUrl);
+      }
     }
 
     await prisma.post.delete({

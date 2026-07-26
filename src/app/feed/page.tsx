@@ -287,8 +287,9 @@ export default function FeedTab() {
 
   const formatTimeAgo = (dateString: string) => {
     const diff = new Date().getTime() - new Date(dateString).getTime();
+    if (diff < 60000) return `только что`;
     const minutes = Math.floor(diff / 60000);
-    if (minutes < 60) return `${minutes || 1}м`;
+    if (minutes < 60) return `${minutes}м`;
     const hours = Math.floor(minutes / 60);
     if (hours < 24) return `${hours}ч`;
     return `${Math.floor(hours / 24)}д`;
@@ -536,7 +537,7 @@ export default function FeedTab() {
                           />
                           <button
                           onClick={() => handlePostComment(post.id)}
-                          disabled={!newCommentContent[post.id]?.trim() || isPostingComment}
+                          disabled={(!newCommentContent[post.id]?.trim() && !commentImageFiles[post.id]) || isPostingComment}
                           className="w-9 h-9 rounded-full bg-primary text-black flex items-center justify-center disabled:opacity-50 shrink-0"
                         >
                           {isPostingComment ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
