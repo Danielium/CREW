@@ -242,13 +242,13 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.telegramUsername = (user as any).telegramUsername;
-        if (user.image && !user.image.startsWith('data:image')) {
+        if (user.image && typeof user.image === 'string' && user.image.length < 500 && !user.image.startsWith('data:image')) {
           token.image = user.image;
         }
       }
       if (trigger === "update" && session) {
         if (session.name) token.name = session.name;
-        if (session.image !== undefined && typeof session.image === 'string' && !session.image.startsWith('data:image')) {
+        if (session.image !== undefined && typeof session.image === 'string' && session.image.length < 500 && !session.image.startsWith('data:image')) {
           token.image = session.image;
         }
       }
