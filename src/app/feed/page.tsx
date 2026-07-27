@@ -324,11 +324,11 @@ export default function FeedTab() {
       </div>
 
       {/* Composer */}
-      <div className="bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] p-4 mx-4 mt-4 flex gap-3">
+      <div className="px-4 py-4 border-b border-white/5 flex gap-3">
         {(currentUser?.image || (session?.user as any)?.image) ? (
-          <img src={currentUser?.image || (session?.user as any)?.image} className="w-10 h-10 rounded-full object-cover border border-border shrink-0" />
+          <img src={currentUser?.image || (session?.user as any)?.image} className="w-10 h-10 rounded-full object-cover shrink-0" />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 border border-border">
+          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
             <User size={20} className="text-foreground" />
           </div>
         )}
@@ -338,31 +338,30 @@ export default function FeedTab() {
             placeholder="Как прошла тренировка?"
             value={newPostContent}
             onChange={(e) => setNewPostContent(e.target.value)}
-            className="w-full bg-transparent resize-none outline-none text-lg placeholder:text-muted/70 min-h-[36px]"
+            className="w-full bg-transparent resize-none outline-none text-[17px] placeholder:text-muted/60 min-h-[40px] pt-1.5"
             rows={1}
           />
 
           {attachedImagePreview && (
             <div className="relative mt-2 w-max">
-              <img src={attachedImagePreview} className="h-32 rounded-xl object-cover border border-border" alt="preview" />
-              <button onClick={removeAttachment} className="absolute -top-2 -right-2 bg-background border border-border text-foreground rounded-full p-1 hover:text-red-500 transition-colors">
+              <img src={attachedImagePreview} className="h-40 rounded-xl object-cover border border-white/10" alt="preview" />
+              <button onClick={removeAttachment} className="absolute -top-2 -right-2 bg-[#1a1a1a] border border-white/10 text-white rounded-full p-1.5 hover:text-red-500 transition-colors shadow-lg">
                 <X size={14} />
               </button>
             </div>
           )}
 
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
-            <label className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-muted hover:bg-white/5 hover:text-foreground transition-colors cursor-pointer -ml-1.5">
+          <div className="flex items-center justify-between mt-1">
+            <label className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-primary hover:bg-primary/10 transition-colors cursor-pointer -ml-2">
               <input type="file" accept="image/*" className="hidden" onChange={handleImageAttach} />
-              <ImageIcon size={19} />
+              <ImageIcon size={20} />
             </label>
             <button
               onClick={handlePost}
               disabled={(!newPostContent.trim() && !attachedImageFile) || isPosting || isUploadingImage || !session}
-              className="bg-primary text-black font-bold px-5 py-2 rounded-full text-sm hover:bg-[#b3e600] transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="bg-foreground text-background font-bold px-4 py-1.5 rounded-full text-[14px] hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center min-w-[90px]"
             >
-              {isPosting || isUploadingImage ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-              Запостить
+              {isPosting || isUploadingImage ? <Loader2 size={16} className="animate-spin" /> : "Опубликовать"}
             </button>
           </div>
         </div>

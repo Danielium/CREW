@@ -114,7 +114,7 @@ function MapContent() {
   const [createTime, setCreateTime] = useState("");
   const [createPaceFrom, setCreatePaceFrom] = useState(5);
   const [createPaceTo, setCreatePaceTo] = useState(6);
-  const [createPaceAny, setCreatePaceAny] = useState(true);
+  const [createPaceAny, setCreatePaceAny] = useState(false);
   const [createLimit, setCreateLimit] = useState(0);
   const [isSubmittingCreate, setIsSubmittingCreate] = useState(false);
 
@@ -163,7 +163,7 @@ function MapContent() {
     setCreateTime("");
     setCreatePaceFrom(5);
     setCreatePaceTo(6);
-    setCreatePaceAny(true);
+    setCreatePaceAny(false);
     setCreateLimit(0);
     setIsCreatingProposal(true);
     setIsSheetOpen(true);
