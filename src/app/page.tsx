@@ -654,7 +654,7 @@ function MapContent() {
             <h2 className="text-2xl font-black uppercase tracking-tight">Новый маячок</h2>
 
             <div className="flex flex-col gap-2">
-              <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted flex items-center gap-2">
+              <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4 flex items-center gap-2">
                 <Clock size={16} /> Дата и время старта
               </label>
               <DateTimeCard date={createDate} time={createTime} onDate={setCreateDate} onTime={setCreateTime} />
@@ -687,7 +687,7 @@ function MapContent() {
             />
 
             <div className="flex flex-col gap-2">
-              <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted flex items-center gap-2">
+              <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4 flex items-center gap-2">
                 <Users size={16} /> Лимит участников
               </label>
               <ParticipantStepper value={createLimit} onChange={setCreateLimit} />
@@ -788,7 +788,7 @@ function MapContent() {
             {isEditingProposal ? (
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted flex items-center gap-2">
+                  <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4 flex items-center gap-2">
                     <Clock size={16} /> Дата и время старта
                   </label>
                   <DateTimeCard date={editDate} time={editTime} onDate={setEditDate} onTime={setEditTime} />
@@ -803,7 +803,7 @@ function MapContent() {
                 />
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted flex items-center gap-2">
+                  <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4 flex items-center gap-2">
                     <Users size={16} /> Лимит участников
                   </label>
                   <ParticipantStepper value={editLimit} onChange={setEditLimit} />

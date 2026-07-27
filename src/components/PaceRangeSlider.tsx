@@ -112,7 +112,7 @@ export function PaceRangeSlider({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <label className="text-xs uppercase font-bold tracking-wider text-muted">Ожидаемый темп</label>
+        <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Ожидаемый темп</label>
         <button
           type="button"
           onClick={() => {

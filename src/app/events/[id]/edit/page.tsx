@@ -223,7 +223,7 @@ export default function EditEventPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted flex items-center gap-2">
+          <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4 flex items-center gap-2">
             <Clock size={16} /> Дата и время старта
           </label>
           <DateTimeCard
