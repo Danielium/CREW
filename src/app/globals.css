@@ -46,42 +46,6 @@
   scrollbar-width: none;  /* Firefox */
 }
 
-/* Dual-thumb range slider (pace picker): overlapping inputs, only the thumb is interactive */
-.range-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 24px;
-}
-.range-thumb::-webkit-slider-runnable-track {
-  -webkit-appearance: none;
-  background: transparent;
-}
-.range-thumb::-moz-range-track {
-  background: transparent;
-}
-.range-thumb::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  pointer-events: auto;
-  width: 20px;
-  height: 20px;
-  border-radius: 9999px;
-  background: var(--primary);
-  border: 3px solid #000;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-}
-.range-thumb::-moz-range-thumb {
-  pointer-events: auto;
-  width: 20px;
-  height: 20px;
-  border-radius: 9999px;
-  background: var(--primary);
-  border: 3px solid #000;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-}
-
 /* Safe area padding utilities for Telegram Web Apps */
 .pt-safe {
   padding-top: max(var(--tg-content-safe-area-inset-top, 0px), calc(env(safe-area-inset-top, 0px) + 80px)) !important;
