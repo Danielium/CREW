@@ -441,111 +441,121 @@ export default function FeedTab() {
                     </button>
                   </div>
 
-                  {/* Comments Section */}
-                  {expandedCommentsPostId === post.id && (
-                    <div className="mt-4 pt-4 border-t border-border animate-in fade-in slide-in-from-top-2 duration-300">
-                      <div className="flex flex-col gap-4 mb-4">
-                        {!commentsData[post.id] ? (
-                          <div className="flex justify-center p-4"><Loader2 className="animate-spin text-muted" size={20} /></div>
-                        ) : commentsData[post.id].length === 0 ? (
-                          <div className="text-sm text-muted text-center py-2">Пока нет комментариев</div>
-                        ) : (
-                          commentsData[post.id].map(comment => (
-                              <div key={comment.id} className="flex gap-3 pt-2 pb-1">
-                                <Link href={`/users/${comment.user.id}`} onClick={(e) => e.stopPropagation()} className="shrink-0">
-                                  {comment.user.image ? (
-                                    <img src={comment.user.image} className="w-10 h-10 rounded-full border border-border object-cover" />
-                                  ) : (
-                                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center border border-border"><User size={18} /></div>
-                                  )}
-                                </Link>
-                                <div className="flex-1 flex flex-col min-w-0">
-                                  <div className="flex justify-between items-start mb-0.5">
-                                    <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5">
-                                      <Link href={`/users/${comment.user.id}`} onClick={(e) => e.stopPropagation()} className="font-bold text-[15px] hover:underline text-foreground">
-                                        {comment.user.name || "Аноним"}
-                                      </Link>
-                                      {comment.user.telegramUsername && (
-                                        <span className="text-sm text-muted">@{comment.user.telegramUsername}</span>
-                                      )}
-                                      <span className="text-sm text-muted">· {formatTimeAgo(comment.createdAt)}</span>
-                                    </div>
-                                    {session?.user && (session.user as any).id === comment.user?.id && (
-                                      <button onClick={(e) => { e.stopPropagation(); handleDeleteComment(post.id, comment.id); }} className="text-muted hover:text-red-500 transition-colors p-1 -mr-1">
-                                        <Trash2 size={14} />
-                                      </button>
-                                    )}
-                                  </div>
-                                  <p className="text-[15px] text-foreground whitespace-pre-wrap leading-snug">{comment.content}</p>
-                                  {comment.mediaUrl && (
-                                    <div className="mt-3 rounded-xl overflow-hidden border border-border bg-muted relative aspect-[4/5] w-full max-w-[300px]">
-                                      <img src={comment.mediaUrl} alt="Comment media" className="absolute inset-0 w-full h-full object-cover" />
-                                    </div>
-                                  )}
-                                </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-
-                      {/* Comment Input */}
-                      <div className="flex flex-col gap-2">
-                        {commentImagePreviews[post.id] && (
-                          <div className="relative w-fit">
-                            <img src={commentImagePreviews[post.id]!} alt="Preview" className="h-20 rounded-xl object-cover border border-border" />
-                            <button 
-                              onClick={() => {
-                                setCommentImageFiles(prev => ({ ...prev, [post.id]: null }));
-                                setCommentImagePreviews(prev => ({ ...prev, [post.id]: null }));
-                              }}
-                              className="absolute -top-2 -right-2 bg-background border border-border rounded-full p-1 hover:text-red-500"
-                            >
-                              <X size={12} />
-                            </button>
-                          </div>
-                        )}
-                        <div className="flex gap-2 items-center">
-                          <label className="cursor-pointer p-2 text-muted hover:text-primary transition-colors">
-                            <input 
-                              type="file" 
-                              className="hidden" 
-                              accept="image/*"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  setCommentImageFiles(prev => ({ ...prev, [post.id]: file }));
-                                  setCommentImagePreviews(prev => ({ ...prev, [post.id]: URL.createObjectURL(file) }));
-                                }
-                              }}
-                            />
-                            <ImageIcon size={20} />
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Написать комментарий..."
-                            value={newCommentContent[post.id] || ""}
-                            onChange={(e) => setNewCommentContent(prev => ({ ...prev, [post.id]: e.target.value }))}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handlePostComment(post.id);
-                              }
-                            }}
-                            className="flex-1 bg-card border border-border rounded-full px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                          />
-                          <button
-                          onClick={() => handlePostComment(post.id)}
-                          disabled={(!newCommentContent[post.id]?.trim() && !commentImageFiles[post.id]) || isPostingComment}
-                          className="w-9 h-9 rounded-full bg-primary text-black flex items-center justify-center disabled:opacity-50 shrink-0"
-                        >
-                          {isPostingComment ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  )}
                 </div>
               </div>
+
+              {/* Comments — full card width, deliberately outside the post's
+                  avatar-indented column so replies aren't squeezed into ~200px */}
+              {expandedCommentsPostId === post.id && (
+                <div className="mt-4 pt-4 border-t border-white/5 animate-in fade-in slide-in-from-top-2 duration-300">
+                  {!commentsData[post.id] ? (
+                    <div className="flex justify-center py-4"><Loader2 className="animate-spin text-muted" size={20} /></div>
+                  ) : commentsData[post.id].length === 0 ? (
+                    <p className="text-[15px] text-muted text-center py-2">Пока нет комментариев</p>
+                  ) : (
+                    <div className="flex flex-col gap-5">
+                      {commentsData[post.id].map(comment => (
+                        <div key={comment.id} className="flex gap-3">
+                          <Link href={`/users/${comment.user.id}`} onClick={(e) => e.stopPropagation()} className="shrink-0">
+                            {comment.user.image ? (
+                              <img src={comment.user.image} className="w-9 h-9 rounded-full object-cover" />
+                            ) : (
+                              <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center"><User size={17} /></div>
+                            )}
+                          </Link>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline justify-between gap-2">
+                              <div className="flex items-baseline gap-1.5 min-w-0">
+                                <Link href={`/users/${comment.user.id}`} onClick={(e) => e.stopPropagation()} className="font-bold text-[15px] text-foreground truncate hover:underline">
+                                  {comment.user.name || "Аноним"}
+                                </Link>
+                                <span className="text-[13px] text-muted shrink-0">{formatTimeAgo(comment.createdAt)}</span>
+                              </div>
+                              {session?.user && (session.user as any).id === comment.user?.id && (
+                                <button onClick={(e) => { e.stopPropagation(); handleDeleteComment(post.id, comment.id); }} className="text-muted hover:text-red-500 transition-colors shrink-0 -mr-1 p-1">
+                                  <Trash2 size={14} />
+                                </button>
+                              )}
+                            </div>
+                            <p className="text-[15px] text-foreground whitespace-pre-wrap break-words leading-[1.45] mt-0.5">{comment.content}</p>
+                            {comment.mediaUrl && (
+                              <div className="mt-2.5 rounded-xl overflow-hidden bg-muted relative aspect-[4/5] w-full max-w-[240px]">
+                                <img src={comment.mediaUrl} alt="Comment media" className="absolute inset-0 w-full h-full object-cover" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Reply composer */}
+                  <div className="flex flex-col gap-2 mt-5">
+                    {commentImagePreviews[post.id] && (
+                      <div className="relative w-fit ml-12">
+                        <img src={commentImagePreviews[post.id]!} alt="Preview" className="h-20 rounded-xl object-cover border border-white/10" />
+                        <button
+                          onClick={() => {
+                            setCommentImageFiles(prev => ({ ...prev, [post.id]: null }));
+                            setCommentImagePreviews(prev => ({ ...prev, [post.id]: null }));
+                          }}
+                          className="absolute -top-2 -right-2 bg-background border border-white/10 rounded-full p-1 hover:text-red-500 transition-colors"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex gap-2.5 items-center">
+                      {(currentUser?.image || (session?.user as any)?.image) ? (
+                        <img src={currentUser?.image || (session?.user as any)?.image} className="w-9 h-9 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+                          <User size={17} className="text-foreground" />
+                        </div>
+                      )}
+
+                      <div className="flex-1 min-w-0 flex items-center gap-1 bg-white/[0.06] rounded-full pl-4 pr-1.5 py-2 border border-white/[0.06] focus-within:border-white/15 transition-colors">
+                        <input
+                          type="text"
+                          placeholder="Комментарий..."
+                          value={newCommentContent[post.id] || ""}
+                          onChange={(e) => setNewCommentContent(prev => ({ ...prev, [post.id]: e.target.value }))}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handlePostComment(post.id);
+                            }
+                          }}
+                          className="flex-1 min-w-0 bg-transparent text-[15px] outline-none placeholder:text-muted/60"
+                        />
+                        <label className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-muted hover:text-foreground hover:bg-white/5 transition-colors cursor-pointer">
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setCommentImageFiles(prev => ({ ...prev, [post.id]: file }));
+                                setCommentImagePreviews(prev => ({ ...prev, [post.id]: URL.createObjectURL(file) }));
+                              }
+                            }}
+                          />
+                          <ImageIcon size={17} />
+                        </label>
+                      </div>
+
+                      <button
+                        onClick={() => handlePostComment(post.id)}
+                        disabled={(!newCommentContent[post.id]?.trim() && !commentImageFiles[post.id]) || isPostingComment}
+                        className="w-9 h-9 rounded-full bg-primary text-black flex items-center justify-center disabled:opacity-30 shrink-0 transition-opacity"
+                      >
+                        {isPostingComment ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ))
         )}
