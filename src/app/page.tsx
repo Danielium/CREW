@@ -143,20 +143,36 @@ function MapContent() {
   const [createLimit, setCreateLimit] = useState(0);
   const [isSubmittingCreate, setIsSubmittingCreate] = useState(false);
 
+  const addressEditedRef = useRef(false);
+
   useEffect(() => {
     if (!isCreatingProposal || !createPosition) return;
+    addressEditedRef.current = false;
     setIsFetchingAddress(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${createPosition[0]}&lon=${createPosition[1]}&accept-language=ru`);
-        const data = await res.json();
-        if (data?.address) {
-          const a = data.address;
-          const parts = [a.city || a.town || a.village, a.road, a.house_number].filter(Boolean);
-          setCreateAddress(parts.length > 0 ? parts.join(", ") : (data.display_name || "Адрес не найден"));
+        // The exact tapped point often has no building/road tagged in OSM at high zoom.
+        // Walk down through zoom levels (building -> street -> area) and keep the most
+        // precise label that at least has a street name, without moving the pin itself.
+        const zooms = [18, 17, 16, 14, 10];
+        let resolved: string | null = null;
+        let fallback: string | null = null;
+        for (const zoom of zooms) {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${createPosition[0]}&lon=${createPosition[1]}&zoom=${zoom}&accept-language=ru`);
+          const data = await res.json();
+          const a = data?.address;
+          if (a) {
+            const parts = [a.city || a.town || a.village, a.road, a.house_number].filter(Boolean);
+            const label = parts.length > 0 ? parts.join(", ") : data.display_name;
+            if (!fallback && label) fallback = label;
+            if (a.road) { resolved = label; break; }
+          }
+        }
+        if (!addressEditedRef.current) {
+          setCreateAddress(resolved || fallback || "Адрес не найден");
         }
       } catch (e) {
-        setCreateAddress("Ошибка сети");
+        if (!addressEditedRef.current) setCreateAddress("Ошибка сети");
       } finally {
         setIsFetchingAddress(false);
       }
@@ -650,8 +666,8 @@ function MapContent() {
 
       {/* Bottom Sheet */}
       <div 
-        className={`absolute bottom-0 left-0 w-full bg-card border-t border-border rounded-t-[32px] p-6 pt-2 pb-32 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${touchOffset > 0 ? 'transition-none' : 'transition-transform duration-500 ease-in-out'}`}
-        style={{ transform: isSheetOpen ? `translateY(${touchOffset}px)` : 'translateY(100%)' }}
+        className={`absolute bottom-0 left-0 w-full bg-card border-t border-border rounded-t-[32px] p-6 pt-2 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${touchOffset > 0 ? 'transition-none' : 'transition-transform duration-500 ease-in-out'}`}
+        style={{ transform: isSheetOpen ? `translateY(${touchOffset}px)` : 'translateY(100%)', paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -670,15 +686,19 @@ function MapContent() {
 
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Локация</label>
-              <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3">
+              <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors">
                 {isFetchingAddress ? (
                   <Loader2 size={18} className="text-primary animate-spin shrink-0" />
                 ) : (
                   <MapPin size={18} className="text-primary shrink-0" />
                 )}
-                <span className="text-sm font-medium leading-tight">
-                  {isFetchingAddress ? "Определяем адрес..." : (createAddress || "Тапни по карте, чтобы передвинуть точку")}
-                </span>
+                <input
+                  type="text"
+                  value={createAddress}
+                  onChange={(e) => { addressEditedRef.current = true; setCreateAddress(e.target.value); }}
+                  placeholder="Тапни по карте или впиши адрес вручную"
+                  className="bg-transparent border-none outline-none w-full font-medium text-sm"
+                />
               </div>
             </div>
 

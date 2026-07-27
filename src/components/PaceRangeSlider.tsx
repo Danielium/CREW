@@ -143,6 +143,9 @@ export function PaceRangeSlider({
           onPointerMove={handlePointerMove}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => e.stopPropagation()}
         >
           <div className="absolute left-2.5 right-2.5 h-1.5 bg-border rounded-full" />
           <div
