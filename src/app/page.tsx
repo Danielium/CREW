@@ -1,13 +1,14 @@
 "use client";
 import { Suspense, useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
-import { Bell, MapPin, Clock, Users, X, Search, Activity, ArrowLeft, LocateFixed, Share, Plus, Minus, Calendar, Loader2 } from "lucide-react";
+import { Bell, MapPin, Clock, Users, X, Search, Activity, ArrowLeft, LocateFixed, Share, Plus, Minus, Loader2 } from "lucide-react";
 import { SwipeButton } from "@/components/SwipeButton";
 import { triggerHaptic } from "@/lib/haptics";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PaceRangeSlider, paceRangeToString, parsePaceRange } from "@/components/PaceRangeSlider";
+import { DateTimeCard } from "@/components/DateTimeCard";
 import { globalCache } from "@/lib/cache";
 
 function ParticipantStepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
@@ -28,33 +29,6 @@ function ParticipantStepper({ value, onChange }: { value: number; onChange: (v: 
       >
         <Plus size={18} />
       </button>
-    </div>
-  );
-}
-
-function DateTimeCard({ date, time, onDate, onTime }: { date: string; time: string; onDate: (v: string) => void; onTime: (v: string) => void }) {
-  return (
-    <div className="bg-card border border-border rounded-2xl flex items-stretch divide-x divide-border overflow-hidden">
-      <div className="flex-1 flex items-center gap-2 p-3 relative focus-within:bg-primary/5 transition-colors">
-        <Calendar size={16} className="text-primary shrink-0" />
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => onDate(e.target.value)}
-          required
-          className="bg-transparent border-none outline-none w-full font-medium text-sm cursor-pointer"
-        />
-      </div>
-      <div className="flex-1 flex items-center gap-2 p-3 relative focus-within:bg-primary/5 transition-colors">
-        <Clock size={16} className="text-primary shrink-0" />
-        <input
-          type="time"
-          value={time}
-          onChange={(e) => onTime(e.target.value)}
-          required
-          className="bg-transparent border-none outline-none w-full font-medium text-sm cursor-pointer"
-        />
-      </div>
     </div>
   );
 }

@@ -107,7 +107,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { title, description, location, date, distance, pace, image, routeData } = await req.json();
+    const { title, description, location, date, distance, pace, image, routeData, showOnMap } = await req.json();
 
     const event = await prisma.event.update({
       where: { id },
@@ -119,7 +119,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         distance: distance ? parseFloat(distance) : null,
         pace: Array.isArray(pace) ? JSON.stringify(pace) : pace,
         image,
-        routeData: typeof routeData === 'string' ? routeData : (routeData ? JSON.stringify(routeData) : null)
+        routeData: typeof routeData === 'string' ? routeData : (routeData ? JSON.stringify(routeData) : null),
+        showOnMap
       }
     });
 

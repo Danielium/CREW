@@ -2,7 +2,7 @@
 import { useRef, useState } from "react";
 import { triggerHaptic } from "@/lib/haptics";
 
-function formatPace(v: number) {
+export function formatPace(v: number) {
   const m = Math.floor(v);
   const s = Math.round((v - m) * 60);
   return `${m}:${s.toString().padStart(2, "0")}`;

@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { ChevronLeft, Loader2, Calendar, MapPin, Activity, Clock, Image as ImageIcon, Plus, Eye, EyeOff } from "lucide-react";
-import Link from "next/link";
+import { Loader2, Clock, MapPin, Activity, Image as ImageIcon, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
 import { uploadImage } from "@/lib/uploadImage";
+import { DateTimeCard } from "@/components/DateTimeCard";
+import { PaceRangeSlider, formatPace } from "@/components/PaceRangeSlider";
 
 const MapRouteBuilder = dynamic(() => import('@/components/MapRouteBuilder'), {
   ssr: false,
@@ -26,9 +27,9 @@ export default function CreateEventPage() {
     routeData: null as string | null,
     showOnMap: false
   });
-  const [paceFrom, setPaceFrom] = useState("");
-  const [paceTo, setPaceTo] = useState("");
-  const [isPaceToModified, setIsPaceToModified] = useState(false);
+  const [paceFrom, setPaceFrom] = useState(5);
+  const [paceTo, setPaceTo] = useState(6);
+  const [paceAny, setPaceAny] = useState(true);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -44,7 +45,7 @@ export default function CreateEventPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     setIsLoading(true);
 
     let finalRouteData = form.routeData;
@@ -65,14 +66,14 @@ export default function CreateEventPage() {
         console.error("Geocoding failed", err);
       }
     }
-    
+
     // Combine date and time safely in local timezone
     const [year, month, day] = form.date.split('-');
     const [hours, minutes] = form.time.split(':');
     const dateTime = new Date(Number(year), Number(month) - 1, Number(day), Number(hours), Number(minutes)).toISOString();
 
     let uploadedImageUrl = null;
-    
+
     if (imageFile) {
       uploadedImageUrl = await uploadImage(imageFile);
       if (!uploadedImageUrl) {
@@ -83,16 +84,7 @@ export default function CreateEventPage() {
     }
 
     try {
-      const paces = [];
-      const timeToSec = (t: string) => {
-        const [m, s] = t.split(':').map(Number);
-        return (m || 0) * 60 + (s || 0);
-      };
-
-      if (paceFrom) paces.push(paceFrom);
-      if (paceTo && paceTo !== paceFrom) paces.push(paceTo);
-
-      paces.sort((a, b) => timeToSec(a) - timeToSec(b));
+      const paces = paceAny ? [] : [formatPace(paceFrom), formatPace(paceTo)];
 
       const res = await fetch("/api/events", {
         method: "POST",
@@ -111,7 +103,7 @@ export default function CreateEventPage() {
       });
 
       const data = await res.json();
-      
+
       if (res.ok) {
         const { globalCache } = await import("@/lib/cache");
         fetch('/api/events').then(r => r.json()).then(d => {
@@ -135,12 +127,12 @@ export default function CreateEventPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="p-4 flex flex-col gap-6 max-w-md mx-auto w-full mt-4">
-        
+
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Название события</label>
           <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors">
             <Activity size={18} className="text-primary" />
-            <input 
+            <input
               type="text"
               required
               placeholder="Придумайте название забега"
@@ -154,7 +146,7 @@ export default function CreateEventPage() {
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Описание</label>
           <div className="bg-card border border-border rounded-2xl flex p-3 gap-3 focus-within:border-primary transition-colors">
-            <textarea 
+            <textarea
               placeholder="Расскажите подробнее о маршруте, темпе и ожиданиях..."
               className="bg-transparent border-none outline-none w-full font-medium resize-none min-h-[80px] text-sm"
               value={form.description}
@@ -164,37 +156,8 @@ export default function CreateEventPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted flex items-center gap-2">
-            <Clock size={16} /> Дата и время старта
-          </label>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors relative">
-              <Calendar size={18} className="text-primary absolute left-3 z-30 pointer-events-none" />
-              <input 
-                type="date" 
-                value={form.date} 
-                onChange={e => setForm({...form, date: e.target.value})} 
-                min={new Date().toISOString().split('T')[0]}
-                required 
-                className="bg-transparent border-none outline-none w-full font-medium text-sm pl-8 cursor-pointer relative z-20" 
-              />
-            </div>
-            <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors relative">
-              <Clock size={18} className="text-primary absolute left-3 z-30 pointer-events-none" />
-              <input 
-                type="time" 
-                value={form.time} 
-                onChange={e => setForm({...form, time: e.target.value})} 
-                required 
-                className="bg-transparent border-none outline-none w-full font-medium text-sm pl-8 cursor-pointer relative z-20" 
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Обложка</label>
-          <div 
+          <div
             onClick={() => fileInputRef.current?.click()}
             className="bg-card border border-border rounded-2xl flex flex-col items-center justify-center h-48 gap-3 cursor-pointer hover:border-primary transition-colors relative overflow-hidden"
           >
@@ -204,7 +167,7 @@ export default function CreateEventPage() {
               <ImageIcon size={32} className="text-muted" />
             )}
             <span className="text-xs font-bold uppercase tracking-wider relative z-10">{imagePreview ? "Изменить обложку" : "Загрузить фото"}</span>
-            <input 
+            <input
               type="file"
               accept="image/*"
               className="hidden"
@@ -214,9 +177,9 @@ export default function CreateEventPage() {
           </div>
         </div>
 
-        <MapRouteBuilder 
-          onDistanceChange={(dist) => setForm(prev => ({...prev, distance: dist}))} 
-          onRouteDataChange={(route) => setForm(prev => ({...prev, routeData: route}))} 
+        <MapRouteBuilder
+          onDistanceChange={(dist) => setForm(prev => ({...prev, distance: dist}))}
+          onRouteDataChange={(route) => setForm(prev => ({...prev, routeData: route}))}
           onAddressFound={(address) => setForm(prev => ({...prev, location: address}))}
         />
 
@@ -224,7 +187,7 @@ export default function CreateEventPage() {
           <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Точка сбора</label>
           <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors">
             <MapPin size={18} className="text-primary" />
-            <input 
+            <input
               type="text"
               required
               placeholder="Адрес"
@@ -234,6 +197,27 @@ export default function CreateEventPage() {
             />
           </div>
         </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted flex items-center gap-2">
+            <Clock size={16} /> Дата и время старта
+          </label>
+          <DateTimeCard
+            date={form.date}
+            time={form.time}
+            onDate={(v) => setForm({...form, date: v})}
+            onTime={(v) => setForm({...form, time: v})}
+            minDate={new Date().toISOString().split('T')[0]}
+          />
+        </div>
+
+        <PaceRangeSlider
+          from={paceFrom}
+          to={paceTo}
+          onChange={(f, t) => { setPaceFrom(f); setPaceTo(t); }}
+          paceAny={paceAny}
+          onPaceAnyChange={setPaceAny}
+        />
 
         <div className="flex items-center justify-between p-4 bg-card border border-border rounded-2xl cursor-pointer" onClick={() => setForm(prev => ({...prev, showOnMap: !prev.showOnMap}))}>
           <div className="flex items-center gap-3">
@@ -250,45 +234,7 @@ export default function CreateEventPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Ожидаемый Темп (мин/км)</label>
-          <div className="grid grid-cols-2 gap-4">
-             <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors">
-               <span className="text-muted text-xs font-bold uppercase">ОТ</span>
-               <input 
-                 type="text" 
-                 placeholder=":"
-                 pattern="^\d{1,2}:[0-5]\d$"
-                 title="Введите темп в формате ММ:СС (например, 5:30)"
-                 maxLength={5}
-                 className="bg-transparent border-none outline-none w-full font-medium"
-                 value={paceFrom}
-                 onChange={(e) => {
-                   setPaceFrom(e.target.value);
-                   if (!isPaceToModified) setPaceTo(e.target.value);
-                 }}
-               />
-             </div>
-             <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors">
-               <span className="text-muted text-xs font-bold uppercase">ДО</span>
-               <input 
-                 type="text" 
-                 placeholder=":"
-                 pattern="^\d{1,2}:[0-5]\d$"
-                 title="Введите темп в формате ММ:СС (например, 5:30)"
-                 maxLength={5}
-                 className="bg-transparent border-none outline-none w-full font-medium"
-                 value={paceTo}
-                 onChange={(e) => {
-                   setPaceTo(e.target.value);
-                   setIsPaceToModified(true);
-                 }}
-               />
-             </div>
-          </div>
-        </div>
-
-        <button 
+        <button
           type="submit"
           disabled={isLoading}
           className="mt-6 w-full py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#b3e600] transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(204,255,0,0.2)]"
