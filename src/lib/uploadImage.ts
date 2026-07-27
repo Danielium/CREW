@@ -49,7 +49,7 @@ export async function uploadImage(file: File, prefix?: string): Promise<string |
     const compressedFile = await imageCompression(file, options);
     
     const formData = new FormData();
-    formData.append("file", compressedFile);
+    formData.append("file", compressedFile, file.name);
 
     const uploadUrl = prefix ? `/api/upload?prefix=${encodeURIComponent(prefix)}` : "/api/upload";
     const response = await fetch(uploadUrl, {

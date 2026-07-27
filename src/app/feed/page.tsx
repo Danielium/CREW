@@ -113,8 +113,8 @@ export default function FeedTab() {
 
   const handleImageAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
-    const files = e.target.files;
-    setAttachedDrafts((prev) => [...prev, ...filesToDrafts(files, prev.length)]);
+    const filesArray = Array.from(e.target.files);
+    setAttachedDrafts((prev) => [...prev, ...filesToDrafts(filesArray as unknown as FileList, prev.length)]);
     e.target.value = "";
   };
 
@@ -589,10 +589,10 @@ export default function FeedTab() {
                             multiple
                             onChange={(e) => {
                               if (!e.target.files?.length) return;
-                              const files = e.target.files;
+                              const filesArray = Array.from(e.target.files);
                               setCommentDrafts(prev => {
                                 const list = prev[post.id] || [];
-                                return { ...prev, [post.id]: [...list, ...filesToDrafts(files, list.length)] };
+                                return { ...prev, [post.id]: [...list, ...filesToDrafts(filesArray as unknown as FileList, list.length)] };
                               });
                               e.target.value = "";
                             }}
