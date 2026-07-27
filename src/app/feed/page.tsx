@@ -336,10 +336,11 @@ export default function FeedTab() {
         <div className="flex-1 flex flex-col min-w-0">
           <div className="flex items-start gap-2">
             <textarea
-              placeholder="Как прошла тренировка? Что нового?"
+              placeholder="Как прошла тренировка?"
               value={newPostContent}
               onChange={(e) => setNewPostContent(e.target.value)}
-              className="w-full bg-transparent resize-none outline-none text-lg placeholder:text-muted/70 min-h-[84px]"
+              className="w-full bg-transparent resize-none outline-none text-lg placeholder:text-muted/70 min-h-[40px]"
+              rows={1}
             />
             <label className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-muted hover:bg-muted/50 transition-colors cursor-pointer mt-0.5">
               <input type="file" accept="image/*" className="hidden" onChange={handleImageAttach} />
@@ -356,16 +357,18 @@ export default function FeedTab() {
             </div>
           )}
 
-          <div className="flex justify-end mt-2">
-            <button
-              onClick={handlePost}
-              disabled={(!newPostContent.trim() && !attachedImageFile) || isPosting || isUploadingImage || !session}
-              className="bg-primary text-black font-bold px-5 py-2 rounded-full text-sm hover:bg-[#b3e600] transition-colors disabled:opacity-50 flex items-center gap-2"
-            >
-              {isPosting || isUploadingImage ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-              Запостить
-            </button>
-          </div>
+          {(newPostContent.trim() || attachedImageFile) && (
+            <div className="flex justify-end mt-2">
+              <button
+                onClick={handlePost}
+                disabled={isPosting || isUploadingImage || !session}
+                className="bg-primary text-black font-bold px-5 py-2 rounded-full text-sm hover:bg-[#b3e600] transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {isPosting || isUploadingImage ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                Запостить
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
