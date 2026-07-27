@@ -698,7 +698,7 @@ function MapContent() {
                   type="text"
                   value={createAddress}
                   onChange={(e) => { addressEditedRef.current = true; setCreateAddress(e.target.value); }}
-                  placeholder="Тапни по карте или впиши адрес вручную"
+                  placeholder="Введите адрес"
                   className="bg-transparent border-none outline-none w-full font-medium text-sm"
                 />
               </div>
