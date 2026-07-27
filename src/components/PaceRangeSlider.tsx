@@ -72,7 +72,12 @@ export function PaceRangeSlider({
         </button>
       </div>
 
-      <div className={`bg-card border border-border rounded-2xl p-4 flex flex-col gap-3 transition-opacity ${paceAny ? "opacity-40 pointer-events-none" : ""}`}>
+      <div
+        className={`bg-card border border-border rounded-2xl p-4 flex flex-col gap-3 transition-opacity ${paceAny ? "opacity-40" : ""}`}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-center gap-2 text-lg font-black">
           <span>{formatPace(from)}</span>
           <span className="text-muted font-medium text-sm">–</span>
@@ -92,9 +97,9 @@ export function PaceRangeSlider({
             max={max}
             step={step}
             value={from}
-            disabled={paceAny}
-            onPointerDown={() => setActiveThumb("from")}
+            onPointerDown={() => { setActiveThumb("from"); if (paceAny) onPaceAnyChange(false); }}
             onChange={(e) => {
+              if (paceAny) onPaceAnyChange(false);
               const v = Math.min(parseFloat(e.target.value), to - step);
               onChange(v, to);
             }}
@@ -107,9 +112,9 @@ export function PaceRangeSlider({
             max={max}
             step={step}
             value={to}
-            disabled={paceAny}
-            onPointerDown={() => setActiveThumb("to")}
+            onPointerDown={() => { setActiveThumb("to"); if (paceAny) onPaceAnyChange(false); }}
             onChange={(e) => {
+              if (paceAny) onPaceAnyChange(false);
               const v = Math.max(parseFloat(e.target.value), from + step);
               onChange(from, v);
             }}

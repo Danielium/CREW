@@ -219,6 +219,11 @@ function MapContent() {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    window.dispatchEvent(new Event(isSheetOpen ? 'hideNav' : 'showNav'));
+    return () => { window.dispatchEvent(new Event('showNav')); };
+  }, [isSheetOpen]);
+
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartY(e.touches[0].clientY);
     setTouchOffset(0);
@@ -693,10 +698,10 @@ function MapContent() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-2">
-              <button onClick={closeSheet} disabled={isSubmittingCreate} className="py-4 bg-muted text-foreground rounded-2xl font-bold uppercase tracking-wider active:scale-95 transition-transform disabled:opacity-50 text-sm">
+              <button onClick={closeSheet} disabled={isSubmittingCreate} className="py-3 bg-muted text-foreground rounded-2xl font-bold uppercase tracking-wider active:scale-95 transition-transform disabled:opacity-50 text-sm">
                 Отмена
               </button>
-              <button onClick={handleCreateSubmit} disabled={isSubmittingCreate || !createDate || !createTime} className="py-4 bg-primary text-black rounded-2xl font-black uppercase tracking-wider active:scale-95 transition-transform disabled:opacity-50 text-sm">
+              <button onClick={handleCreateSubmit} disabled={isSubmittingCreate || !createDate || !createTime} className="py-3 bg-primary text-black rounded-2xl font-black uppercase tracking-wider active:scale-95 transition-transform disabled:opacity-50 text-sm">
                 {isSubmittingCreate ? <Loader2 className="animate-spin mx-auto" size={18} /> : "Поставить маячок"}
               </button>
             </div>
@@ -809,10 +814,10 @@ function MapContent() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-2">
-                  <button onClick={() => setIsEditingProposal(false)} disabled={isSubmittingEdit} className="py-4 bg-muted text-foreground rounded-2xl font-bold uppercase tracking-wider active:scale-95 transition-transform disabled:opacity-50 text-sm">
+                  <button onClick={() => setIsEditingProposal(false)} disabled={isSubmittingEdit} className="py-3 bg-muted text-foreground rounded-2xl font-bold uppercase tracking-wider active:scale-95 transition-transform disabled:opacity-50 text-sm">
                     Отмена
                   </button>
-                  <button onClick={handleSaveEdit} disabled={isSubmittingEdit} className="py-4 bg-primary text-black rounded-2xl font-bold uppercase tracking-wider active:scale-95 transition-transform disabled:opacity-50 text-sm">
+                  <button onClick={handleSaveEdit} disabled={isSubmittingEdit} className="py-3 bg-primary text-black rounded-2xl font-bold uppercase tracking-wider active:scale-95 transition-transform disabled:opacity-50 text-sm">
                     {isSubmittingEdit ? "Сохранение..." : "Сохранить"}
                   </button>
                 </div>
