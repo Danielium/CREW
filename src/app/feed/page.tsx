@@ -370,7 +370,7 @@ export default function FeedTab() {
       </div>
 
       {/* Feed List */}
-      <div className="flex flex-col gap-3 px-4 pb-4">
+      <div className="flex flex-col gap-3 px-4 pt-3 pb-4">
         {isLoading ? (
           <div className="flex justify-center p-12">
             <Loader2 className="animate-spin text-primary" size={32} />
