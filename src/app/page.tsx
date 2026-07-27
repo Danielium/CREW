@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PaceRangeSlider, paceRangeToString, parsePaceRange } from "@/components/PaceRangeSlider";
+import { globalCache } from "@/lib/cache";
 
 function ParticipantStepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
@@ -65,7 +66,7 @@ function MapContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const [proposals, setProposals] = useState<any[]>([]);
+  const [proposals, setProposals] = useState<any[]>(globalCache.mapProposals || []);
   const [selectedProposal, setSelectedProposal] = useState<any | null>(null);
   const [hasUnreadRequests, setHasUnreadRequests] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -306,7 +307,8 @@ function MapContent() {
       const data = await res.json();
       if (data.proposals) {
         setProposals(data.proposals);
-        
+        globalCache.mapProposals = data.proposals;
+
         // Check if focused run is missing (expired)
         const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
         const startParam = tg?.initDataUnsafe?.start_param;
@@ -666,7 +668,7 @@ function MapContent() {
 
       {/* Bottom Sheet */}
       <div 
-        className={`absolute bottom-0 left-0 w-full bg-card border-t border-border rounded-t-[32px] p-6 pt-2 pb-10 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${touchOffset > 0 ? 'transition-none' : 'transition-transform duration-500 ease-in-out'}`}
+        className={`absolute bottom-0 left-0 w-full bg-card border-t border-border rounded-t-[32px] p-6 pt-2 pb-16 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${touchOffset > 0 ? 'transition-none' : 'transition-transform duration-500 ease-in-out'}`}
         style={{ transform: isSheetOpen ? `translateY(${touchOffset}px)` : 'translateY(100%)' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
