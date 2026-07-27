@@ -113,7 +113,8 @@ export default function FeedTab() {
 
   const handleImageAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
-    setAttachedDrafts((prev) => [...prev, ...filesToDrafts(e.target.files!, prev.length)]);
+    const files = e.target.files;
+    setAttachedDrafts((prev) => [...prev, ...filesToDrafts(files, prev.length)]);
     e.target.value = "";
   };
 
