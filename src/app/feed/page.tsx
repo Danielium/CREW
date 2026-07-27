@@ -324,7 +324,7 @@ export default function FeedTab() {
       </div>
 
       {/* Composer */}
-      <div className="px-4 py-4 border-b border-white/5 flex gap-3">
+      <div className="bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] p-4 mx-4 mt-4 flex gap-3">
         {(currentUser?.image || (session?.user as any)?.image) ? (
           <img src={currentUser?.image || (session?.user as any)?.image} className="w-10 h-10 rounded-full object-cover shrink-0" />
         ) : (
@@ -344,14 +344,14 @@ export default function FeedTab() {
 
           {attachedImagePreview && (
             <div className="relative mt-2 w-max">
-              <img src={attachedImagePreview} className="h-40 rounded-xl object-cover border border-white/10" alt="preview" />
-              <button onClick={removeAttachment} className="absolute -top-2 -right-2 bg-[#1a1a1a] border border-white/10 text-white rounded-full p-1.5 hover:text-red-500 transition-colors shadow-lg">
+              <img src={attachedImagePreview} className="h-32 rounded-xl object-cover border border-white/10" alt="preview" />
+              <button onClick={removeAttachment} className="absolute -top-2 -right-2 bg-background border border-white/10 text-foreground rounded-full p-1 hover:text-red-500 transition-colors shadow-lg">
                 <X size={14} />
               </button>
             </div>
           )}
 
-          <div className="flex items-center justify-between mt-1">
+          <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
             <label className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-primary hover:bg-primary/10 transition-colors cursor-pointer -ml-2">
               <input type="file" accept="image/*" className="hidden" onChange={handleImageAttach} />
               <ImageIcon size={20} />
@@ -359,7 +359,7 @@ export default function FeedTab() {
             <button
               onClick={handlePost}
               disabled={(!newPostContent.trim() && !attachedImageFile) || isPosting || isUploadingImage || !session}
-              className="bg-foreground text-background font-bold px-4 py-1.5 rounded-full text-[14px] hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center min-w-[90px]"
+              className="bg-primary text-black font-bold px-5 py-2 rounded-full text-sm hover:bg-[#b3e600] transition-colors disabled:opacity-50 flex items-center justify-center min-w-[90px]"
             >
               {isPosting || isUploadingImage ? <Loader2 size={16} className="animate-spin" /> : "Опубликовать"}
             </button>
