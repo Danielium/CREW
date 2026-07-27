@@ -1,12 +1,62 @@
 "use client";
 import { Suspense, useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
-import { Bell, MapPin, Clock, Users, X, Search, Activity, ArrowLeft, LocateFixed, Share } from "lucide-react";
+import { Bell, MapPin, Clock, Users, X, Search, Activity, ArrowLeft, LocateFixed, Share, Plus, Minus, Calendar, Loader2 } from "lucide-react";
 import { SwipeButton } from "@/components/SwipeButton";
 import { triggerHaptic } from "@/lib/haptics";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { PaceRangeSlider, paceRangeToString, parsePaceRange } from "@/components/PaceRangeSlider";
+
+function ParticipantStepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="bg-card border border-border rounded-2xl flex items-center justify-between p-2">
+      <button
+        type="button"
+        onClick={() => { triggerHaptic("light"); onChange(Math.max(0, value - 1)); }}
+        className="w-11 h-11 flex items-center justify-center rounded-xl bg-muted/20 text-foreground active:scale-95 transition-transform"
+      >
+        <Minus size={18} />
+      </button>
+      <span className="font-black text-lg">{value === 0 ? "Без лимита" : value}</span>
+      <button
+        type="button"
+        onClick={() => { triggerHaptic("light"); onChange(value + 1); }}
+        className="w-11 h-11 flex items-center justify-center rounded-xl bg-primary/20 text-primary active:scale-95 transition-transform"
+      >
+        <Plus size={18} />
+      </button>
+    </div>
+  );
+}
+
+function DateTimeCard({ date, time, onDate, onTime }: { date: string; time: string; onDate: (v: string) => void; onTime: (v: string) => void }) {
+  return (
+    <div className="bg-card border border-border rounded-2xl flex items-stretch divide-x divide-border overflow-hidden">
+      <div className="flex-1 flex items-center gap-2 p-3 relative focus-within:bg-primary/5 transition-colors">
+        <Calendar size={16} className="text-primary shrink-0" />
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => onDate(e.target.value)}
+          required
+          className="bg-transparent border-none outline-none w-full font-medium text-sm cursor-pointer"
+        />
+      </div>
+      <div className="flex-1 flex items-center gap-2 p-3 relative focus-within:bg-primary/5 transition-colors">
+        <Clock size={16} className="text-primary shrink-0" />
+        <input
+          type="time"
+          value={time}
+          onChange={(e) => onTime(e.target.value)}
+          required
+          className="bg-transparent border-none outline-none w-full font-medium text-sm cursor-pointer"
+        />
+      </div>
+    </div>
+  );
+}
 
 const TinderMap = dynamic(() => import("@/components/TinderMap"), { ssr: false });
 
@@ -73,10 +123,92 @@ function MapContent() {
   const [isEditingProposal, setIsEditingProposal] = useState(false);
   const [editDate, setEditDate] = useState("");
   const [editTime, setEditTime] = useState("");
-  const [editPace, setEditPace] = useState("");
+  const [editPaceFrom, setEditPaceFrom] = useState(5);
+  const [editPaceTo, setEditPaceTo] = useState(6);
+  const [editPaceAny, setEditPaceAny] = useState(true);
   const [justJoinedMap, setJustJoinedMap] = useState<Record<string, boolean>>({});
-  const [editLimit, setEditLimit] = useState("");
+  const [editLimit, setEditLimit] = useState(0);
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+
+  // --- Create Proposal (draft pin dropped on the map) ---
+  const [isCreatingProposal, setIsCreatingProposal] = useState(false);
+  const [createPosition, setCreatePosition] = useState<[number, number] | null>(null);
+  const [createAddress, setCreateAddress] = useState("");
+  const [isFetchingAddress, setIsFetchingAddress] = useState(false);
+  const [createDate, setCreateDate] = useState("");
+  const [createTime, setCreateTime] = useState("");
+  const [createPaceFrom, setCreatePaceFrom] = useState(5);
+  const [createPaceTo, setCreatePaceTo] = useState(6);
+  const [createPaceAny, setCreatePaceAny] = useState(true);
+  const [createLimit, setCreateLimit] = useState(0);
+  const [isSubmittingCreate, setIsSubmittingCreate] = useState(false);
+
+  useEffect(() => {
+    if (!isCreatingProposal || !createPosition) return;
+    setIsFetchingAddress(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${createPosition[0]}&lon=${createPosition[1]}&accept-language=ru`);
+        const data = await res.json();
+        if (data?.address) {
+          const a = data.address;
+          const parts = [a.city || a.town || a.village, a.road, a.house_number].filter(Boolean);
+          setCreateAddress(parts.length > 0 ? parts.join(", ") : (data.display_name || "Адрес не найден"));
+        }
+      } catch (e) {
+        setCreateAddress("Ошибка сети");
+      } finally {
+        setIsFetchingAddress(false);
+      }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [createPosition, isCreatingProposal]);
+
+  const startCreatingProposal = (latlng: { lat: number; lng: number }) => {
+    triggerHaptic('medium');
+    setCreatePosition([latlng.lat, latlng.lng]);
+    setCreateAddress("");
+    setCreateDate("");
+    setCreateTime("");
+    setCreatePaceFrom(5);
+    setCreatePaceTo(6);
+    setCreatePaceAny(true);
+    setCreateLimit(0);
+    setIsCreatingProposal(true);
+    setIsSheetOpen(true);
+  };
+
+  const handleCreateSubmit = async () => {
+    if (!createPosition || !createDate || !createTime) return;
+    triggerHaptic('medium');
+    setIsSubmittingCreate(true);
+    try {
+      const startTime = new Date(`${createDate}T${createTime}`).toISOString();
+      const res = await fetch("/api/map-events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lat: createPosition[0],
+          lng: createPosition[1],
+          address: createAddress,
+          pace: createPaceAny ? null : paceRangeToString(createPaceFrom, createPaceTo),
+          startTime,
+          maxParticipants: createLimit
+        })
+      });
+      if (res.ok) {
+        closeSheet();
+        fetchProposals();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Произошла ошибка при создании пробежки");
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSubmittingCreate(false);
+    }
+  };
 
   useEffect(() => {
     // Show the hint every time the map is opened
@@ -97,6 +229,8 @@ function MapContent() {
     setTimeout(() => {
       setSelectedProposal(null);
       setIsEditingProposal(false);
+      setIsCreatingProposal(false);
+      setCreatePosition(null);
       setJustJoinedMap({}); // Clear local joined state
     }, 300); // Wait for animation
   };
@@ -316,14 +450,17 @@ function MapContent() {
   const handleEditClick = () => {
     if (!selectedProposal) return;
     const d = new Date(selectedProposal.startTime);
-    
+
     // adjust for local timezone offset when getting YYYY-MM-DD
     const localDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-    
+
     setEditDate(localDate);
     setEditTime(d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false}));
-    setEditPace(selectedProposal.pace || "");
-    setEditLimit((selectedProposal.maxParticipants || 0).toString());
+    const [pFrom, pTo] = parsePaceRange(selectedProposal.pace);
+    setEditPaceFrom(pFrom);
+    setEditPaceTo(pTo);
+    setEditPaceAny(!selectedProposal.pace);
+    setEditLimit(selectedProposal.maxParticipants || 0);
     setIsEditingProposal(true);
   };
 
@@ -350,8 +487,8 @@ function MapContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           startTime,
-          pace: editPace,
-          maxParticipants: parseInt(editLimit) || 0
+          pace: editPaceAny ? null : paceRangeToString(editPaceFrom, editPaceTo),
+          maxParticipants: editLimit
         })
       });
       if (res.ok) {
@@ -367,8 +504,13 @@ function MapContent() {
   };
 
   const handleMapClick = (latlng: any) => {
-    // If they click empty space, go to create page with coords
-    router.push(`/map/create?lat=${latlng.lat}&lng=${latlng.lng}`);
+    if (isCreatingProposal) {
+      // Move the draft pin instead of starting a new one
+      setCreatePosition([latlng.lat, latlng.lng]);
+      return;
+    }
+    if (selectedProposal) return; // ignore taps while viewing another proposal
+    startCreatingProposal(latlng);
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -449,7 +591,7 @@ function MapContent() {
 
   return (
     <div className="absolute inset-0 bg-black text-foreground flex flex-col overflow-hidden">
-      <TinderMap proposals={proposals} onSelectProposal={handleSelectProposal} onMapClick={handleMapClick} forceCenter={forceCenter} triggerLocate={triggerLocate} onLocationFound={handleLocationFound} />
+      <TinderMap proposals={proposals} onSelectProposal={handleSelectProposal} onMapClick={handleMapClick} forceCenter={forceCenter} triggerLocate={triggerLocate} onLocationFound={handleLocationFound} draftPosition={createPosition} />
 
       {/* Top UI Overlay */}
       <div className="absolute top-0 left-0 w-full px-6 pb-6 pt-safe flex items-center pointer-events-none z-10 gap-3">
@@ -510,7 +652,56 @@ function MapContent() {
         onTouchEnd={handleTouchEnd}
       >
         <div className="w-12 h-1.5 bg-muted/50 rounded-full mx-auto mb-6 cursor-pointer" onClick={closeSheet} />
-        {selectedProposal && selectedProposal.type === "CLUB" ? (
+        {isCreatingProposal ? (
+          <div className="flex flex-col gap-4">
+            <h2 className="text-2xl font-black uppercase tracking-tight">Новый маячок</h2>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted flex items-center gap-2">
+                <Clock size={16} /> Дата и время старта
+              </label>
+              <DateTimeCard date={createDate} time={createTime} onDate={setCreateDate} onTime={setCreateTime} />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Локация</label>
+              <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3">
+                {isFetchingAddress ? (
+                  <Loader2 size={18} className="text-primary animate-spin shrink-0" />
+                ) : (
+                  <MapPin size={18} className="text-primary shrink-0" />
+                )}
+                <span className="text-sm font-medium leading-tight">
+                  {isFetchingAddress ? "Определяем адрес..." : (createAddress || "Тапни по карте, чтобы передвинуть точку")}
+                </span>
+              </div>
+            </div>
+
+            <PaceRangeSlider
+              from={createPaceFrom}
+              to={createPaceTo}
+              onChange={(f, t) => { setCreatePaceFrom(f); setCreatePaceTo(t); }}
+              paceAny={createPaceAny}
+              onPaceAnyChange={setCreatePaceAny}
+            />
+
+            <div className="flex flex-col gap-2">
+              <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted flex items-center gap-2">
+                <Users size={16} /> Лимит участников
+              </label>
+              <ParticipantStepper value={createLimit} onChange={setCreateLimit} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <button onClick={closeSheet} disabled={isSubmittingCreate} className="py-4 bg-muted text-foreground rounded-2xl font-bold uppercase tracking-wider active:scale-95 transition-transform disabled:opacity-50 text-sm">
+                Отмена
+              </button>
+              <button onClick={handleCreateSubmit} disabled={isSubmittingCreate || !createDate || !createTime} className="py-4 bg-primary text-black rounded-2xl font-black uppercase tracking-wider active:scale-95 transition-transform disabled:opacity-50 text-sm">
+                {isSubmittingCreate ? <Loader2 className="animate-spin mx-auto" size={18} /> : "Поставить маячок"}
+              </button>
+            </div>
+          </div>
+        ) : selectedProposal && selectedProposal.type === "CLUB" ? (
           <div className="flex flex-col gap-4">
             <div className="flex items-start justify-between w-full mb-4 gap-2">
               <div className="flex items-center gap-3">
@@ -596,21 +787,27 @@ function MapContent() {
             {isEditingProposal ? (
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted">Дата и время</label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <input type="date" className="bg-muted/30 border-none outline-none rounded-2xl p-4 font-medium text-sm" value={editDate} onChange={e => setEditDate(e.target.value)} />
-                    <input type="time" className="bg-muted/30 border-none outline-none rounded-2xl p-4 font-medium text-sm" value={editTime} onChange={e => setEditTime(e.target.value)} />
-                  </div>
+                  <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted flex items-center gap-2">
+                    <Clock size={16} /> Дата и время старта
+                  </label>
+                  <DateTimeCard date={editDate} time={editTime} onDate={setEditDate} onTime={setEditTime} />
                 </div>
+
+                <PaceRangeSlider
+                  from={editPaceFrom}
+                  to={editPaceTo}
+                  onChange={(f, t) => { setEditPaceFrom(f); setEditPaceTo(t); }}
+                  paceAny={editPaceAny}
+                  onPaceAnyChange={setEditPaceAny}
+                />
+
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted">Темп (мин/км)</label>
-                  <input type="text" placeholder="Например: 5:30 или 5:00 - 6:00" className="bg-muted/30 border-none outline-none rounded-2xl p-4 font-medium text-sm w-full" value={editPace} onChange={e => setEditPace(e.target.value)} />
+                  <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted flex items-center gap-2">
+                    <Users size={16} /> Лимит участников
+                  </label>
+                  <ParticipantStepper value={editLimit} onChange={setEditLimit} />
                 </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs uppercase font-bold tracking-wider pl-4 text-muted">Лимит участников (0 = безлимит)</label>
-                  <input type="number" min="0" className="bg-muted/30 border-none outline-none rounded-2xl p-4 font-medium text-sm w-full" value={editLimit} onChange={e => setEditLimit(e.target.value)} />
-                </div>
-                
+
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <button onClick={() => setIsEditingProposal(false)} disabled={isSubmittingEdit} className="py-4 bg-muted text-foreground rounded-2xl font-bold uppercase tracking-wider active:scale-95 transition-transform disabled:opacity-50 text-sm">
                     Отмена

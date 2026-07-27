@@ -32,6 +32,23 @@ const crewIcon = new L.DivIcon({
   iconAnchor: [16, 32],
 });
 
+// Draft pin shown while placing a new run proposal (before it's saved)
+const draftIcon = new L.DivIcon({
+  html: `
+    <div style="position: relative; width: 32px; height: 32px;">
+      <div style="position: absolute; top: 8px; left: 8px; width: 16px; height: 16px; border-radius: 50%; background: rgba(204,255,0,0.35); animation: draftPulse 1.6s ease-out infinite;"></div>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#CCFF00" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; width: 32px; height: 32px; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.5));">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+        <circle cx="12" cy="10" r="3" fill="#000"></circle>
+      </svg>
+    </div>
+    <style>@keyframes draftPulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.4); opacity: 0; } }</style>
+  `,
+  className: '',
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+});
+
 function MapController({ onMapClick, forceCenter }: any) {
   const map = useMapEvents({
     click: (e) => {
@@ -56,7 +73,7 @@ function MapController({ onMapClick, forceCenter }: any) {
 
 const DEFAULT_CENTER: [number, number] = [55.7558, 37.6173]; // Moscow fallback
 
-export default function TinderMap({ proposals, onSelectProposal, onMapClick, forceCenter, triggerLocate, onLocationFound }: { proposals: any[], onSelectProposal: (p: any) => void, onMapClick?: (latlng: any) => void, forceCenter?: [number, number] | null, triggerLocate?: number, onLocationFound?: (latlng: [number, number]) => void }) {
+export default function TinderMap({ proposals, onSelectProposal, onMapClick, forceCenter, triggerLocate, onLocationFound, draftPosition }: { proposals: any[], onSelectProposal: (p: any) => void, onMapClick?: (latlng: any) => void, forceCenter?: [number, number] | null, triggerLocate?: number, onLocationFound?: (latlng: [number, number]) => void, draftPosition?: [number, number] | null }) {
   const [initialCenter, setInitialCenter] = useState<[number, number] | null>(null);
   const [hasFlown, setHasFlown] = useState(false);
 
@@ -147,6 +164,10 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
             />
           );
         })}
+
+        {draftPosition && (
+          <Marker position={draftPosition} icon={draftIcon} />
+        )}
 
         <UserLocationMarker onLocationFound={handleSetInitialLocation} triggerLocate={triggerLocate} />
       </MapContainer>
