@@ -648,10 +648,10 @@ function MapContent() {
 
       {/* Pin Cycler Buttons (Left) */}
       <div className="absolute bottom-36 left-6 z-10 flex gap-2 pointer-events-auto">
-        <button onClick={() => cyclePins(-1)} className="w-14 h-14 bg-card border border-border text-foreground rounded-full shadow-[0_0_20px_rgba(0,0,0,0.4)] flex items-center justify-center active:scale-95 transition-transform">
+        <button onClick={() => cyclePins(-1)} disabled={sortedProposals.length === 0} className="w-14 h-14 bg-card border border-border text-foreground rounded-full shadow-[0_0_20px_rgba(0,0,0,0.4)] flex items-center justify-center active:scale-95 transition-transform disabled:opacity-40 disabled:active:scale-100">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
         </button>
-        <button onClick={() => cyclePins(1)} className="w-14 h-14 bg-card border border-border text-foreground rounded-full shadow-[0_0_20px_rgba(0,0,0,0.4)] flex items-center justify-center active:scale-95 transition-transform">
+        <button onClick={() => cyclePins(1)} disabled={sortedProposals.length === 0} className="w-14 h-14 bg-card border border-border text-foreground rounded-full shadow-[0_0_20px_rgba(0,0,0,0.4)] flex items-center justify-center active:scale-95 transition-transform disabled:opacity-40 disabled:active:scale-100">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
         </button>
       </div>
