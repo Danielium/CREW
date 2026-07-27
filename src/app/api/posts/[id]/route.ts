@@ -35,15 +35,15 @@ export async function DELETE(
       select: { mediaUrl: true }
     });
 
-    const { deleteImageFromS3 } = await import("@/lib/uploadImage");
-    
+    const { deleteMediaFromS3 } = await import("@/lib/uploadImage");
+
     if (post.mediaUrl) {
-      await deleteImageFromS3(post.mediaUrl);
+      await deleteMediaFromS3(post.mediaUrl);
     }
 
     const deletePromises = comments
       .filter(c => c.mediaUrl)
-      .map(c => deleteImageFromS3(c.mediaUrl));
+      .map(c => deleteMediaFromS3(c.mediaUrl));
       
     if (deletePromises.length > 0) {
       await Promise.allSettled(deletePromises);

@@ -1,5 +1,43 @@
 import imageCompression from 'browser-image-compression';
 
+export type MediaKind = "image" | "video";
+export type UploadedMedia = { url: string; type: MediaKind };
+
+/**
+ * Uploads either an image or a video.
+ * Images are compressed client-side and posted through /api/upload.
+ * Videos bypass the serverless body limit by PUTting straight to S3 with a
+ * presigned URL from /api/upload/presign.
+ */
+export async function uploadMedia(file: File): Promise<UploadedMedia | null> {
+  if (file.type.startsWith("video/")) {
+    try {
+      const presignRes = await fetch("/api/upload/presign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentType: file.type, size: file.size }),
+      });
+      const presign = await presignRes.json();
+      if (!presignRes.ok) throw new Error(presign.error || "Presign failed");
+
+      const put = await fetch(presign.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!put.ok) throw new Error("S3 upload failed");
+
+      return { url: presign.url, type: "video" };
+    } catch (error) {
+      console.error("Error uploading video:", error);
+      return null;
+    }
+  }
+
+  const url = await uploadImage(file);
+  return url ? { url, type: "image" } : null;
+}
+
 export async function uploadImage(file: File, prefix?: string): Promise<string | null> {
   try {
     const options = {
@@ -29,6 +67,31 @@ export async function uploadImage(file: File, prefix?: string): Promise<string |
     console.error("Error uploading image:", error);
     return null;
   }
+}
+
+/**
+ * Deletes every object referenced by a media column, which may hold either a bare
+ * URL (legacy rows) or a JSON array of {url, type} entries.
+ */
+export async function deleteMediaFromS3(raw: string | null) {
+  if (!raw) return;
+  const value = raw.trim();
+  let urls: string[] = [];
+
+  if (value.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        urls = parsed.map((item) => item?.url).filter((u): u is string => typeof u === "string");
+      }
+    } catch {
+      urls = [];
+    }
+  } else {
+    urls = [value];
+  }
+
+  await Promise.allSettled(urls.map((u) => deleteImageFromS3(u)));
 }
 
 export async function deleteImageFromS3(url: string | null) {

@@ -27,8 +27,14 @@ type CommentType = {
   mediaUrl?: string | null;
 };
 
-import { uploadImage } from "@/lib/uploadImage";
+import { uploadMedia } from "@/lib/uploadImage";
 import { globalCache } from "@/lib/cache";
+import { MediaCarousel, parseMedia, serializeMedia, type MediaItem } from "@/components/MediaCarousel";
+
+const MEDIA_ACCEPT = "image/*,video/mp4,video/webm,video/quicktime";
+const MAX_ATTACHMENTS = 10;
+
+type Draft = { file: File; previewUrl: string; type: "image" | "video" };
 
 export default function FeedTab() {
   const { data: session, update: updateSession } = useSession();
@@ -38,8 +44,7 @@ export default function FeedTab() {
   // Post Creation State
   const [newPostContent, setNewPostContent] = useState("");
   const [isPosting, setIsPosting] = useState(false);
-  const [attachedImageFile, setAttachedImageFile] = useState<File | null>(null);
-  const [attachedImagePreview, setAttachedImagePreview] = useState<string | null>(null);
+  const [attachedDrafts, setAttachedDrafts] = useState<Draft[]>([]);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Comments State
@@ -47,8 +52,7 @@ export default function FeedTab() {
   const [commentsData, setCommentsData] = useState<Record<string, CommentType[]>>({});
   const [newCommentContent, setNewCommentContent] = useState<Record<string, string>>({});
   const [isPostingComment, setIsPostingComment] = useState(false);
-  const [commentImageFiles, setCommentImageFiles] = useState<Record<string, File | null>>({});
-  const [commentImagePreviews, setCommentImagePreviews] = useState<Record<string, string | null>>({});
+  const [commentDrafts, setCommentDrafts] = useState<Record<string, Draft[]>>({});
   
   // Current User State (for Avatar)
   const [currentUser, setCurrentUser] = useState<{ id: string; name: string | null; image: string | null } | null>(globalCache.userData || null);
@@ -98,35 +102,60 @@ export default function FeedTab() {
     }
   }, [posts]);
 
+  const filesToDrafts = (fileList: FileList, existing: number): Draft[] =>
+    Array.from(fileList)
+      .slice(0, Math.max(0, MAX_ATTACHMENTS - existing))
+      .map((file) => ({
+        file,
+        previewUrl: URL.createObjectURL(file),
+        type: file.type.startsWith("video/") ? "video" : "image",
+      }));
+
   const handleImageAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setAttachedImageFile(file);
-      setAttachedImagePreview(URL.createObjectURL(file));
-    }
+    if (!e.target.files?.length) return;
+    setAttachedDrafts((prev) => [...prev, ...filesToDrafts(e.target.files!, prev.length)]);
+    e.target.value = "";
   };
 
-  const removeAttachment = () => {
-    setAttachedImageFile(null);
-    setAttachedImagePreview(null);
+  const removeAttachment = (index?: number) => {
+    setAttachedDrafts((prev) => {
+      if (index === undefined) {
+        prev.forEach((d) => URL.revokeObjectURL(d.previewUrl));
+        return [];
+      }
+      const draft = prev[index];
+      if (draft) URL.revokeObjectURL(draft.previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const uploadDrafts = async (drafts: Draft[]): Promise<MediaItem[] | null> => {
+    const uploaded: MediaItem[] = [];
+    for (const draft of drafts) {
+      const result = await uploadMedia(draft.file);
+      if (!result) return null;
+      uploaded.push(result);
+    }
+    return uploaded;
   };
 
   const handlePost = async () => {
-    if (!session?.user || (!newPostContent.trim() && !attachedImageFile)) return;
-    
+    if (!session?.user || (!newPostContent.trim() && attachedDrafts.length === 0)) return;
+
     setIsPosting(true);
     try {
-      let uploadedMediaUrl = null;
-      if (attachedImageFile) {
+      let uploadedMediaUrl: string | null = null;
+      if (attachedDrafts.length > 0) {
         setIsUploadingImage(true);
-        uploadedMediaUrl = await uploadImage(attachedImageFile);
+        const uploaded = await uploadDrafts(attachedDrafts);
         setIsUploadingImage(false);
-        
-        if (!uploadedMediaUrl) {
-          alert("Ошибка при загрузке изображения");
+
+        if (!uploaded) {
+          alert("Не удалось загрузить вложение");
           setIsPosting(false);
           return;
         }
+        uploadedMediaUrl = serializeMedia(uploaded);
       }
 
       const res = await fetch('/api/posts', {
@@ -202,20 +231,21 @@ export default function FeedTab() {
 
   const handlePostComment = async (postId: string) => {
     const content = newCommentContent[postId] || "";
-    const attachedFile = commentImageFiles[postId];
-    if (!session?.user || (!content.trim() && !attachedFile)) return;
+    const drafts = commentDrafts[postId] || [];
+    if (!session?.user || (!content.trim() && drafts.length === 0)) return;
 
     setIsPostingComment(true);
     try {
-      let uploadedMediaUrl = null;
-      if (attachedFile) {
-        uploadedMediaUrl = await uploadImage(attachedFile);
-        
-        if (!uploadedMediaUrl) {
-          alert("Ошибка при загрузке изображения комментария");
+      let uploadedMediaUrl: string | null = null;
+      if (drafts.length > 0) {
+        const uploaded = await uploadDrafts(drafts);
+
+        if (!uploaded) {
+          alert("Не удалось загрузить вложение");
           setIsPostingComment(false);
           return;
         }
+        uploadedMediaUrl = serializeMedia(uploaded);
       }
 
       const res = await fetch(`/api/posts/${postId}/comments`, {
@@ -234,8 +264,10 @@ export default function FeedTab() {
           [postId]: [...(prev[postId] || []), data.comment]
         }));
         setNewCommentContent(prev => ({ ...prev, [postId]: "" }));
-        setCommentImageFiles(prev => ({ ...prev, [postId]: null }));
-        setCommentImagePreviews(prev => ({ ...prev, [postId]: null }));
+        setCommentDrafts(prev => {
+          (prev[postId] || []).forEach(d => URL.revokeObjectURL(d.previewUrl));
+          return { ...prev, [postId]: [] };
+        });
         
         // Update comment count optimistically
         setPosts(posts.map(p => {
@@ -342,23 +374,34 @@ export default function FeedTab() {
             rows={1}
           />
 
-          {attachedImagePreview && (
-            <div className="relative mt-2 w-max">
-              <img src={attachedImagePreview} className="h-32 rounded-xl object-cover border border-white/10" alt="preview" />
-              <button onClick={removeAttachment} className="absolute -top-2 -right-2 bg-background border border-white/10 text-foreground rounded-full p-1 hover:text-red-500 transition-colors shadow-lg">
-                <X size={14} />
-              </button>
+          {attachedDrafts.length > 0 && (
+            <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar">
+              {attachedDrafts.map((draft, index) => (
+                <div key={draft.previewUrl} className="relative shrink-0">
+                  {draft.type === "video" ? (
+                    <video src={draft.previewUrl} className="h-28 w-auto rounded-xl border border-white/10 bg-black/40" muted playsInline />
+                  ) : (
+                    <img src={draft.previewUrl} className="h-28 w-auto rounded-xl object-cover border border-white/10" alt="preview" />
+                  )}
+                  <button
+                    onClick={() => removeAttachment(index)}
+                    className="absolute -top-2 -right-2 bg-background border border-white/10 text-foreground rounded-full p-1 hover:text-red-500 transition-colors shadow-lg"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
 
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
             <label className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-primary hover:bg-primary/10 transition-colors cursor-pointer -ml-2">
-              <input type="file" accept="image/*" className="hidden" onChange={handleImageAttach} />
+              <input type="file" accept={MEDIA_ACCEPT} multiple className="hidden" onChange={handleImageAttach} />
               <ImageIcon size={20} />
             </label>
             <button
               onClick={handlePost}
-              disabled={(!newPostContent.trim() && !attachedImageFile) || isPosting || isUploadingImage || !session}
+              disabled={(!newPostContent.trim() && attachedDrafts.length === 0) || isPosting || isUploadingImage || !session}
               className="bg-primary text-black font-bold px-5 py-2 rounded-full text-sm hover:bg-[#b3e600] transition-colors disabled:opacity-50 flex items-center justify-center min-w-[90px]"
             >
               {isPosting || isUploadingImage ? <Loader2 size={16} className="animate-spin" /> : "Опубликовать"}
@@ -417,8 +460,8 @@ export default function FeedTab() {
 
                   {/* Media (If attached) */}
                   {post.mediaUrl && (
-                    <div className="mb-3 rounded-xl overflow-hidden border border-border bg-muted relative aspect-[4/5] w-full">
-                      <img src={post.mediaUrl} alt="Post media" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="mb-3">
+                      <MediaCarousel items={parseMedia(post.mediaUrl)} />
                     </div>
                   )}
 
@@ -479,8 +522,8 @@ export default function FeedTab() {
                             </div>
                             <p className="text-[15px] text-foreground whitespace-pre-wrap break-words leading-[1.45] mt-0.5">{comment.content}</p>
                             {comment.mediaUrl && (
-                              <div className="mt-2.5 rounded-xl overflow-hidden bg-muted relative aspect-[4/5] w-full max-w-[240px]">
-                                <img src={comment.mediaUrl} alt="Comment media" className="absolute inset-0 w-full h-full object-cover" />
+                              <div className="mt-2.5 max-w-[260px]">
+                                <MediaCarousel items={parseMedia(comment.mediaUrl)} />
                               </div>
                             )}
                           </div>
@@ -489,35 +532,44 @@ export default function FeedTab() {
                     </div>
                   )}
 
-                  {/* Reply composer */}
+                  {/* Reply composer — Threads sizing: small avatar, one tall pill */}
                   <div className="flex flex-col gap-2 mt-5">
-                    {commentImagePreviews[post.id] && (
-                      <div className="relative w-fit ml-12">
-                        <img src={commentImagePreviews[post.id]!} alt="Preview" className="h-20 rounded-xl object-cover border border-white/10" />
-                        <button
-                          onClick={() => {
-                            setCommentImageFiles(prev => ({ ...prev, [post.id]: null }));
-                            setCommentImagePreviews(prev => ({ ...prev, [post.id]: null }));
-                          }}
-                          className="absolute -top-2 -right-2 bg-background border border-white/10 rounded-full p-1 hover:text-red-500 transition-colors"
-                        >
-                          <X size={12} />
-                        </button>
+                    {(commentDrafts[post.id]?.length || 0) > 0 && (
+                      <div className="flex gap-2 ml-10 overflow-x-auto no-scrollbar">
+                        {commentDrafts[post.id].map((draft, index) => (
+                          <div key={draft.previewUrl} className="relative shrink-0">
+                            {draft.type === "video" ? (
+                              <video src={draft.previewUrl} className="h-20 w-auto rounded-xl border border-white/10 bg-black/40" muted playsInline />
+                            ) : (
+                              <img src={draft.previewUrl} alt="Preview" className="h-20 w-auto rounded-xl object-cover border border-white/10" />
+                            )}
+                            <button
+                              onClick={() => setCommentDrafts(prev => {
+                                const list = prev[post.id] || [];
+                                URL.revokeObjectURL(list[index]?.previewUrl);
+                                return { ...prev, [post.id]: list.filter((_, i) => i !== index) };
+                              })}
+                              className="absolute -top-2 -right-2 bg-background border border-white/10 rounded-full p-1 hover:text-red-500 transition-colors"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
-                    <div className="flex gap-2.5 items-center">
+                    <div className="flex gap-2 items-center">
                       {(currentUser?.image || (session?.user as any)?.image) ? (
-                        <img src={currentUser?.image || (session?.user as any)?.image} className="w-9 h-9 rounded-full object-cover shrink-0" />
+                        <img src={currentUser?.image || (session?.user as any)?.image} className="w-8 h-8 rounded-full object-cover shrink-0" />
                       ) : (
-                        <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0">
-                          <User size={17} className="text-foreground" />
+                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                          <User size={15} className="text-foreground" />
                         </div>
                       )}
 
-                      <div className="flex-1 min-w-0 flex items-center gap-1 bg-white/[0.06] rounded-full pl-4 pr-1.5 py-2 border border-white/[0.06] focus-within:border-white/15 transition-colors">
+                      <div className="flex-1 min-w-0 flex items-center gap-1 bg-white/[0.06] rounded-full pl-4 pr-1.5 py-2.5 border border-white/[0.06] focus-within:border-white/15 transition-colors">
                         <input
                           type="text"
-                          placeholder="Комментарий..."
+                          placeholder={`Ответьте ${post.user?.name || "автору"}`}
                           value={newCommentContent[post.id] || ""}
                           onChange={(e) => setNewCommentContent(prev => ({ ...prev, [post.id]: e.target.value }))}
                           onKeyDown={(e) => {
@@ -532,13 +584,16 @@ export default function FeedTab() {
                           <input
                             type="file"
                             className="hidden"
-                            accept="image/*"
+                            accept={MEDIA_ACCEPT}
+                            multiple
                             onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                setCommentImageFiles(prev => ({ ...prev, [post.id]: file }));
-                                setCommentImagePreviews(prev => ({ ...prev, [post.id]: URL.createObjectURL(file) }));
-                              }
+                              if (!e.target.files?.length) return;
+                              const files = e.target.files;
+                              setCommentDrafts(prev => {
+                                const list = prev[post.id] || [];
+                                return { ...prev, [post.id]: [...list, ...filesToDrafts(files, list.length)] };
+                              });
+                              e.target.value = "";
                             }}
                           />
                           <ImageIcon size={17} />
@@ -547,7 +602,7 @@ export default function FeedTab() {
 
                       <button
                         onClick={() => handlePostComment(post.id)}
-                        disabled={(!newCommentContent[post.id]?.trim() && !commentImageFiles[post.id]) || isPostingComment}
+                        disabled={(!newCommentContent[post.id]?.trim() && (commentDrafts[post.id]?.length || 0) === 0) || isPostingComment}
                         className="w-9 h-9 rounded-full bg-primary text-black flex items-center justify-center disabled:opacity-30 shrink-0 transition-opacity"
                       >
                         {isPostingComment ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
