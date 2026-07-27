@@ -667,7 +667,7 @@ function MapContent() {
       {/* Bottom Sheet */}
       <div 
         className={`absolute bottom-0 left-0 w-full bg-card border-t border-border rounded-t-[32px] p-6 pt-2 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${touchOffset > 0 ? 'transition-none' : 'transition-transform duration-500 ease-in-out'}`}
-        style={{ transform: isSheetOpen ? `translateY(${touchOffset}px)` : 'translateY(100%)', paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
+        style={{ transform: isSheetOpen ? `translateY(${touchOffset}px)` : 'translateY(100%)', paddingBottom: "calc(1.5rem + var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px)))" }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
