@@ -323,9 +323,9 @@ export default function FeedTab() {
         <h1 className="text-2xl font-black tracking-tight uppercase">ЛЕНТА</h1>
       </div>
 
-      {/* Composer (Tweet Box) */}
-      <div className="px-4 py-4 border-b border-border bg-card/30">
-        <div className="flex gap-3">
+      {/* Composer */}
+      <div className="p-4">
+        <div className="bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] p-4 flex gap-3">
           {(currentUser?.image || (session?.user as any)?.image) ? (
             <img src={currentUser?.image || (session?.user as any)?.image} className="w-10 h-10 rounded-full object-cover border border-border shrink-0" />
           ) : (
@@ -372,7 +372,7 @@ export default function FeedTab() {
       </div>
 
       {/* Feed List */}
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-3 px-4 pb-4">
         {isLoading ? (
           <div className="flex justify-center p-12">
             <Loader2 className="animate-spin text-primary" size={32} />
@@ -383,7 +383,7 @@ export default function FeedTab() {
           </div>
         ) : (
           posts.map((post) => (
-            <div key={post.id} className="p-4 border-b border-border bg-background hover:bg-card/20 transition-colors cursor-pointer">
+            <div key={post.id} className="p-4 bg-card/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[22px] transition-colors cursor-pointer">
               <div className="flex gap-3">
                 {/* Avatar */}
                 <Link href={`/users/${(post.user as any)?.id}`} onClick={(e) => e.stopPropagation()} className="shrink-0">
@@ -427,24 +427,20 @@ export default function FeedTab() {
                   )}
 
                   {/* Action Bar */}
-                  <div className="flex items-center gap-4 text-muted mt-2">
-                    <button 
+                  <div className="flex items-center gap-2 text-muted mt-3">
+                    <button
                       onClick={(e) => { e.stopPropagation(); toggleLike(post.id); }}
-                      className={`flex items-center gap-1.5 transition-colors group ${post.isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-colors ${post.isLiked ? 'bg-primary/10 text-primary' : 'bg-white/[0.03] hover:bg-primary/10 hover:text-primary'}`}
                     >
-                      <div className="p-1.5 rounded-full group-hover:bg-red-500/10 transition-colors">
-                        <Heart size={16} className={post.isLiked ? "fill-red-500 text-red-500" : ""} />
-                      </div>
+                      <Heart size={16} className={post.isLiked ? "fill-primary text-primary" : ""} />
                       <span className="text-xs font-medium">{post._count?.likes || 0}</span>
                     </button>
-                    
-                    <button 
+
+                    <button
                       onClick={(e) => { e.stopPropagation(); toggleComments(post.id); }}
-                      className={`flex items-center gap-1.5 transition-colors group ${expandedCommentsPostId === post.id ? 'text-blue-500' : 'hover:text-blue-500'}`}
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-colors ${expandedCommentsPostId === post.id ? 'bg-white/[0.06] text-foreground' : 'bg-white/[0.03] hover:bg-white/[0.06] hover:text-foreground'}`}
                     >
-                      <div className="p-1.5 rounded-full group-hover:bg-blue-500/10 transition-colors">
-                        <MessageSquare size={16} className={expandedCommentsPostId === post.id ? "fill-blue-500 text-blue-500" : ""} />
-                      </div>
+                      <MessageSquare size={16} />
                       <span className="text-xs font-medium">{post._count?.comments || 0}</span>
                     </button>
                   </div>
