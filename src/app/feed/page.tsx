@@ -334,19 +334,13 @@ export default function FeedTab() {
         )}
 
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="flex items-start gap-2">
-            <textarea
-              placeholder="Как прошла тренировка?"
-              value={newPostContent}
-              onChange={(e) => setNewPostContent(e.target.value)}
-              className="w-full bg-transparent resize-none outline-none text-lg placeholder:text-muted/70 min-h-[60px]"
-              rows={1}
-            />
-            <label className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-muted hover:bg-muted/50 transition-colors cursor-pointer mt-0.5">
-              <input type="file" accept="image/*" className="hidden" onChange={handleImageAttach} />
-              <ImageIcon size={20} />
-            </label>
-          </div>
+          <textarea
+            placeholder="Как прошла тренировка?"
+            value={newPostContent}
+            onChange={(e) => setNewPostContent(e.target.value)}
+            className="w-full bg-transparent resize-none outline-none text-lg placeholder:text-muted/70 min-h-[36px]"
+            rows={1}
+          />
 
           {attachedImagePreview && (
             <div className="relative mt-2 w-max">
@@ -357,7 +351,11 @@ export default function FeedTab() {
             </div>
           )}
 
-          <div className="flex justify-end mt-2">
+          <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
+            <label className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-muted hover:bg-white/5 hover:text-foreground transition-colors cursor-pointer -ml-1.5">
+              <input type="file" accept="image/*" className="hidden" onChange={handleImageAttach} />
+              <ImageIcon size={19} />
+            </label>
             <button
               onClick={handlePost}
               disabled={(!newPostContent.trim() && !attachedImageFile) || isPosting || isUploadingImage || !session}
