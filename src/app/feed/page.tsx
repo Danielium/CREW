@@ -324,49 +324,47 @@ export default function FeedTab() {
       </div>
 
       {/* Composer */}
-      <div className="p-4">
-        <div className="bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] p-4 flex gap-3">
-          {(currentUser?.image || (session?.user as any)?.image) ? (
-            <img src={currentUser?.image || (session?.user as any)?.image} className="w-10 h-10 rounded-full object-cover border border-border shrink-0" />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 border border-border">
-              <User size={20} className="text-foreground" />
-            </div>
-          )}
-          
-          <div className="flex-1 flex flex-col">
-            <div className="flex items-start gap-2">
-              <textarea
-                placeholder="Как прошла тренировка? Что нового?"
-                value={newPostContent}
-                onChange={(e) => setNewPostContent(e.target.value)}
-                className="w-full bg-transparent resize-none outline-none text-lg placeholder:text-muted/70 min-h-[60px]"
-              />
-              <label className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-muted hover:bg-muted/50 transition-colors cursor-pointer mt-0.5">
-                <input type="file" accept="image/*" className="hidden" onChange={handleImageAttach} />
-                <ImageIcon size={20} />
-              </label>
-            </div>
+      <div className="bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] p-4 mx-4 mt-4 flex gap-3">
+        {(currentUser?.image || (session?.user as any)?.image) ? (
+          <img src={currentUser?.image || (session?.user as any)?.image} className="w-10 h-10 rounded-full object-cover border border-border shrink-0" />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 border border-border">
+            <User size={20} className="text-foreground" />
+          </div>
+        )}
 
-            {attachedImagePreview && (
-              <div className="relative mt-2 w-max">
-                <img src={attachedImagePreview} className="h-32 rounded-xl object-cover border border-border" alt="preview" />
-                <button onClick={removeAttachment} className="absolute -top-2 -right-2 bg-background border border-border text-foreground rounded-full p-1 hover:text-red-500 transition-colors">
-                  <X size={14} />
-                </button>
-              </div>
-            )}
-            
-            <div className="flex justify-end mt-2">
-              <button 
-                onClick={handlePost}
-                disabled={(!newPostContent.trim() && !attachedImageFile) || isPosting || isUploadingImage || !session}
-                className="bg-primary text-black font-bold px-5 py-2 rounded-full text-sm hover:bg-[#b3e600] transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                {isPosting || isUploadingImage ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                Запостить
+        <div className="flex-1 flex flex-col min-w-0">
+          <div className="flex items-start gap-2">
+            <textarea
+              placeholder="Как прошла тренировка? Что нового?"
+              value={newPostContent}
+              onChange={(e) => setNewPostContent(e.target.value)}
+              className="w-full bg-transparent resize-none outline-none text-lg placeholder:text-muted/70 min-h-[84px]"
+            />
+            <label className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-muted hover:bg-muted/50 transition-colors cursor-pointer mt-0.5">
+              <input type="file" accept="image/*" className="hidden" onChange={handleImageAttach} />
+              <ImageIcon size={20} />
+            </label>
+          </div>
+
+          {attachedImagePreview && (
+            <div className="relative mt-2 w-max">
+              <img src={attachedImagePreview} className="h-32 rounded-xl object-cover border border-border" alt="preview" />
+              <button onClick={removeAttachment} className="absolute -top-2 -right-2 bg-background border border-border text-foreground rounded-full p-1 hover:text-red-500 transition-colors">
+                <X size={14} />
               </button>
             </div>
+          )}
+
+          <div className="flex justify-end mt-2">
+            <button
+              onClick={handlePost}
+              disabled={(!newPostContent.trim() && !attachedImageFile) || isPosting || isUploadingImage || !session}
+              className="bg-primary text-black font-bold px-5 py-2 rounded-full text-sm hover:bg-[#b3e600] transition-colors disabled:opacity-50 flex items-center gap-2"
+            >
+              {isPosting || isUploadingImage ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+              Запостить
+            </button>
           </div>
         </div>
       </div>
