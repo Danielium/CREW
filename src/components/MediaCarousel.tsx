@@ -88,28 +88,30 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
       <div
         ref={scrollerRef}
         onScroll={handleScroll}
-        className="flex gap-2 items-center overflow-x-auto snap-x snap-mandatory no-scrollbar"
+        className="flex gap-2 overflow-x-auto snap-x snap-mandatory no-scrollbar"
       >
         {items.map((item, index) => (
           <div
             key={`${item.url}-${index}`}
-            className="snap-center shrink-0 rounded-2xl overflow-hidden bg-black/30"
+            className="snap-start shrink-0 w-[64%] aspect-[4/5] rounded-2xl overflow-hidden bg-black/30"
           >
-            {/* Fixed height, width auto: every slide lines up at the same height
-                (like Threads) and stays true to its own aspect ratio instead of
-                being cropped. Only an oversized safety cap on width, so a single
-                extreme panorama can't blow out the layout. */}
+            {/* Multi-item posts use a fixed tile size (crop via object-cover) so
+                every slide is the same size regardless of its own aspect ratio -
+                that's what makes the next slide peek by a consistent amount, like
+                Threads. A single-image post (see branch above) is never cropped;
+                this tradeoff is specific to carousels where the peek matters more
+                than preserving one photo's exact framing. */}
             {item.type === "video" ? (
               <video
                 src={item.url}
                 controls
                 playsInline
                 preload="metadata"
-                className="h-[340px] w-auto max-w-[90vw]"
+                className="w-full h-full object-cover"
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
-              <img src={item.url} alt="" className="h-[340px] w-auto max-w-[90vw]" />
+              <img src={item.url} alt="" className="w-full h-full object-cover" />
             )}
           </div>
         ))}
