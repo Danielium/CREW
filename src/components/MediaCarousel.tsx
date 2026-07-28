@@ -95,19 +95,21 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
             key={`${item.url}-${index}`}
             className="snap-center shrink-0 rounded-2xl overflow-hidden bg-black/30"
           >
-            {/* Sized by max-height/max-width only, so landscape stays landscape
-                instead of being cropped into a portrait tile. */}
+            {/* Fixed height, width auto: every slide lines up at the same height
+                (like Threads) and stays true to its own aspect ratio instead of
+                being cropped. Only an oversized safety cap on width, so a single
+                extreme panorama can't blow out the layout. */}
             {item.type === "video" ? (
               <video
                 src={item.url}
                 controls
                 playsInline
                 preload="metadata"
-                className="max-h-[380px] max-w-[78vw] w-auto h-auto"
+                className="h-[340px] w-auto max-w-[90vw]"
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
-              <img src={item.url} alt="" className="max-h-[380px] max-w-[78vw] w-auto h-auto" />
+              <img src={item.url} alt="" className="h-[340px] w-auto max-w-[90vw]" />
             )}
           </div>
         ))}
