@@ -53,3 +53,6 @@ node_modules/
 .idea/
 public/uploads/
 dev.db*
+
+# local-only assistant context, not shared with the repo
+CLAUDE.md
