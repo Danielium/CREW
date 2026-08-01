@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Loader2, User, Target, Trash2, MoreVertical } from "lucide-react";
+import { Loader2, User, Trash2, MoreVertical, Crown, Flag } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
@@ -135,10 +135,11 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
                           </div>
                       )}
                       <div className="flex flex-col">
-                        <span className="font-bold text-sm truncate max-w-[120px]">{user.name}</span>
-                        {user.role && (
-                          <span className="text-[10px] text-muted uppercase tracking-wider">{user.role}</span>
-                        )}
+                        <span className="flex items-center gap-1.5 font-bold text-sm">
+                          <span className="truncate max-w-[120px]">{user.name}</span>
+                          {user.role === "FOUNDER" && <Crown size={13} className={`shrink-0 ${isMe ? 'text-black' : 'text-primary'}`} />}
+                          {user.role === "PACER" && <Flag size={13} className={`shrink-0 ${isMe ? 'text-black/70' : 'text-muted'}`} />}
+                        </span>
                       </div>
                   </div>
                   <div className="flex items-center gap-3 relative">
@@ -165,7 +166,7 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
                               }} 
                               className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium hover:bg-white/5 rounded-lg transition-colors text-left"
                             >
-                              <Target size={14} className="text-blue-500" />
+                              <Flag size={14} className="text-primary" />
                               {user.role === "PACER" ? "Снять пейсера" : "Сделать пейсером"}
                             </button>
                             <button 

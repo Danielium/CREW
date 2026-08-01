@@ -44,18 +44,18 @@ export async function POST(req: Request) {
 
     const userId = (session.user as any).id;
     
-    // Check if user is FOUNDER or OFFICER of any club
+    // Check if user is FOUNDER or PACER of any club
     const activeClubMember = await prisma.clubMember.findFirst({
       where: {
         userId,
         status: "ACTIVE",
-        role: { in: ["FOUNDER", "OFFICER", "PACER"] }
+        role: { in: ["FOUNDER", "PACER"] }
       },
       include: { club: true }
     });
 
     if (!activeClubMember) {
-      return NextResponse.json({ error: "Только создатели и офицеры клуба могут создавать события" }, { status: 403 });
+      return NextResponse.json({ error: "Только основатель и пейсеры клуба могут создавать события" }, { status: 403 });
     }
 
     const { title, description, location, date, distance, pace, image, routeData, showOnMap } = await req.json();
