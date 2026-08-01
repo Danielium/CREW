@@ -350,12 +350,7 @@ export default function FeedTab() {
   };
 
   return (
-    <div className="flex flex-col min-h-[100dvh] text-foreground pb-24 relative z-10">
-      {/* Header Sticky */}
-      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border px-4 pb-4 pt-safe flex justify-between items-center">
-        <h1 className="text-2xl font-black tracking-tight uppercase">ЛЕНТА</h1>
-      </div>
-
+    <div className="flex flex-col min-h-[100dvh] text-foreground pb-24 pt-safe relative z-10">
       {/* Composer */}
       <div className="bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] p-4 mx-4 mt-4 flex gap-3">
         {(currentUser?.image || (session?.user as any)?.image) ? (
