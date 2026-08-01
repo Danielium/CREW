@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Bell, User, Users, Search, ChevronRight, Trophy, Info, Loader2, Map as MapIcon, Flag, Crown, Edit2, Trash2, Calendar, Clock, Activity, BarChart2, MapPin, Plus, Check, QrCode, ScanLine } from "lucide-react";
-import { CrewLogo } from "@/components/CrewLogo";
 import Link from "next/link";
 import ClubBadge from "@/components/ClubBadge";
 import { useSession } from "next-auth/react";
@@ -59,17 +58,8 @@ export default function ClubTab() {
       <div className="fixed top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-primary/20 rounded-full blur-[100px] -z-10 pointer-events-none opacity-50" />
 
       {/* Header */}
-      <div className="flex justify-between items-center px-4 pb-4">
-        <div className="flex items-center gap-3">
-          <Link href={inClub ? `/club/${userData?.clubMembers[0]?.clubId}` : "/club/create"}>
-            <div className="w-12 h-12 rounded-[16px] bg-primary flex items-center justify-center shadow-[0_0_15px_rgba(204,255,0,0.4)]">
-              <CrewLogo size={40} className="text-black" />
-            </div>
-          </Link>
-          <div className="flex flex-col">
-            <h1 className="text-2xl font-black tracking-tighter uppercase leading-none drop-shadow-sm">CREW</h1>
-          </div>
-        </div>
+      <div className="px-4 pt-2 pb-4">
+        <h1 className="text-[10px] font-bold text-muted uppercase tracking-widest">Клуб</h1>
       </div>
       {/* Franchise CTA */}
       <div className="px-4 mb-4">
