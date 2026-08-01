@@ -57,12 +57,8 @@ export default function ClubTab() {
       <div className="fixed top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-primary/10 to-transparent -z-10 pointer-events-none" />
       <div className="fixed top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-primary/20 rounded-full blur-[100px] -z-10 pointer-events-none opacity-50" />
 
-      {/* Header */}
-      <div className="px-4 pt-2 pb-4">
-        <h1 className="text-[10px] font-bold text-muted uppercase tracking-widest">Клуб</h1>
-      </div>
       {/* Franchise CTA */}
-      <div className="px-4 mb-4">
+      <div className="px-4 mb-4 mt-4">
         <Link href={inClub ? `/club/${userData?.clubMembers[0]?.clubId}` : "/club/create"}>
           <div className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-[28px] p-5 flex items-center justify-between relative overflow-hidden group shadow-xl">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-[50px] -z-10 group-hover:bg-primary/20 transition-all duration-500" />
