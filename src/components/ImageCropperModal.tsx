@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '@/lib/cropImage';
 import { Loader2, X, Check } from 'lucide-react';
@@ -37,7 +38,14 @@ export function ImageCropperModal({ imageSrc, onCropComplete, onClose }: ImageCr
     }
   };
 
-  return (
+  // Portal straight to <body>: this modal must always be a true fullscreen
+  // overlay, but "fixed" only escapes the viewport if no ancestor sets a
+  // transform/filter/backdrop-filter — several call sites embed this inside
+  // backdrop-blur cards, which would otherwise trap it (and clip it via
+  // overflow-hidden) instead of covering the screen.
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-[200] flex flex-col bg-background">
       <div className="flex justify-between items-center p-4 pt-16 z-10 border-b border-border bg-card">
         <button onClick={onClose} disabled={isProcessing} className="p-2 text-muted hover:text-foreground disabled:opacity-50">
@@ -64,7 +72,10 @@ export function ImageCropperModal({ imageSrc, onCropComplete, onClose }: ImageCr
         />
       </div>
 
-      <div className="p-6 bg-card border-t border-border z-10">
+      <div
+        className="p-6 bg-card border-t border-border z-10"
+        style={{ paddingBottom: "max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem), var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px)))" }}
+      >
         <div className="flex items-center gap-4">
           <span className="text-xs text-muted font-bold">Zoom</span>
           <input
@@ -79,6 +90,7 @@ export function ImageCropperModal({ imageSrc, onCropComplete, onClose }: ImageCr
           />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
