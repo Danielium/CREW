@@ -49,6 +49,11 @@ export default function ClubProfilePage() {
     fetchClub();
   }, [id]);
 
+  useEffect(() => {
+    window.dispatchEvent(new Event(isEditingLogo ? 'hideNav' : 'showNav'));
+    return () => { window.dispatchEvent(new Event('showNav')); };
+  }, [isEditingLogo]);
+
   const openLogoEditor = () => {
     try {
       const current = JSON.parse(club.logoConfig);
@@ -528,7 +533,10 @@ export default function ClubProfilePage() {
       {isEditingLogo && (
         <div className="fixed inset-0 z-[200] flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Эмблема клуба">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => !isUploadingLogo && setIsEditingLogo(false)} />
-          <div className="relative w-full max-w-[480px] bg-card/95 backdrop-blur-2xl border-t border-white/10 rounded-t-[28px] p-6 pb-8 max-h-[85vh] overflow-y-auto">
+          <div
+            className="relative w-full max-w-[480px] bg-card/95 backdrop-blur-2xl border-t border-white/10 rounded-t-[28px] p-6 max-h-[85vh] overflow-y-auto"
+            style={{ paddingBottom: "max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem), var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px)))" }}
+          >
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-black uppercase tracking-tight text-lg">Эмблема клуба</h2>
               <button
