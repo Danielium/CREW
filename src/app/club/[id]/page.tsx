@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
-import { Bell, User, Users, Search, ChevronRight, Trophy, Info, Loader2, Map, Flag, Crown, Edit2, Trash2, Calendar, Clock, Activity, BarChart2, MapPin, Plus, Check, Shield, Star, Target, UserCheck, UserX, ChevronLeft } from "lucide-react";
+import { Bell, User, Users, Search, ChevronRight, Trophy, Info, Loader2, Map, Flag, Crown, Edit2, Trash2, Calendar, Clock, Activity, BarChart2, MapPin, Plus, Check, Shield, Star, Target, UserCheck, UserX, ChevronLeft, X } from "lucide-react";
 import Link from "next/link";
 import ClubBadge from "@/components/ClubBadge";
+import ClubLogoPicker, { DEFAULT_SIMPLE_LOGO, type SimpleLogoConfig } from "@/components/ClubLogoPicker";
 import { globalCache } from "@/lib/cache";
 
 export default function ClubProfilePage() {
@@ -18,6 +19,8 @@ export default function ClubProfilePage() {
   const [isJoining, setIsJoining] = useState(false);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isEditingLogo, setIsEditingLogo] = useState(false);
+  const [draftLogo, setDraftLogo] = useState<SimpleLogoConfig>(DEFAULT_SIMPLE_LOGO);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editNameValue, setEditNameValue] = useState("");
   const [isSavingName, setIsSavingName] = useState(false);
@@ -46,30 +49,38 @@ export default function ClubProfilePage() {
     fetchClub();
   }, [id]);
 
-  useEffect(() => {
-    // Check if we just returned from logo builder
-    const savedConfig = localStorage.getItem("clubLogoConfig");
-    if (savedConfig && id) {
-      setIsUploadingLogo(true);
-      try {
-        const config = JSON.parse(savedConfig);
-        fetch(`/api/clubs/${id}/logo`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ logoConfig: JSON.stringify(config) })
-        }).then(res => {
-          if (res.ok) fetchClub();
-        }).finally(() => {
-          localStorage.removeItem("clubLogoConfig");
-          setIsUploadingLogo(false);
-        });
-      } catch (e) {
-        console.error(e);
-        localStorage.removeItem("clubLogoConfig");
-        setIsUploadingLogo(false);
-      }
+  const openLogoEditor = () => {
+    try {
+      const current = JSON.parse(club.logoConfig);
+      setDraftLogo({ ...DEFAULT_SIMPLE_LOGO, ...current });
+    } catch {
+      setDraftLogo(DEFAULT_SIMPLE_LOGO);
     }
-  }, [id]);
+    setIsEditingLogo(true);
+  };
+
+  const handleSaveLogo = async () => {
+    setIsUploadingLogo(true);
+    try {
+      const res = await fetch(`/api/clubs/${id}/logo`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ logoConfig: JSON.stringify(draftLogo) })
+      });
+      if (res.ok) {
+        globalCache.clubs = null;
+        setIsEditingLogo(false);
+        await fetchClub();
+      } else {
+        alert("Ошибка при сохранении эмблемы");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Сетевая ошибка");
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
 
   const handleJoin = async () => {
     if (!session) return router.push('/login');
@@ -242,17 +253,19 @@ export default function ClubProfilePage() {
           </div>
           <div className="flex items-center gap-4 mb-4">
             {isFounder ? (
-              <div className="relative group cursor-pointer shrink-0" onClick={() => {
-                if (club?.logoConfig) localStorage.setItem("clubLogoConfig", club.logoConfig);
-                router.push(`/club/logo-builder?admin=true&clubId=${id}`);
-              }}>
+              <button
+                type="button"
+                onClick={openLogoEditor}
+                aria-label="Изменить эмблему клуба"
+                className="relative group shrink-0 -m-1 p-1 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+              >
                 {(() => {
                   try {
                     const logo = JSON.parse(club.logoConfig);
                     return (
                       <div className={`relative ${isUploadingLogo ? 'opacity-50' : 'opacity-100'} transition-opacity drop-shadow-xl`}>
                         <ClubBadge {...logo} size={64} />
-                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center text-black shadow-lg">
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center text-black shadow-lg pointer-events-none">
                           {isUploadingLogo ? <Loader2 size={12} className="animate-spin" /> : <Edit2 size={12} />}
                         </div>
                       </div>
@@ -260,7 +273,7 @@ export default function ClubProfilePage() {
                   } catch(e) {}
                   return null;
                 })()}
-              </div>
+              </button>
             ) : (
               (() => {
                 try {
@@ -510,6 +523,36 @@ export default function ClubProfilePage() {
         )}
 
       </div>
+
+      {/* Logo Editor — bottom sheet, matches the app's map-proposal sheet pattern */}
+      {isEditingLogo && (
+        <div className="fixed inset-0 z-[200] flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Эмблема клуба">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => !isUploadingLogo && setIsEditingLogo(false)} />
+          <div className="relative w-full max-w-[480px] bg-card/95 backdrop-blur-2xl border-t border-white/10 rounded-t-[28px] p-6 pb-8 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-black uppercase tracking-tight text-lg">Эмблема клуба</h2>
+              <button
+                onClick={() => setIsEditingLogo(false)}
+                disabled={isUploadingLogo}
+                aria-label="Закрыть"
+                className="w-9 h-9 rounded-full flex items-center justify-center text-muted hover:text-foreground hover:bg-white/5 transition-colors disabled:opacity-50"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <ClubLogoPicker value={draftLogo} onChange={setDraftLogo} />
+
+            <button
+              onClick={handleSaveLogo}
+              disabled={isUploadingLogo}
+              className="w-full mt-6 py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#b3e600] active:scale-[0.98] transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(204,255,0,0.3)]"
+            >
+              {isUploadingLogo ? <Loader2 className="animate-spin" size={20} /> : <><Check size={20} /> Сохранить</>}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,0 +1,218 @@
+"use client";
+
+import { useRef, useState } from "react";
+import { Zap, Flame, Shield, Crown, Star, Heart, Activity, Target, Trophy, Mountain, Flag, Check, Image as ImageIcon, Loader2 } from "lucide-react";
+import ClubBadge, { ShapeType } from "@/components/ClubBadge";
+import { ImageCropperModal } from "@/components/ImageCropperModal";
+import { uploadImage } from "@/lib/uploadImage";
+
+export type SimpleLogoConfig = {
+  shape: ShapeType;
+  pattern: "solid";
+  color1: string;
+  color2?: string;
+  iconName: string;
+  iconColor: string;
+  imageUrl?: string;
+};
+
+const SHAPES: { id: ShapeType; name: string }[] = [
+  { id: "circle", name: "Круг" },
+  { id: "square", name: "Квадрат" },
+  { id: "octagon", name: "Октагон" },
+  { id: "triangle", name: "Треугольник" },
+];
+
+// Curated for a running club — dropped the leftover fantasy/combat set
+// (Skull, Sword, Anchor, Ghost, Crosshair) that shipped with the original
+// icon grid; ClubBadge's ICON_MAP still recognizes them so old clubs that
+// picked one keep rendering correctly.
+const ICONS: { id: string; Comp: any }[] = [
+  { id: "Flag", Comp: Flag },
+  { id: "Zap", Comp: Zap },
+  { id: "Activity", Comp: Activity },
+  { id: "Target", Comp: Target },
+  { id: "Trophy", Comp: Trophy },
+  { id: "Mountain", Comp: Mountain },
+  { id: "Flame", Comp: Flame },
+  { id: "Shield", Comp: Shield },
+  { id: "Crown", Comp: Crown },
+  { id: "Star", Comp: Star },
+  { id: "Heart", Comp: Heart },
+];
+
+const COLORS = [
+  "#CCFF00", // Acid Green (brand)
+  "#FF3366", // Cyber Pink
+  "#00E5FF", // Electric Blue
+  "#FF6B00", // Bright Orange
+  "#8A2BE2", // Purple
+  "#FFFFFF", // White
+  "#111111", // Pitch Black
+  "#8E8E93", // Gray
+];
+
+/** Perceptual luminance so the icon stays legible against any swatch — no manual icon-color picker needed. */
+export function contrastIconColor(hex: string) {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? "#111111" : "#FFFFFF";
+}
+
+export const DEFAULT_SIMPLE_LOGO: SimpleLogoConfig = {
+  shape: "circle",
+  pattern: "solid",
+  color1: "#CCFF00",
+  iconName: "Flag",
+  iconColor: contrastIconColor("#CCFF00"),
+};
+
+export default function ClubLogoPicker({
+  value,
+  onChange,
+}: {
+  value: SimpleLogoConfig;
+  onChange: (next: SimpleLogoConfig) => void;
+}) {
+  const hasPhoto = !!value.imageUrl;
+  const [isUploading, setIsUploading] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const setShape = (shape: ShapeType) => onChange({ ...value, shape });
+  const setColor = (color1: string) => onChange({ ...value, color1, iconColor: contrastIconColor(color1) });
+  const setIcon = (iconName: string) => onChange({ ...value, iconName });
+  const dropPhoto = () => onChange({ ...value, imageUrl: undefined });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) setCropSrc(event.target.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = async (file: File, previewUrl: string) => {
+    setCropSrc(null);
+    setIsUploading(true);
+    onChange({ ...value, imageUrl: previewUrl });
+    const uploadedUrl = await uploadImage(file, "club-logos");
+    setIsUploading(false);
+    if (uploadedUrl) {
+      onChange({ ...value, imageUrl: uploadedUrl });
+    } else {
+      alert("Не удалось загрузить фото");
+      onChange({ ...value, imageUrl: undefined });
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-6">
+      <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+
+      <div className="relative scale-[0.85] drop-shadow-xl">
+        <ClubBadge {...value} size={112} />
+        {isUploading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+            <Loader2 size={24} className="animate-spin text-white" />
+          </div>
+        )}
+      </div>
+
+      {hasPhoto ? (
+        <div className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 flex flex-col gap-3">
+          <p className="text-xs text-muted leading-relaxed">Вместо эмблемы используется фото. Форма, цвет и иконка ниже не будут видны, пока оно не убрано.</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1 px-3 py-2.5 rounded-xl bg-white/10 text-xs font-bold uppercase tracking-wider hover:bg-white/15 transition-colors"
+            >
+              Заменить фото
+            </button>
+            <button
+              onClick={dropPhoto}
+              className="flex-1 px-3 py-2.5 rounded-xl bg-red-500/10 text-red-400 text-xs font-bold uppercase tracking-wider hover:bg-red-500/15 transition-colors"
+            >
+              Убрать фото
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-black/40 border border-white/10 text-xs font-bold uppercase tracking-wider hover:border-primary/50 transition-colors"
+        >
+          <ImageIcon size={14} /> Загрузить фото вместо эмблемы
+        </button>
+      )}
+
+      {cropSrc && (
+        <ImageCropperModal imageSrc={cropSrc} onCropComplete={handleCropComplete} onClose={() => setCropSrc(null)} />
+      )}
+
+      <div className={`w-full flex flex-col gap-6 transition-opacity ${hasPhoto ? "opacity-40 pointer-events-none" : ""}`}>
+      <div className="w-full">
+        <p className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">Форма</p>
+        <div className="grid grid-cols-2 gap-2">
+          {SHAPES.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setShape(s.id)}
+              aria-pressed={value.shape === s.id}
+              aria-label={s.name}
+              className={`h-12 rounded-xl border-2 flex items-center justify-center text-xs font-bold uppercase transition-colors ${
+                value.shape === s.id ? "border-primary text-primary bg-primary/10" : "border-white/10 text-muted"
+              }`}
+            >
+              {s.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="w-full">
+        <p className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">Цвет</p>
+        <div className="flex flex-wrap gap-3">
+          {COLORS.map((c) => (
+            <button
+              key={c}
+              onClick={() => setColor(c)}
+              aria-pressed={value.color1 === c}
+              aria-label={`Цвет ${c}`}
+              className={`w-11 h-11 rounded-full border-2 flex items-center justify-center transition-transform active:scale-95 ${
+                value.color1 === c ? "border-primary scale-110" : "border-white/10"
+              }`}
+              style={{ backgroundColor: c }}
+            >
+              {value.color1 === c && <Check size={16} color={contrastIconColor(c)} strokeWidth={3} />}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="w-full">
+        <p className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">Иконка</p>
+        <div className="grid grid-cols-5 gap-2">
+          {ICONS.map(({ id, Comp }) => (
+            <button
+              key={id}
+              onClick={() => setIcon(id)}
+              aria-pressed={value.iconName === id}
+              aria-label={id}
+              className={`aspect-square min-h-11 rounded-xl flex items-center justify-center border-2 transition-colors ${
+                value.iconName === id ? "border-primary bg-primary/10 text-primary" : "border-white/10 text-foreground"
+              }`}
+            >
+              <Comp size={22} />
+            </button>
+          ))}
+        </div>
+      </div>
+      </div>
+    </div>
+  );
+}

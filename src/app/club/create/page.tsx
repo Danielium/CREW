@@ -1,26 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ChevronLeft, Flag, Users, Shield, Lock, Hash, Loader2, Check } from "lucide-react";
-import Link from "next/link";
+import { useState } from "react";
+import { Flag, Users, Shield, Lock, Hash, Loader2, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import ClubBadge from "@/components/ClubBadge";
+import ClubLogoPicker, { DEFAULT_SIMPLE_LOGO, type SimpleLogoConfig } from "@/components/ClubLogoPicker";
 import { globalCache } from "@/lib/cache";
 
 const AVAILABLE_TAGS = [
-  "Party Pace", "Hardcore", "Beginners", "Dogs friendly", 
+  "Party Pace", "Hardcore", "Beginners", "Dogs friendly",
   "Track", "Trail", "Morning Crew", "Night Owls", "Beer Runners"
 ];
-
-const DEFAULT_LOGO = {
-  shape: "circle",
-  pattern: "solid",
-  color1: "#FFFFFF",
-  color2: "#111111",
-  iconName: "Zap",
-  iconColor: "#111111"
-};
 
 export default function CreateClubPage() {
   const router = useRouter();
@@ -30,30 +20,7 @@ export default function CreateClubPage() {
   const [joinType, setJoinType] = useState("OPEN");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [logoConfig, setLogoConfig] = useState<any>(DEFAULT_LOGO);
-
-  useEffect(() => {
-    const checkLogo = () => {
-      const savedLogo = localStorage.getItem("clubLogoConfig");
-      if (savedLogo) {
-        try {
-          const parsed = JSON.parse(savedLogo);
-          setLogoConfig((prev: any) => {
-            // Only update if changed to avoid unnecessary re-renders
-            if (JSON.stringify(prev) !== JSON.stringify(parsed)) {
-              return parsed;
-            }
-            return prev;
-          });
-        } catch (e) {}
-      }
-    };
-    
-    checkLogo();
-    // Poll to catch updates when returning via history.back()
-    const interval = setInterval(checkLogo, 500);
-    return () => clearInterval(interval);
-  }, []);
+  const [logoConfig, setLogoConfig] = useState<SimpleLogoConfig>(DEFAULT_SIMPLE_LOGO);
 
   const toggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -82,7 +49,6 @@ export default function CreateClubPage() {
       if (data.club) {
         globalCache.clubs = null;
         globalCache.userData = null;
-        localStorage.removeItem("clubLogoConfig");
         router.push("/club");
       } else {
         alert(data.error || "Ошибка при создании клуба");
@@ -108,22 +74,10 @@ export default function CreateClubPage() {
 
       <div className="px-6 py-6 flex flex-col gap-8 flex-1 relative z-10">
         
-        {/* Logo Preview */}
-        <div className="flex flex-col items-center justify-center py-6 bg-card/40 backdrop-blur-xl border border-white/5 rounded-[28px] relative overflow-hidden group shadow-xl">
+        {/* Logo Picker */}
+        <div className="flex flex-col items-center py-6 px-5 bg-card/40 backdrop-blur-xl border border-white/5 rounded-[28px] relative overflow-hidden group shadow-xl">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-[50px] -z-10 group-hover:bg-primary/20 transition-all duration-500" />
-          {logoConfig ? (
-            <div className="relative z-10 scale-[0.85] drop-shadow-xl">
-              <ClubBadge {...logoConfig} />
-            </div>
-          ) : (
-            <div className="w-24 h-24 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 flex items-center justify-center mb-2 z-10 text-muted">
-              <Shield size={32} />
-            </div>
-          )}
-          
-          <Link href="/club/logo-builder" className="relative z-10 mt-3 px-5 py-2.5 bg-black/40 border border-white/10 rounded-full text-xs font-bold uppercase tracking-wider hover:border-primary/50 transition-colors shadow-lg">
-            {logoConfig ? "Изменить эмблему" : "Создать эмблему"}
-          </Link>
+          <ClubLogoPicker value={logoConfig} onChange={setLogoConfig} />
         </div>
 
         {/* Basic Info */}

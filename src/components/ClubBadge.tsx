@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Zap, Flame, Skull, Sword, Shield, Mountain, Anchor, Crown, Star, Heart, Activity, Target, Trophy, Ghost, Crosshair, HelpCircle } from "lucide-react";
+import { Zap, Flame, Skull, Sword, Shield, Mountain, Anchor, Crown, Star, Heart, Activity, Target, Trophy, Ghost, Crosshair, Flag, HelpCircle } from "lucide-react";
 
 export type ShapeType = "square" | "circle" | "triangle" | "octagon";
 export type PatternType = "solid" | "split-diagonal" | "stripes" | "checker" | "half-vertical";
@@ -18,7 +18,7 @@ interface ClubBadgeProps {
 }
 
 const ICON_MAP: Record<string, any> = {
-  Zap, Flame, Skull, Sword, Shield, Mountain, Anchor, Crown, Star, Heart, Activity, Target, Trophy, Ghost, Crosshair
+  Zap, Flame, Skull, Sword, Shield, Mountain, Anchor, Crown, Star, Heart, Activity, Target, Trophy, Ghost, Crosshair, Flag
 };
 
 export default function ClubBadge({

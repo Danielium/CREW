@@ -58,7 +58,7 @@ export default function BottomNav() {
 
   const activeIndex = navItems.findIndex(item => pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path)));
 
-  if (pathname === '/login' || pathname.startsWith('/club/logo-builder') || pathname.startsWith('/map/requests') || pathname.startsWith('/events/')) {
+  if (pathname === '/login' || pathname.startsWith('/map/requests') || pathname.startsWith('/events/')) {
     return null;
   }
 
