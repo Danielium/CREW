@@ -352,7 +352,7 @@ export default function FeedTab() {
   return (
     <div className="flex flex-col min-h-[100dvh] text-foreground pb-24 pt-safe relative z-10">
       {/* Composer */}
-      <div className="bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] p-4 mx-4 mt-4 flex gap-3">
+      <div data-onboarding="feed-composer" className="bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] p-4 mx-4 mt-4 flex gap-3">
         {(currentUser?.image || (session?.user as any)?.image) ? (
           <img src={currentUser?.image || (session?.user as any)?.image} className="w-10 h-10 rounded-full object-cover shrink-0" />
         ) : (

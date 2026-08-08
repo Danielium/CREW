@@ -301,7 +301,7 @@ export default function ProfileTab() {
       {/* Header & Avatar */}
       <div className="px-4 mb-6 relative">
         <div className="absolute top-0 right-4 flex gap-3 z-30">
-          <Link href="/profile/settings" className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-muted hover:text-foreground transition-colors">
+          <Link href="/profile/settings" data-onboarding="profile-settings" className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-muted hover:text-foreground transition-colors">
             <Settings size={18} />
           </Link>
         </div>

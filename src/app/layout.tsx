@@ -7,6 +7,7 @@ import { TelegramInit } from "@/components/TelegramInit";
 import { TelegramBackButton } from "@/components/TelegramBackButton";
 import { MainScrollContainer } from "@/components/MainScrollContainer";
 import { SplashLoader } from "@/components/SplashLoader";
+import AppShell from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "CREW",
@@ -40,19 +41,14 @@ export default function RootLayout({
         <TelegramInit />
         <TelegramBackButton />
         <AuthProvider>
-          <div 
-            className="w-full max-w-[480px] bg-background relative shadow-2xl overflow-hidden flex flex-col mx-auto"
-            style={{ 
-              height: "var(--tg-viewport-stable-height, 100dvh)"
-            }}
-          >
+          <AppShell>
             <SplashLoader>
               <MainScrollContainer>
                 {children}
               </MainScrollContainer>
               <BottomNav />
             </SplashLoader>
-          </div>
+          </AppShell>
         </AuthProvider>
       </body>
     </html>
