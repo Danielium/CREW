@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Zap, Flame, Shield, Crown, Star, Heart, Activity, Target, Trophy, Mountain, Flag, Check, Image as ImageIcon, Loader2, ChevronDown, Camera } from "lucide-react";
+import { Zap, Flame, Shield, Crown, Star, Heart, Activity, Target, Trophy, Mountain, Flag, Check, Image as ImageIcon, Loader2, ChevronDown, Palette } from "lucide-react";
 import ClubBadge, { ShapeType } from "@/components/ClubBadge";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
 import { uploadImage } from "@/lib/uploadImage";
@@ -118,28 +118,15 @@ export default function ClubLogoPicker({
     <div className="flex flex-col items-center gap-5 w-full">
       <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
 
-      {/* Photo is the primary path — tapping the preview itself uploads/replaces it. */}
-      <button
-        type="button"
-        onClick={() => fileInputRef.current?.click()}
-        aria-label={hasPhoto ? "Заменить фото" : "Загрузить фото"}
-        className="relative group drop-shadow-xl rounded-full"
-      >
+      {/* Preview only — the button below is the single, unambiguous way to upload. */}
+      <div className="relative drop-shadow-xl">
         <ClubBadge {...value} size={128} />
-        <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/30 group-active:bg-black/40 transition-colors flex items-center justify-center">
-          <Camera size={22} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
         {isUploading && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
             <Loader2 size={24} className="animate-spin text-white" />
           </div>
         )}
-        {!hasPhoto && (
-          <div className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-primary text-black flex items-center justify-center shadow-lg border-2 border-background">
-            <Camera size={16} />
-          </div>
-        )}
-      </button>
+      </div>
 
       {hasPhoto ? (
         <div className="flex gap-2 w-full">
@@ -174,9 +161,12 @@ export default function ClubLogoPicker({
         <div className="w-full">
           <button
             onClick={() => setBuilderOpen((v) => !v)}
-            className="w-full flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-muted uppercase tracking-widest hover:text-foreground transition-colors"
+            aria-expanded={builderOpen}
+            className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl border text-xs font-bold uppercase tracking-wider transition-colors ${
+              builderOpen ? "border-primary/40 bg-primary/5 text-primary" : "border-white/10 text-muted hover:border-white/20 hover:text-foreground"
+            }`}
           >
-            Или собери эмблему сам
+            <Palette size={14} /> Или собери эмблему сам
             <ChevronDown size={14} className={`transition-transform ${builderOpen ? "rotate-180" : ""}`} />
           </button>
 
