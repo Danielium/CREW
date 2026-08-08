@@ -541,7 +541,7 @@ export default function ClubProfilePage() {
               </button>
             </div>
 
-            <ClubLogoPicker value={draftLogo} onChange={setDraftLogo} />
+            <ClubLogoPicker value={draftLogo} onChange={setDraftLogo} startExpanded={!draftLogo.imageUrl} />
 
             <button
               onClick={handleSaveLogo}
