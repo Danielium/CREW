@@ -212,7 +212,7 @@ export default function OnboardingHint({
         <button
           onClick={onDismiss}
           aria-label="Закрыть подсказку"
-          className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full flex items-center justify-center text-muted hover:text-foreground hover:bg-white/5 transition-colors"
+          className="absolute z-10 top-3.5 right-3.5 w-8 h-8 rounded-full flex items-center justify-center text-muted hover:text-foreground hover:bg-white/5 transition-colors"
         >
           <X size={16} />
         </button>

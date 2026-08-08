@@ -46,8 +46,9 @@ export default function OnboardingProvider() {
       setStep(next);
     };
 
-    // A short beat first, so the hint lands after the screen itself, not with it.
-    const minDelay = 700;
+    // Give the user a couple seconds to actually land on the screen before
+    // interrupting them with a hint.
+    const minDelay = 2000;
     const startedAt = Date.now();
     const tryShow = () => {
       if (Date.now() - startedAt < minDelay) return;
