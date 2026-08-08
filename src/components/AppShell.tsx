@@ -1,12 +1,19 @@
 "use client";
 
-import { useRef } from "react";
-import OnboardingProvider from "@/components/OnboardingProvider";
+import { createContext, useContext, useRef } from "react";
+
+const ShellRefContext = createContext<React.RefObject<HTMLDivElement | null> | null>(null);
+
+/** The AppShell's own DOM node, for anything that needs to measure or position against the phone-width frame (e.g. the onboarding overlay). */
+export function useShellRef() {
+  return useContext(ShellRefContext);
+}
 
 /**
- * The phone-width frame every screen renders inside. It owns the ref that the
- * onboarding overlay measures against, so hints stay inside the frame instead of
- * spilling across the desktop viewport.
+ * The phone-width frame every screen renders inside. Exposes its ref via
+ * context so descendants (like the onboarding overlay, mounted deeper in the
+ * tree once the splash screen clears) can measure against it without prop
+ * drilling.
  */
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const shellRef = useRef<HTMLDivElement>(null);
@@ -17,8 +24,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       className="w-full max-w-[480px] bg-background relative shadow-2xl overflow-hidden flex flex-col mx-auto"
       style={{ height: "var(--tg-viewport-stable-height, 100dvh)" }}
     >
-      {children}
-      <OnboardingProvider shellRef={shellRef} />
+      <ShellRefContext.Provider value={shellRef}>{children}</ShellRefContext.Provider>
     </div>
   );
 }

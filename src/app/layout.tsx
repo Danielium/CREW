@@ -8,6 +8,7 @@ import { TelegramBackButton } from "@/components/TelegramBackButton";
 import { MainScrollContainer } from "@/components/MainScrollContainer";
 import { SplashLoader } from "@/components/SplashLoader";
 import AppShell from "@/components/AppShell";
+import OnboardingProvider from "@/components/OnboardingProvider";
 
 export const metadata: Metadata = {
   title: "CREW",
@@ -47,6 +48,7 @@ export default function RootLayout({
                 {children}
               </MainScrollContainer>
               <BottomNav />
+              <OnboardingProvider />
             </SplashLoader>
           </AppShell>
         </AuthProvider>

@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import OnboardingHint from "@/components/OnboardingHint";
+import { useShellRef } from "@/components/AppShell";
 import { pickStep, type OnboardingStep } from "@/lib/onboarding";
 
-export default function OnboardingProvider({ shellRef }: { shellRef: React.RefObject<HTMLElement | null> }) {
+export default function OnboardingProvider() {
+  const shellRef = useShellRef();
   const { status } = useSession();
   const pathname = usePathname();
   const [seenMask, setSeenMask] = useState<number | null>(null);
@@ -80,6 +82,6 @@ export default function OnboardingProvider({ shellRef }: { shellRef: React.RefOb
     }).catch(() => {});
   };
 
-  if (!step) return null;
+  if (!step || !shellRef) return null;
   return <OnboardingHint step={step} shellRef={shellRef} onDismiss={handleDismiss} />;
 }
