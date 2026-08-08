@@ -60,7 +60,7 @@ export default function ClubTab() {
       {/* Franchise CTA */}
       <div className="px-4 mb-4 mt-4">
         <Link href={inClub ? `/club/${userData?.clubMembers[0]?.clubId}` : "/club/create"}>
-          <div className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-[28px] p-5 flex items-center justify-between relative overflow-hidden group shadow-xl">
+          <div data-onboarding="club-create" className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-[28px] p-5 flex items-center justify-between relative overflow-hidden group shadow-xl">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-[50px] -z-10 group-hover:bg-primary/20 transition-all duration-500" />
             <div className="relative z-10 flex items-center gap-4">
               {inClub ? (
@@ -113,7 +113,7 @@ export default function ClubTab() {
       <div className="mt-6">
         {activeTab === "События" && <FeedEvents userData={userData} />}
         {activeTab === "Атлеты" && <Leaderboard clubId={userData?.clubMembers[0]?.clubId} />}
-        {activeTab === "Клубы" && <GlobalClubs inClub={inClub} />}
+        {activeTab === "Клубы" && <GlobalClubs />}
       </div>
     </div>
   );

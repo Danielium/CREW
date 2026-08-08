@@ -31,9 +31,6 @@ export async function POST(req: Request) {
     }
 
     const { name, description, joinType, tags, logoConfig } = body;
-    
-    const { randomBytes } = await import('crypto');
-    const inviteCode = randomBytes(4).toString('hex').toUpperCase(); // 8 characters
 
     const club = await prisma.club.create({
       data: {
@@ -42,7 +39,6 @@ export async function POST(req: Request) {
         joinType: joinType || "OPEN",
         tags: JSON.stringify(tags || []),
         logoConfig: JSON.stringify(logoConfig || {}),
-        inviteCode,
         members: {
           create: {
             userId: (session.user as any).id,

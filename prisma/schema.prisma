@@ -23,6 +23,7 @@ model User {
   totalDistance Float        @default(0)
   weeklyGoal    Float        @default(15)
   notifyClubEvents Boolean   @default(true)
+  onboardingSeenMask Int     @default(0)
   createdAt     DateTime     @default(now())
   
   accounts      Account[]
@@ -69,7 +70,6 @@ model Club {
   logoConfig        String?      // JSON stringified
   joinType          String       @default("OPEN") // "OPEN" | "APPLICATION" | "INVITE_ONLY"
   tags              String?      // JSON stringified array
-  inviteCode        String?      @unique
   totalClubDistance Float        @default(0)
   createdAt         DateTime     @default(now())
   

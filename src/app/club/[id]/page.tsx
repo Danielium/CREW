@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
-import { Bell, User, Users, Search, ChevronRight, Trophy, Info, Loader2, Map, Flag, Crown, Edit2, Trash2, Calendar, Clock, Activity, BarChart2, MapPin, Plus, Check, QrCode, ScanLine, Shield, Star, Target, Copy, UserCheck, UserX, Key, ChevronLeft } from "lucide-react";
+import { Bell, User, Users, Search, ChevronRight, Trophy, Info, Loader2, Map, Flag, Crown, Edit2, Trash2, Calendar, Clock, Activity, BarChart2, MapPin, Plus, Check, Shield, Star, Target, UserCheck, UserX, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import ClubBadge from "@/components/ClubBadge";
 import { globalCache } from "@/lib/cache";
@@ -16,7 +16,6 @@ export default function ClubProfilePage() {
   const [club, setClub] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -141,24 +140,6 @@ export default function ClubProfilePage() {
       alert("Сетевая ошибка");
     } finally {
       setIsSavingDescription(false);
-    }
-  };
-
-  const copyInviteCode = async () => {
-    if (!club?.inviteCode) return;
-    try {
-      await navigator.clipboard.writeText(club.inviteCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      const el = document.createElement("textarea");
-      el.value = club.inviteCode;
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand("copy");
-      document.body.removeChild(el);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -433,37 +414,6 @@ export default function ClubProfilePage() {
             <div>
               <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-4">Администрирование</h3>
               
-              {/* Invite Code Section */}
-              <div className="bg-card/40 backdrop-blur-xl rounded-[28px] border border-white/5 p-6 shadow-xl relative overflow-hidden group mb-6">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-[50px] -z-10 group-hover:bg-primary/20 transition-all duration-500" />
-                
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                    <Key size={16} />
-                  </div>
-                  <h2 className="font-black uppercase tracking-wider text-sm">Код приглашения</h2>
-                </div>
-                <p className="text-xs text-muted mb-5 leading-relaxed">
-                  Поделитесь этим кодом, чтобы бегуны могли вступить в клуб напрямую.
-                </p>
-
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 bg-black/40 border border-white/10 rounded-2xl p-4 font-mono text-xl font-black tracking-[0.3em] text-center text-primary shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] select-all">
-                    {club.inviteCode || "—"}
-                  </div>
-                  <button
-                    onClick={copyInviteCode}
-                    className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all active:scale-95 ${
-                      copied
-                        ? "bg-green-500 text-white shadow-green-500/20"
-                        : "bg-primary text-black shadow-primary/20 hover:bg-[#b3e600]"
-                    }`}
-                  >
-                    {copied ? <Check size={24} /> : <Copy size={24} />}
-                  </button>
-                </div>
-              </div>
-
               {/* Pending Applications */}
               {(club.joinType === "APPLICATION" || club.members.filter((m: any) => m.status === "PENDING").length > 0) && (
               <div className="bg-card/40 backdrop-blur-xl rounded-[28px] border border-white/5 p-6 shadow-xl relative overflow-hidden">

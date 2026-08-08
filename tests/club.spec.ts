@@ -4,7 +4,6 @@ test.describe('Club Creation and Joining', () => {
   const founderEmail = `founder_${Date.now()}@crew.app`;
   const memberEmail = `member_${Date.now()}@crew.app`;
   const testPass = 'password123';
-  let inviteCode = '';
 
   test.beforeAll(async ({ request }) => {
     // Seed a founder and a member
@@ -19,29 +18,24 @@ test.describe('Club Creation and Joining', () => {
     await page.fill('input[type="password"]', testPass);
     await page.click('button[type="submit"]');
     await expect(page).toHaveURL(/\/profile/);
-    
+
     // Go to create club
     await page.goto('/club/create');
-    
+
     // Fill out the club creation form
     await page.fill('input[placeholder="GHOST RUNNERS"]', 'Playwright Run Club');
     await page.fill('textarea[placeholder="Мы бегаем по ночам и не смотрим на темп."]', 'A club for E2E testing.');
-    
+
+    // Club defaults to OPEN join type, so no extra config needed for the join test below.
     // Click submit
     await page.click('button[type="submit"]');
 
     // Should redirect to the club page
     await expect(page).toHaveURL(/\/club\/c/); // Club IDs usually start with 'c' or are cuid
     await expect(page.locator('h1')).toContainText('PLAYWRIGHT RUN CLUB');
-
-    // Get the invite code from admin panel
-    await page.click('button:has-text("УПРАВЛЕНИЕ")');
-    const inviteCodeElement = page.locator('text=КОД ПРИГЛАШЕНИЯ').locator('..').locator('div.text-2xl');
-    inviteCode = (await inviteCodeElement.textContent()) || '';
-    expect(inviteCode.length).toBeGreaterThan(0);
   });
 
-  test('User can join a club via invite code', async ({ page }) => {
+  test('User can join an open club from the club list', async ({ page }) => {
     // Login as member
     await page.goto('/login');
     await page.fill('input[type="email"]', memberEmail);
@@ -50,20 +44,17 @@ test.describe('Club Creation and Joining', () => {
 
     // Handle redirect to profile
     await expect(page).toHaveURL(/\/profile/);
-    
-    // Go to home page
-    await page.goto('/');
 
-    // Should be on Home Page in "Клубы" tab because they have no club
-    await expect(page.locator('text=Создать клуб')).toBeVisible();
+    // Go to club list and find the club created above
+    await page.goto('/club');
+    await page.click('text=PLAYWRIGHT RUN CLUB');
+    await expect(page).toHaveURL(/\/club\/c/);
 
-    // Click on the join button (usually a scan or input)
-    // Actually the app has a GlobalClubs component with a join modal
-    await page.click('button:has-text("Войти по коду")');
-    await page.fill('input[placeholder="Введите код..."]', inviteCode);
-    await page.click('button:has-text("Присоединиться")');
+    // OPEN clubs join immediately via the CTA button
+    await page.click('button:has-text("Вступить")');
 
-    // Should now be redirected to the club page or see the club in their feed
+    // Should now show the user as a member (join CTA disappears)
     await expect(page.locator('text=PLAYWRIGHT RUN CLUB').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('button:has-text("Вступить")')).not.toBeVisible();
   });
 });
