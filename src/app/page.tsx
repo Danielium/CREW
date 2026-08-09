@@ -54,16 +54,38 @@ function MapContent() {
   const [isJoiningClub, setIsJoiningClub] = useState(false);
 
   useEffect(() => {
+    // Deep link from a shared club QR / link: ?startapp=club_<id>
+    const openSharedClub = () => {
+      const param = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
+      if (param && param.startsWith('club_')) {
+        router.replace(`/club/${param.replace('club_', '')}`);
+        return true;
+      }
+      return false;
+    };
+
+    if (openSharedClub()) return;
+
+    // The Telegram SDK is loaded afterInteractive, so start_param can land after
+    // this mount. Keep checking briefly instead of missing the deep link.
+    const startedAt = Date.now();
+    const timer = setInterval(() => {
+      if (openSharedClub() || Date.now() - startedAt > 3000) clearInterval(timer);
+    }, 100);
+    return () => clearInterval(timer);
+  }, [router]);
+
+  useEffect(() => {
     const lat = searchParams.get('lat');
     const lng = searchParams.get('lng');
     const focus = searchParams.get('focus');
-    
+
     if (lat && lng) {
       setForceCenter([parseFloat(lat), parseFloat(lng)]);
     }
-    
+
     let focusId = focus;
-    
+
     // Support Telegram Mini App startapp parameter
     const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
     const startParam = tg?.initDataUnsafe?.start_param;

@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
-import { Bell, User, Users, Search, ChevronRight, Trophy, Info, Loader2, Map, Flag, Crown, Edit2, Trash2, Calendar, Clock, Activity, BarChart2, MapPin, Plus, Check, Shield, Star, Target, UserCheck, UserX, ChevronLeft, X } from "lucide-react";
+import { Bell, User, Users, Search, ChevronRight, Trophy, Info, Loader2, Map, Flag, Crown, Edit2, Trash2, Calendar, Clock, Activity, BarChart2, MapPin, Plus, Check, Shield, Star, Target, UserCheck, UserX, ChevronLeft, Share2, Copy } from "lucide-react";
 import Link from "next/link";
 import ClubBadge from "@/components/ClubBadge";
+import BottomSheet from "@/components/BottomSheet";
+import ClubQRCard from "@/components/ClubQRCard";
 import ClubLogoPicker, { DEFAULT_SIMPLE_LOGO, type SimpleLogoConfig } from "@/components/ClubLogoPicker";
 import { globalCache } from "@/lib/cache";
 
@@ -28,6 +30,8 @@ export default function ClubProfilePage() {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [editDescriptionValue, setEditDescriptionValue] = useState("");
   const [isSavingDescription, setIsSavingDescription] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isLinkCopied, setIsLinkCopied] = useState(false);
 
   const fetchClub = async () => {
     try {
@@ -48,11 +52,6 @@ export default function ClubProfilePage() {
   useEffect(() => {
     fetchClub();
   }, [id]);
-
-  useEffect(() => {
-    window.dispatchEvent(new Event(isEditingLogo ? 'hideNav' : 'showNav'));
-    return () => { window.dispatchEvent(new Event('showNav')); };
-  }, [isEditingLogo]);
 
   const openLogoEditor = () => {
     try {
@@ -87,16 +86,60 @@ export default function ClubProfilePage() {
     }
   };
 
+  const getClubLink = () => {
+    const botAppUrl = process.env.NEXT_PUBLIC_BOT_APP_URL;
+    return botAppUrl ? `${botAppUrl}?startapp=club_${id}` : `${window.location.origin}/club/${id}`;
+  };
+
+  const handleShareClub = async () => {
+    const link = getClubLink();
+    const shareData = { title: club?.name ? `Клуб «${club.name}» в CREW` : "Клуб в CREW", url: link };
+    const tg = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
+    if (tg?.initDataUnsafe) {
+      setIsShareOpen(true);
+      return;
+    }
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (e) {
+        // user cancelled or unsupported — fall back to modal
+      }
+    }
+    setIsShareOpen(true);
+  };
+
+  const handleCopyClubLink = async () => {
+    try {
+      await navigator.clipboard.writeText(getClubLink());
+      setIsLinkCopied(true);
+      setTimeout(() => setIsLinkCopied(false), 2000);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleJoin = async () => {
     if (!session) return router.push('/login');
     setIsJoining(true);
     try {
       const res = await fetch(`/api/clubs/${id}/join`, { method: "POST" });
+      const data = await res.json();
       if (res.ok) {
+        // Membership changed: the cached user, club list and event feed are all stale now.
         globalCache.clubs = null;
+        globalCache.userData = null;
+        globalCache.events = null;
+
+        // Joined outright — go straight to the club's events. An APPLICATION club
+        // only files a request, so stay here and show the pending state instead.
+        if (data.status === "ACTIVE") {
+          router.push("/club");
+          return;
+        }
         fetchClub();
       } else {
-        const data = await res.json();
         alert(data.error || "Ошибка при вступлении в клуб");
       }
     } catch (e) {
@@ -235,6 +278,12 @@ export default function ClubProfilePage() {
   
   const tags = JSON.parse(club.tags || "[]");
 
+  let clubLogo: Record<string, any> | null = null;
+  try {
+    const parsed = JSON.parse(club.logoConfig);
+    if (parsed && parsed.shape) clubLogo = parsed;
+  } catch (e) {}
+
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground relative z-10">
       {/* Dynamic Background Glow */}
@@ -244,7 +293,16 @@ export default function ClubProfilePage() {
       {/* HEADER BANNER */}
       <div className="h-64 bg-card/40 backdrop-blur-xl relative flex flex-col justify-end p-6 border-b border-white/5 shadow-lg">
         {/* Native back button used here via TelegramBackButton */}
-        
+
+        <button
+          type="button"
+          onClick={handleShareClub}
+          aria-label="Поделиться клубом"
+          className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition-transform"
+        >
+          <Share2 size={18} />
+        </button>
+
         {/* Diagonal Pattern Overlay */}
         <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), repeating-linear-gradient(45deg, #000 25%, #222 25%, #222 75%, #000 75%, #000)', backgroundPosition: '0 0, 10px 10px', backgroundSize: '20px 20px' }}></div>
         
@@ -527,38 +585,45 @@ export default function ClubProfilePage() {
 
       </div>
 
-      {/* Logo Editor — bottom sheet, matches the app's map-proposal sheet pattern */}
-      {isEditingLogo && (
-        <div className="fixed inset-0 z-[200] flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Эмблема клуба">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => !isUploadingLogo && setIsEditingLogo(false)} />
-          <div
-            className="relative w-full max-w-[480px] bg-card/95 backdrop-blur-2xl border-t border-white/10 rounded-t-[28px] p-6 max-h-[85vh] overflow-y-auto"
-            style={{ paddingBottom: "max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem), var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px)))" }}
+      <BottomSheet
+        open={isEditingLogo}
+        onClose={() => setIsEditingLogo(false)}
+        title="Эмблема клуба"
+        locked={isUploadingLogo}
+        footer={
+          <button
+            onClick={handleSaveLogo}
+            disabled={isUploadingLogo}
+            className="w-full py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#b3e600] active:scale-[0.98] transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(204,255,0,0.3)]"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-black uppercase tracking-tight text-lg">Эмблема клуба</h2>
-              <button
-                onClick={() => setIsEditingLogo(false)}
-                disabled={isUploadingLogo}
-                aria-label="Закрыть"
-                className="w-9 h-9 rounded-full flex items-center justify-center text-muted hover:text-foreground hover:bg-white/5 transition-colors disabled:opacity-50"
-              >
-                <X size={18} />
-              </button>
-            </div>
+            {isUploadingLogo ? <Loader2 className="animate-spin" size={20} /> : <><Check size={20} /> Сохранить</>}
+          </button>
+        }
+      >
+        <ClubLogoPicker value={draftLogo} onChange={setDraftLogo} startExpanded={!draftLogo.imageUrl} />
+      </BottomSheet>
 
-            <ClubLogoPicker value={draftLogo} onChange={setDraftLogo} startExpanded={!draftLogo.imageUrl} />
+      <BottomSheet
+        open={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        title="Поделиться клубом"
+        footer={
+          <button
+            onClick={handleCopyClubLink}
+            className="w-full py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#b3e600] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(204,255,0,0.3)]"
+          >
+            {isLinkCopied ? <><Check size={20} /> Скопировано</> : <><Copy size={20} /> Скопировать ссылку</>}
+          </button>
+        }
+      >
+        <ClubQRCard value={getClubLink()} clubName={club.name} logo={clubLogo} />
 
-            <button
-              onClick={handleSaveLogo}
-              disabled={isUploadingLogo}
-              className="w-full mt-6 py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#b3e600] active:scale-[0.98] transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(204,255,0,0.3)]"
-            >
-              {isUploadingLogo ? <Loader2 className="animate-spin" size={20} /> : <><Check size={20} /> Сохранить</>}
-            </button>
-          </div>
-        </div>
-      )}
+        <p className="mt-5 text-center text-[10px] font-bold text-muted uppercase tracking-widest">
+          {process.env.NEXT_PUBLIC_BOT_APP_URL
+            ? "Наведите камеру — клуб откроется прямо в Telegram"
+            : "Наведите камеру, чтобы открыть клуб"}
+        </p>
+      </BottomSheet>
     </div>
   );
 }

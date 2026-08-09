@@ -201,7 +201,7 @@ export default function ClubLogoPicker({
                       aria-pressed={value.color1 === c}
                       aria-label={`Цвет ${c}`}
                       className={`w-11 h-11 rounded-full border-2 flex items-center justify-center transition-transform active:scale-95 ${
-                        value.color1 === c ? "border-primary scale-110" : "border-white/10"
+                        value.color1 === c ? "border-primary" : "border-white/10"
                       }`}
                       style={{ backgroundColor: c }}
                     >
