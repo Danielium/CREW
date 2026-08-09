@@ -609,7 +609,7 @@ export default function ClubProfilePage() {
       <BottomSheet
         open={isShareOpen}
         onClose={() => setIsShareOpen(false)}
-        title="Поделиться клубом"
+        ariaLabel="Поделиться клубом"
         footer={
           <button
             onClick={handleCopyClubLink}
@@ -619,6 +619,11 @@ export default function ClubProfilePage() {
           </button>
         }
       >
+        {/* Centered, not BottomSheet's default left-aligned title: everything
+            below — the QR card, the caption — is itself a centered column, and
+            a left-flush heading over that reads as lopsided rather than framing it. */}
+        <h2 className="mb-6 text-center font-black uppercase tracking-tight text-lg">Поделиться клубом</h2>
+
         <ClubQRCard value={getClubLink()} clubName={club.name} logo={clubLogo} />
 
         <p className="mt-5 text-center text-[10px] font-bold text-muted uppercase tracking-widest">

@@ -41,8 +41,19 @@ export default function BottomSheet({ open, onClose, title, locked = false, aria
   useEffect(() => {
     if (open) {
       setShouldRender(true);
-      const raf = requestAnimationFrame(() => setIsMounted(true));
-      return () => cancelAnimationFrame(raf);
+      // A single rAF isn't reliable: React can commit the off-screen starting
+      // position and the "flip to visible" state within the same browser frame,
+      // so the transition has nothing to animate from — confirmed on real hardware
+      // and reproducible in desktop Chrome too. Nest two rAFs so the first one's
+      // callback runs only after the off-screen frame has actually painted.
+      let raf2 = 0;
+      const raf1 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => setIsMounted(true));
+      });
+      return () => {
+        cancelAnimationFrame(raf1);
+        cancelAnimationFrame(raf2);
+      };
     }
     setIsMounted(false);
     setDragOffset(0);
