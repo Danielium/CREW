@@ -427,13 +427,12 @@ export default function ClubProfilePage() {
           </div>
         )}
 
-        {isFounder && (
+        {isFounder && (club.joinType === "APPLICATION" || club.members.filter((m: any) => m.status === "PENDING").length > 0) && (
           <div className="flex flex-col gap-8 mt-4 border-t border-white/10 pt-8">
             <div>
               <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-4">Администрирование</h3>
-              
+
               {/* Pending Applications */}
-              {(club.joinType === "APPLICATION" || club.members.filter((m: any) => m.status === "PENDING").length > 0) && (
               <div className="bg-card/40 backdrop-blur-xl rounded-[28px] border border-white/5 p-6 shadow-xl relative overflow-hidden">
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-3">
@@ -505,7 +504,6 @@ export default function ClubProfilePage() {
                   </div>
                 )}
               </div>
-              )}
             </div>
           </div>
         )}
