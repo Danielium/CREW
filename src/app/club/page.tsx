@@ -83,7 +83,8 @@ export default function ClubTab() {
               ) : (
                 <div>
                   <h3 className="font-black uppercase tracking-tight text-lg mb-1 drop-shadow-sm">Создать клуб</h3>
-                  <p className="text-sm text-muted leading-relaxed [text-wrap:pretty]">Собери свою беговую банду и врывайся в топ</p>
+                  {/* Non-breaking space after the one-letter conjunction: "и" must never end a line. */}
+                  <p className="text-sm text-muted leading-relaxed [text-wrap:pretty]">Собери свою беговую банду и{" "}врывайся в топ</p>
                 </div>
               )}
             </div>
