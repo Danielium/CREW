@@ -294,25 +294,28 @@ export default function ClubProfilePage() {
       <div className="h-64 bg-card/40 backdrop-blur-xl relative flex flex-col justify-end p-6 border-b border-white/5 shadow-lg">
         {/* Native back button used here via TelegramBackButton */}
 
-        <button
-          type="button"
-          onClick={handleShareClub}
-          aria-label="Поделиться клубом"
-          className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition-transform"
-        >
-          <Share2 size={18} />
-        </button>
-
         {/* Diagonal Pattern Overlay */}
         <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), repeating-linear-gradient(45deg, #000 25%, #222 25%, #222 75%, #000 75%, #000)', backgroundPosition: '0 0, 10px 10px', backgroundSize: '20px 20px' }}></div>
         
         <div className="relative z-10">
-          <div className="flex flex-wrap gap-2 mb-3">
-            {tags.map((tag: string) => (
-              <span key={tag} className="px-2 py-1 bg-background text-[10px] font-bold uppercase tracking-wider rounded-md text-primary">
-                #{tag}
-              </span>
-            ))}
+          {/* Share sits inline with the tags: the banner's top-right corner belongs
+              to Telegram's own controls and anything placed there collides with them. */}
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex flex-wrap gap-2">
+              {tags.map((tag: string) => (
+                <span key={tag} className="px-2 py-1 bg-background text-[10px] font-bold uppercase tracking-wider rounded-md text-primary">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={handleShareClub}
+              aria-label="Поделиться клубом"
+              className="shrink-0 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition-transform"
+            >
+              <Share2 size={18} />
+            </button>
           </div>
           <div className="flex items-center gap-4 mb-4">
             {isFounder ? (
