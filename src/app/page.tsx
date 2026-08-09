@@ -9,6 +9,7 @@ import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PaceRangeSlider, paceRangeToString, parsePaceRange } from "@/components/PaceRangeSlider";
 import { DateTimeCard } from "@/components/DateTimeCard";
+import BottomSheet, { BOTTOM_SHEET_TRANSITION_MS } from "@/components/BottomSheet";
 import { globalCache } from "@/lib/cache";
 
 function ParticipantStepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
@@ -46,8 +47,6 @@ function MapContent() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [forceCenter, setForceCenter] = useState<[number, number] | null>(null);
-  const [touchStartY, setTouchStartY] = useState(0);
-  const [touchOffset, setTouchOffset] = useState(0);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const lastFocusedId = useRef<string | null>(null);
   const [showClubJoinModal, setShowClubJoinModal] = useState(false);
@@ -222,48 +221,17 @@ function MapContent() {
     }
   };
 
-  useEffect(() => {
-    window.dispatchEvent(new Event(isSheetOpen ? 'hideNav' : 'showNav'));
-    return () => { window.dispatchEvent(new Event('showNav')); };
-  }, [isSheetOpen]);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStartY(e.touches[0].clientY);
-    setTouchOffset(0);
-  };
-
   const closeSheet = () => {
     setIsSheetOpen(false);
+    // Wait out BottomSheet's own close transition before wiping the content
+    // underneath it, so nothing changes shape while still visibly sliding away.
     setTimeout(() => {
       setSelectedProposal(null);
       setIsEditingProposal(false);
       setIsCreatingProposal(false);
       setCreatePosition(null);
       setJustJoinedMap({}); // Clear local joined state
-    }, 300); // Wait for animation
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartY === 0) return;
-    const currentY = e.touches[0].clientY;
-    const diff = currentY - touchStartY;
-    
-    if (diff > 0) {
-      setTouchOffset(diff);
-    }
-    
-    if (diff > 120) {
-      closeSheet();
-      setTouchStartY(0);
-      setTouchOffset(0);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (touchOffset <= 120) {
-      setTouchOffset(0);
-    }
-    setTouchStartY(0);
+    }, BOTTOM_SHEET_TRANSITION_MS);
   };
 
   useEffect(() => {
@@ -644,15 +612,7 @@ function MapContent() {
         </button>
       </div>
 
-      {/* Bottom Sheet */}
-      <div 
-        className={`absolute bottom-0 left-0 w-full bg-card border-t border-border rounded-t-[32px] p-6 pt-2 pb-16 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${touchOffset > 0 ? 'transition-none' : 'transition-transform duration-500 ease-in-out'}`}
-        style={{ transform: isSheetOpen ? `translateY(${touchOffset}px)` : 'translateY(100%)' }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <div className="w-12 h-1.5 bg-muted/50 rounded-full mx-auto mb-6 cursor-pointer" onClick={closeSheet} />
+      <BottomSheet open={isSheetOpen} onClose={closeSheet} ariaLabel={isCreatingProposal ? "Новый маячок" : "Пробежка"}>
         {isCreatingProposal ? (
           <div className="flex flex-col gap-4">
             <h2 className="text-2xl font-black uppercase tracking-tight">Новый маячок</h2>
@@ -908,7 +868,7 @@ function MapContent() {
             )}
           </div>
         )}
-      </div>
+      </BottomSheet>
 
       {/* Join Club Modal */}
       {showClubJoinModal && (

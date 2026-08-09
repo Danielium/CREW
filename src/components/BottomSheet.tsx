@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 
 const DISMISS_THRESHOLD = 120;
+// Exported so callers can time their own post-close state resets (e.g. clearing
+// a form) to land after the sheet has actually finished sliding away.
+export const BOTTOM_SHEET_TRANSITION_MS = 500;
+const TRANSITION_MS = BOTTOM_SHEET_TRANSITION_MS;
 
 interface BottomSheetProps {
   open: boolean;
@@ -22,6 +26,9 @@ interface BottomSheetProps {
  * so every sheet in CREW closes the same way.
  */
 export default function BottomSheet({ open, onClose, title, locked = false, ariaLabel, footer, children }: BottomSheetProps) {
+  // Decoupled from `open`: stays true through the close animation, so a tap-outside
+  // or Escape close slides the sheet away instead of the subtree vanishing mid-frame.
+  const [shouldRender, setShouldRender] = useState(open);
   const [isMounted, setIsMounted] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const dragStartY = useRef(0);
@@ -29,23 +36,28 @@ export default function BottomSheet({ open, onClose, title, locked = false, aria
   const isDragging = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Slide in on the frame after mount so the transform actually animates.
+  // Slide in on the frame after mount so the transform actually animates;
+  // on close, keep rendering for one transition's worth before unmounting.
   useEffect(() => {
-    if (!open) {
-      setIsMounted(false);
-      setDragOffset(0);
-      offsetRef.current = 0;
-      return;
+    if (open) {
+      setShouldRender(true);
+      const raf = requestAnimationFrame(() => setIsMounted(true));
+      return () => cancelAnimationFrame(raf);
     }
-    const raf = requestAnimationFrame(() => setIsMounted(true));
-    return () => cancelAnimationFrame(raf);
+    setIsMounted(false);
+    setDragOffset(0);
+    offsetRef.current = 0;
+    const timeout = setTimeout(() => setShouldRender(false), TRANSITION_MS);
+    return () => clearTimeout(timeout);
   }, [open]);
 
   // Sheets own the nav bar: it would otherwise sit above the sheet's actions.
+  // Tied to shouldRender, not open, so the nav doesn't pop back in while the
+  // sheet is still sliding out.
   useEffect(() => {
-    window.dispatchEvent(new Event(open ? "hideNav" : "showNav"));
+    window.dispatchEvent(new Event(shouldRender ? "hideNav" : "showNav"));
     return () => { window.dispatchEvent(new Event("showNav")); };
-  }, [open]);
+  }, [shouldRender]);
 
   useEffect(() => {
     if (!open) return;
@@ -85,7 +97,7 @@ export default function BottomSheet({ open, onClose, title, locked = false, aria
     }
   };
 
-  if (!open) return null;
+  if (!shouldRender) return null;
 
   const translateY = isMounted ? dragOffset : window.innerHeight;
 
@@ -97,10 +109,14 @@ export default function BottomSheet({ open, onClose, title, locked = false, aria
         onClick={() => !locked && onClose()}
       />
       <div
+        // duration-500 below must match TRANSITION_MS above — it's what the unmount timer waits out.
         className={`relative w-full max-w-[480px] bg-card border-t border-border rounded-t-[32px] px-6 pt-2 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${dragOffset > 0 ? "transition-none" : "transition-transform duration-500 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"}`}
         style={{
           transform: `translateY(${translateY}px)`,
-          paddingBottom: "max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem), var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px)))",
+          // 4rem floor, not 2rem: some Android WebViews report no real safe-area
+          // value at all, and 2rem previously let the 3-button nav bar overlap
+          // the sheet's own actions (see commit e2321ca).
+          paddingBottom: "max(4rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem), var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px)))",
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
