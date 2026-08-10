@@ -217,7 +217,7 @@ export default function OnboardingHint({
           <X size={16} />
         </button>
 
-        <h2 className="font-black uppercase tracking-tight text-[19px] leading-tight pr-9 drop-shadow-sm">
+        <h2 className="font-bold uppercase tracking-normal text-[19px] leading-tight pr-9 drop-shadow-sm font-display">
           {step.title}
         </h2>
         <p className="text-sm text-muted leading-relaxed mt-2.5">{step.body}</p>

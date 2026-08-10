@@ -51,7 +51,7 @@ export function ImageCropperModal({ imageSrc, onCropComplete, onClose }: ImageCr
         <button onClick={onClose} disabled={isProcessing} className="p-2 text-muted hover:text-foreground disabled:opacity-50">
           <X size={24} />
         </button>
-        <h3 className="font-black uppercase">Обрезать фото</h3>
+        <h3 className="font-bold uppercase font-display">Обрезать фото</h3>
         <button onClick={handleSave} disabled={isProcessing} className="p-2 text-primary font-bold hover:text-white transition-colors flex items-center gap-1 disabled:opacity-50">
           {isProcessing ? <Loader2 size={20} className="animate-spin" /> : <Check size={20} />}
           Готово

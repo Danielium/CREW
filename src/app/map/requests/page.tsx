@@ -62,7 +62,7 @@ export default function RequestsInbox() {
     <div className="flex flex-col min-h-[100dvh] bg-black text-foreground">
       {/* Header */}
       <div className="flex items-center gap-4 px-4 pb-4 pt-safe border-b border-border sticky top-0 bg-black/80 backdrop-blur-md z-20">
-        <h1 className="text-2xl font-black uppercase tracking-tight">Уведомления</h1>
+        <h1 className="text-2xl font-bold uppercase tracking-normal font-display">Уведомления</h1>
       </div>
 
       {/* Tabs */}

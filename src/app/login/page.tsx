@@ -311,7 +311,7 @@ export default function LoginPage() {
         {mode === "LOGIN" && (
           <div className="flex flex-col flex-1 min-h-0 animate-in fade-in slide-in-from-bottom-8 duration-500">
             <div className="mb-10">
-              <h1 className="text-5xl font-black uppercase mb-4 leading-tight">Снова<br/><span className="text-primary">В деле</span></h1>
+              <h1 className="text-5xl font-bold uppercase mb-4 leading-tight font-display">Снова<br/><span className="text-primary">В деле</span></h1>
               <p className="text-muted">Войдите, чтобы продолжить свои тренировки.</p>
             </div>
 
@@ -348,7 +348,7 @@ export default function LoginPage() {
         {mode === "REGISTER_1" && (
           <div className="flex flex-col flex-1 min-h-0 animate-in fade-in slide-in-from-right-8 duration-500">
             <div className="mb-10">
-              <h1 className="text-4xl font-black uppercase mb-4 leading-tight">Создать<br/>Аккаунт</h1>
+              <h1 className="text-4xl font-bold uppercase mb-4 leading-tight font-display">Создать<br/>Аккаунт</h1>
               <p className="text-muted">Шаг 1 из 4. Придумайте логин и пароль.</p>
             </div>
 
@@ -378,7 +378,7 @@ export default function LoginPage() {
         {mode === "REGISTER_2" && (
           <div className="flex flex-col flex-1 min-h-0 animate-in fade-in slide-in-from-right-8 duration-500">
             <div className="mb-10">
-              <h1 className="text-4xl font-black uppercase mb-4 leading-tight">Как вас<br/>зовут?</h1>
+              <h1 className="text-4xl font-bold uppercase mb-4 leading-tight font-display">Как вас<br/>зовут?</h1>
               <p className="text-muted">Шаг 2 из 4. Это имя увидят другие бегуны в клубе.</p>
             </div>
 
@@ -401,7 +401,7 @@ export default function LoginPage() {
         {mode === "REGISTER_3" && (
           <div className="flex flex-col flex-1 min-h-0 animate-in fade-in slide-in-from-right-8 duration-500">
             <div className="mb-8">
-              <h1 className="text-4xl font-black uppercase mb-4 leading-tight">Выбор<br/>Аватара</h1>
+              <h1 className="text-4xl font-bold uppercase mb-4 leading-tight font-display">Выбор<br/>Аватара</h1>
               <p className="text-muted">Шаг 3 из 4. Выберите стиль вашего профиля.</p>
             </div>
 

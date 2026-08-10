@@ -7,6 +7,14 @@ import { Loader2, Users, Search } from "lucide-react";
 
 import { globalCache } from "@/lib/cache";
 
+// Wording matches the join-type picker on the create-club screen, so a club
+// reads the same here as it did when its founder chose the mode.
+const JOIN_TYPE_LABELS: Record<string, string> = {
+  OPEN: "Открытый",
+  APPLICATION: "По заявкам",
+  INVITE_ONLY: "Закрытый",
+};
+
 export default function GlobalClubs() {
   const [clubs, setClubs] = useState<any[]>(globalCache.clubs || []);
   const [isLoading, setIsLoading] = useState(!globalCache.clubs);
@@ -66,10 +74,10 @@ export default function GlobalClubs() {
 
       <div className="mb-6 px-2 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-black tracking-tight uppercase drop-shadow-sm">
+          <h2 className="text-2xl font-bold tracking-normal uppercase drop-shadow-sm font-display">
             {query ? "Результаты" : "Битва Клубов"}
           </h2>
-          <p className="text-xs text-primary uppercase tracking-widest font-bold mt-1">
+          <p className="text-sm text-muted leading-relaxed mt-1">
             {query ? `Найдено: ${filteredClubs.length}` : "Топ беговых клубов"}
           </p>
         </div>
@@ -96,16 +104,16 @@ export default function GlobalClubs() {
                   return null;
                 })()}
                 <div className="ml-1">
-                  <h3 className={`font-black uppercase tracking-tight ${club.name.length > 12 ? 'text-sm break-all' : 'text-lg'} leading-none mb-2 text-foreground/90 group-hover:text-white transition-colors`}>{club.name}</h3>
+                  <h3 className={`font-bold uppercase tracking-normal font-display ${club.name.length > 12 ? 'text-sm break-all' : 'text-lg'} leading-none mb-2 text-foreground/90 group-hover:text-white transition-colors`}>{club.name}</h3>
                   <div className="flex items-center gap-3 text-[10px] text-muted font-bold uppercase tracking-wider">
                     <span className="flex items-center gap-1.5"><Users size={12} className="text-primary/70"/> {club._count.members}</span>
-                    <span className="text-primary/70 px-2 py-0.5 bg-primary/10 rounded-full">{club.joinType}</span>
+                    <span className="text-primary/70 px-2 py-0.5 bg-primary/10 rounded-full">{JOIN_TYPE_LABELS[club.joinType] ?? club.joinType}</span>
                   </div>
                 </div>
               </div>
               <div className="text-right flex flex-col items-end justify-center">
                 <p className="text-2xl font-black italic tracking-tighter text-white/90 drop-shadow-md">{club.totalClubDistance.toFixed(1)}</p>
-                <p className="text-[9px] text-primary uppercase font-black tracking-widest mt-0.5">КМ</p>
+                <p className="text-[10px] text-primary uppercase font-black tracking-widest mt-0.5">КМ</p>
               </div>
             </div>
           </Link>

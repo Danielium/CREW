@@ -83,7 +83,7 @@ export default function BottomNav() {
               <div className={`relative z-10 flex items-center justify-center mb-1 transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted group-hover:text-foreground'}`}>
                 <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
               </div>
-              <span className={`relative z-10 text-[10px] font-medium leading-none transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted'}`}>
+              <span className={`relative z-10 text-[11px] font-medium leading-none transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted'}`}>
                 {item.name}
               </span>
             </Link>

@@ -366,7 +366,7 @@ export default function ClubProfilePage() {
                 </div>
               ) : (
                 <div className={`flex items-center gap-3 ${isFounder ? 'cursor-pointer group/name' : ''}`} onClick={() => isFounder && setIsEditingName(true)}>
-                  <h1 className={`${club.name.length > 12 ? 'text-2xl' : 'text-4xl'} font-black uppercase tracking-tight leading-none break-words`}>{club.name}</h1>
+                  <h1 className={`${club.name.length > 12 ? 'text-2xl' : 'text-4xl'} font-bold uppercase tracking-normal leading-none break-words font-display`}>{club.name}</h1>
                   {isFounder && (
                     <button className="text-muted group-hover/name:text-primary transition-colors">
                       <Edit2 size={16} />
@@ -437,7 +437,7 @@ export default function ClubProfilePage() {
         {!isActiveMember && (
           <div className="bg-card p-6 rounded-3xl border border-border flex flex-col items-center text-center shadow-lg">
             <Shield size={32} className="text-primary mb-3" />
-            <h3 className="font-black uppercase tracking-wider mb-2">Стать частью клуба</h3>
+            <h3 className="font-bold uppercase tracking-normal mb-2 font-display">Стать частью клуба</h3>
             <p className="text-xs text-muted mb-6">
               {club.joinType === "OPEN" ? "Свободный вход для всех желающих." : club.joinType === "APPLICATION" ? "Заявки рассматриваются фаундерами. Докажи, что ты достоин." : "Только по приглашению."}
             </p>
@@ -474,7 +474,7 @@ export default function ClubProfilePage() {
                       <img src={ev.image || "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80&w=1000&auto=format&fit=crop"} className="absolute inset-0 w-full h-full object-cover opacity-50" />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1c] to-transparent"></div>
                       <div className="absolute bottom-2 left-3 right-3 flex justify-between items-end">
-                        <h4 className="font-black uppercase tracking-tight text-lg leading-none z-10 text-white">{ev.title}</h4>
+                        <h4 className="font-bold uppercase tracking-normal text-lg leading-none z-10 text-white font-display">{ev.title}</h4>
                       </div>
                     </div>
                     <div className="p-3 flex justify-between items-center text-xs text-muted font-medium">
@@ -500,7 +500,7 @@ export default function ClubProfilePage() {
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                       <Users size={16} />
                     </div>
-                    <h2 className="font-black uppercase tracking-wider text-sm">Заявки</h2>
+                    <h2 className="font-bold uppercase tracking-normal text-sm font-display">Заявки</h2>
                   </div>
                   {club.members.filter((m: any) => m.status === "PENDING").length > 0 && (
                     <span className="bg-primary text-black text-[10px] font-black px-3 py-1 rounded-full shadow-[0_0_15px_rgba(204,255,0,0.5)]">
@@ -622,7 +622,7 @@ export default function ClubProfilePage() {
         {/* Centered, not BottomSheet's default left-aligned title: everything
             below — the QR card, the caption — is itself a centered column, and
             a left-flush heading over that reads as lopsided rather than framing it. */}
-        <h2 className="mb-6 text-center font-black uppercase tracking-tight text-lg">Поделиться клубом</h2>
+        <h2 className="mb-6 text-center font-bold uppercase tracking-normal text-lg font-display">Поделиться клубом</h2>
 
         <ClubQRCard value={getClubLink()} clubName={club.name} logo={clubLogo} />
 

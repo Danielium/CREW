@@ -118,7 +118,7 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
 
   return (
     <div className="flex flex-col px-4">
-      <h2 className="text-xl font-black uppercase tracking-tight mb-4">{clubId ? "Атлеты Клуба" : "Индивидуальный Топ"}</h2>
+      <h2 className="text-xl font-bold uppercase tracking-normal mb-4 font-display">{clubId ? "Атлеты Клуба" : "Индивидуальный Топ"}</h2>
       <div className="flex flex-col gap-2">
         {users.map((user, index) => {
           const isMe = user.id === (session?.user as any)?.id;

@@ -615,7 +615,7 @@ function MapContent() {
       <BottomSheet open={isSheetOpen} onClose={closeSheet} ariaLabel={isCreatingProposal ? "Новый маячок" : "Пробежка"}>
         {isCreatingProposal ? (
           <div className="flex flex-col gap-4">
-            <h2 className="text-2xl font-black uppercase tracking-tight">Новый маячок</h2>
+            <h2 className="text-2xl font-bold uppercase tracking-normal font-display">Новый маячок</h2>
 
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4 flex items-center gap-2">
@@ -675,7 +675,7 @@ function MapContent() {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Клубная пробежка</span>
-                  <h2 className="text-2xl font-black uppercase tracking-tight leading-none mt-0.5">{selectedProposal.event.title}</h2>
+                  <h2 className="text-2xl font-bold uppercase tracking-normal leading-none mt-0.5 font-display">{selectedProposal.event.title}</h2>
                   <span className="text-sm font-medium text-muted mt-0.5">{selectedProposal.event.club?.name}</span>
                 </div>
               </div>
@@ -735,7 +735,7 @@ function MapContent() {
         ) : selectedProposal && (
           <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-black uppercase tracking-tight">Совместная пробежка</h2>
+              <h2 className="text-2xl font-bold uppercase tracking-normal font-display">Совместная пробежка</h2>
               <button 
                 onClick={() => {
                   const botAppUrl = process.env.NEXT_PUBLIC_BOT_APP_URL;
@@ -878,7 +878,7 @@ function MapContent() {
               <div className="w-16 h-16 rounded-[20px] bg-primary flex items-center justify-center text-black mb-2">
                 <Users size={32} />
               </div>
-              <h3 className="text-xl font-black uppercase tracking-tight">Вступление в клуб</h3>
+              <h3 className="text-xl font-bold uppercase tracking-normal font-display">Вступление в клуб</h3>
               <p className="text-sm text-muted">Вступи в клуб чтобы пойти на пробежку и километры засчитались в битве.</p>
             </div>
             <div className="flex flex-col gap-3">

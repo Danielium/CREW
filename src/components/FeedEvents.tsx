@@ -77,7 +77,7 @@ export default function FeedEvents({ userData }: { userData: any }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="px-4 flex justify-between items-center">
-        <h2 className="text-xl font-black uppercase tracking-tight">Открытые события</h2>
+        <h2 className="text-xl font-bold uppercase tracking-normal font-display">Открытые события</h2>
         {canCreate && (
           <Link href="/events/create" className="px-3 py-1.5 rounded-full bg-primary text-black font-bold text-[10px] uppercase tracking-widest shadow-[0_0_10px_rgba(204,255,0,0.4)]">
             Создать
@@ -162,7 +162,7 @@ export default function FeedEvents({ userData }: { userData: any }) {
 
                 {/* Title & Info */}
                 <div className="flex flex-col mt-auto">
-                  <h3 className="text-4xl italic font-black uppercase tracking-tighter text-white leading-[1.05] mb-3 pr-12">{ev.title}</h3>
+                  <h3 className="text-4xl italic font-bold uppercase tracking-normal text-white leading-[1.05] mb-3 pr-12 font-display">{ev.title}</h3>
                   <div className="w-16 h-1.5 bg-primary mb-4 rounded-full"></div>
                   
                   <div className="flex flex-col gap-1.5 text-white/90 text-[14px] font-medium tracking-wide">

@@ -141,7 +141,7 @@ export default function BottomSheet({ open, onClose, title, locked = false, aria
           disabled={locked}
         />
         <div ref={scrollRef} className="max-h-[70vh] overflow-y-auto no-scrollbar">
-          {title && <h2 className="font-black uppercase tracking-tight text-lg mb-6">{title}</h2>}
+          {title && <h2 className="font-bold uppercase tracking-normal text-lg mb-6 font-display">{title}</h2>}
           {children}
         </div>
         {footer && <div className="pt-6">{footer}</div>}

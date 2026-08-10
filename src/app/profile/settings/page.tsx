@@ -441,7 +441,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="mb-6">
-              <h2 className="text-2xl font-black uppercase tracking-tight">Приватность</h2>
+              <h2 className="text-2xl font-bold uppercase tracking-normal font-display">Приватность</h2>
             </div>
 
             <div className="flex flex-col gap-3">

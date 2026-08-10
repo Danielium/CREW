@@ -76,13 +76,13 @@ export default function ClubTab() {
                     })()}
                   </div>
                   <div>
-                    <h3 className="font-black uppercase tracking-tight text-lg mb-1 drop-shadow-sm">{userData.clubMembers[0].club.name}</h3>
+                    <h3 className="font-bold uppercase tracking-normal text-lg mb-1 drop-shadow-sm font-display">{userData.clubMembers[0].club.name}</h3>
                     <p className="text-xs text-muted leading-relaxed">Мой клуб</p>
                   </div>
                 </>
               ) : (
                 <div>
-                  <h3 className="font-black uppercase tracking-tight text-lg mb-1 drop-shadow-sm">Создать клуб</h3>
+                  <h3 className="font-bold uppercase tracking-normal text-lg mb-1 drop-shadow-sm font-display">Создать клуб</h3>
                   {/* Non-breaking space after the one-letter conjunction: "и" must never end a line. */}
                   <p className="text-sm text-muted leading-relaxed [text-wrap:pretty]">Собери свою беговую банду и{" "}врывайся в топ</p>
                 </div>
@@ -101,7 +101,7 @@ export default function ClubTab() {
           <button 
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 pb-3 text-center text-sm font-bold uppercase tracking-wider transition-colors border-b-2 ${
+            className={`flex-1 pb-3 text-center text-sm font-bold uppercase tracking-wider transition-colors border-b-2 font-display ${
               activeTab === tab ? "border-primary text-primary" : "border-transparent text-muted"
             }`}
           >

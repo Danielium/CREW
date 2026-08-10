@@ -97,7 +97,7 @@ export default function EventDetailsPage() {
         {/* Native back button used here */}
         
         <div className="absolute bottom-0 left-0 w-full p-6">
-          <h1 className="text-3xl font-black uppercase tracking-tight leading-none mb-2 text-white">{event.title}</h1>
+          <h1 className="text-3xl font-bold uppercase tracking-normal leading-none mb-2 text-white font-display">{event.title}</h1>
           <div className="flex items-center gap-4 text-sm font-bold text-primary tracking-wider uppercase">
             <span className="flex items-center gap-1"><Calendar size={14} /> {new Date(event.date).toLocaleDateString('ru-RU')}</span>
             <span className="flex items-center gap-1"><Clock size={14} /> {new Date(event.date).toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'})}</span>
@@ -132,7 +132,7 @@ export default function EventDetailsPage() {
           )}
         </div>
 
-        <h2 className="text-xl font-black uppercase tracking-tight mb-4">Участники ({event.attendees?.length || 0})</h2>
+        <h2 className="text-xl font-bold uppercase tracking-normal mb-4 font-display">Участники ({event.attendees?.length || 0})</h2>
         
         <div className="flex flex-col gap-3">
           {event.attendees?.map((user: any) => {
