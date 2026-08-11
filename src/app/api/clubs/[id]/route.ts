@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { MAX_NAME, MAX_DESCRIPTION, sanitizeTags } from "@/lib/club";
 
 export const dynamic = 'force-dynamic';
 
@@ -160,20 +161,28 @@ export async function PATCH(req: Request, context: any) {
       return NextResponse.json({ error: "Only founders can edit club" }, { status: 403 });
     }
 
-    const { name, description } = await req.json();
-    
+    const { name, description, tags } = await req.json();
+
     const updateData: any = {};
     if (name !== undefined) {
-      if (name.trim().length === 0) {
-        return NextResponse.json({ error: "Name cannot be empty" }, { status: 400 });
+      const cleanName = typeof name === "string" ? name.trim() : "";
+      if (!cleanName) {
+        return NextResponse.json({ error: "Название клуба не может быть пустым" }, { status: 400 });
       }
-      updateData.name = name.trim();
+      if (cleanName.length > MAX_NAME) {
+        return NextResponse.json({ error: `Название клуба — не длиннее ${MAX_NAME} символов` }, { status: 400 });
+      }
+      updateData.name = cleanName;
     }
-    
+
     if (description !== undefined) {
-      updateData.description = description.trim();
+      updateData.description = typeof description === "string" ? description.trim().slice(0, MAX_DESCRIPTION) : "";
     }
-    
+
+    if (tags !== undefined) {
+      updateData.tags = JSON.stringify(sanitizeTags(tags));
+    }
+
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: "No fields to update" }, { status: 400 });
     }

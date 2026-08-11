@@ -6,14 +6,7 @@ import ClubBadge from "@/components/ClubBadge";
 import { Loader2, Users, Search } from "lucide-react";
 
 import { globalCache } from "@/lib/cache";
-
-// Wording matches the join-type picker on the create-club screen, so a club
-// reads the same here as it did when its founder chose the mode.
-const JOIN_TYPE_LABELS: Record<string, string> = {
-  OPEN: "Открытый",
-  APPLICATION: "По заявкам",
-  INVITE_ONLY: "Закрытый",
-};
+import { JOIN_TYPE_LABELS } from "@/lib/club";
 
 export default function GlobalClubs() {
   const [clubs, setClubs] = useState<any[]>(globalCache.clubs || []);

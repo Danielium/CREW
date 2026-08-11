@@ -2,33 +2,9 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { MAX_NAME, MAX_DESCRIPTION, JOIN_TYPES, sanitizeTags } from "@/lib/club";
 
 export const dynamic = 'force-dynamic';
-
-// The create form enforces these too, but it is not the only way to reach this
-// route: without them a crafted request stores tags long enough to break the
-// club list layout, or a joinType the app has no branch for.
-const MAX_NAME = 20;
-const MAX_DESCRIPTION = 500;
-const MAX_TAGS = 3;
-const MAX_TAG_LENGTH = 16;
-const JOIN_TYPES = ["OPEN", "APPLICATION", "INVITE_ONLY"];
-
-function sanitizeTags(input: unknown): string[] {
-  if (!Array.isArray(input)) return [];
-  const seen = new Set<string>();
-  const tags: string[] = [];
-  for (const raw of input) {
-    if (typeof raw !== "string") continue;
-    const tag = raw.trim().slice(0, MAX_TAG_LENGTH);
-    const key = tag.toLowerCase();
-    if (!tag || seen.has(key)) continue;
-    seen.add(key);
-    tags.push(tag);
-    if (tags.length === MAX_TAGS) break;
-  }
-  return tags;
-}
 
 export async function POST(req: Request) {
   try {

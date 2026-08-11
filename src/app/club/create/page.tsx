@@ -1,27 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Flag, Users, Shield, Lock, ClipboardCheck, Loader2, Check, ArrowRight, Plus, X } from "lucide-react";
+import { Flag, Users, Shield, Lock, ClipboardCheck, Loader2, Check, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import ClubLogoPicker, { DEFAULT_SIMPLE_LOGO, type SimpleLogoConfig } from "@/components/ClubLogoPicker";
 import ClubBadge from "@/components/ClubBadge";
+import TagPicker from "@/components/TagPicker";
 import { globalCache } from "@/lib/cache";
-
-const AVAILABLE_TAGS = [
-  "Без напряга", "Хардкор", "Для новичков", "С собаками",
-  "Стадион", "Трейл", "Утренние", "Совы", "Бег и пиво"
-];
-
-const MAX_TAGS = 3;
-const MAX_NAME = 20;
-// Tags render as chips in a row; longer than this and they wrap into ribbons.
-const MAX_TAG_LENGTH = 16;
+import { MAX_NAME, MAX_TAGS, JOIN_TYPE_LABELS } from "@/lib/club";
 
 const JOIN_TYPES = [
-  { value: "OPEN", icon: Users, title: "Открытый", desc: "Любой желающий может вступить в один клик." },
-  { value: "APPLICATION", icon: ClipboardCheck, title: "По заявкам", desc: "Вы свайпаете кандидатов. Элитарный клуб." },
-  { value: "INVITE_ONLY", icon: Lock, title: "Закрытый", desc: "Только по секретной ссылке-инвайту." },
+  { value: "OPEN", icon: Users, title: JOIN_TYPE_LABELS.OPEN, desc: "Любой желающий может вступить в один клик." },
+  { value: "APPLICATION", icon: ClipboardCheck, title: JOIN_TYPE_LABELS.APPLICATION, desc: "Вы свайпаете кандидатов. Элитарный клуб." },
+  { value: "INVITE_ONLY", icon: Lock, title: JOIN_TYPE_LABELS.INVITE_ONLY, desc: "Только по секретной ссылке-инвайту." },
 ];
 
 // Punchy heading, functional subtitle — same pairing the club tab uses for
@@ -44,20 +36,12 @@ export default function CreateClubPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [logoConfig, setLogoConfig] = useState<SimpleLogoConfig>(DEFAULT_SIMPLE_LOGO);
-  const [customTag, setCustomTag] = useState("");
-  const [isAddingTag, setIsAddingTag] = useState(false);
 
   // Each step is its own screen: without this the next step opens already
   // scrolled to wherever the previous one was left.
   useEffect(() => {
     document.getElementById("main-scroll-container")?.scrollTo({ top: 0 });
   }, [step]);
-
-  // Hitting the cap disables the input, so anything half-typed would be stranded
-  // there with no way to clear it.
-  useEffect(() => {
-    if (selectedTags.length >= MAX_TAGS) setCustomTag("");
-  }, [selectedTags.length]);
 
   // Steps are component state, not routes, but Telegram's back button (and
   // Android's) only knows history. Advancing pushes a same-URL entry so back
@@ -68,28 +52,6 @@ export default function CreateClubPage() {
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
-
-  const toggleTag = (tag: string) => {
-    if (selectedTags.includes(tag)) {
-      setSelectedTags(selectedTags.filter(t => t !== tag));
-    } else if (selectedTags.length < MAX_TAGS) {
-      setSelectedTags([...selectedTags, tag]);
-    }
-  };
-
-  const addCustomTag = () => {
-    const value = customTag.trim();
-    if (!value || selectedTags.length >= MAX_TAGS) return;
-    // Typing something that already exists picks it rather than creating a twin
-    // that differs only by case.
-    const existing = [...AVAILABLE_TAGS, ...selectedTags].find(t => t.toLowerCase() === value.toLowerCase());
-    if (existing) {
-      if (!selectedTags.includes(existing)) setSelectedTags([...selectedTags, existing]);
-    } else {
-      setSelectedTags([...selectedTags, value]);
-    }
-    setCustomTag("");
-  };
 
   const handleCreate = async () => {
     if (!name.trim()) return;
@@ -239,71 +201,7 @@ export default function CreateClubPage() {
 
             <div>
               <label className={`${LABEL} mb-3 flex items-center gap-2`}><Flag size={14}/> Вайб (до {MAX_TAGS} тегов)</label>
-              <div className="flex flex-wrap gap-2">
-                {AVAILABLE_TAGS.map(tag => {
-                  const isSelected = selectedTags.includes(tag);
-                  const isBlocked = !isSelected && selectedTags.length >= MAX_TAGS;
-                  return (
-                    <button
-                      key={tag}
-                      onClick={() => toggleTag(tag)}
-                      aria-pressed={isSelected}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
-                        isSelected
-                          ? "bg-primary text-black border-primary"
-                          : isBlocked
-                            ? "bg-card border-border text-muted/40"
-                            : "bg-card border-border text-muted hover:border-muted"
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  );
-                })}
-
-                {/* Tags the founder invented: same chip, plus a way back out. */}
-                {selectedTags.filter(t => !AVAILABLE_TAGS.includes(t)).map(tag => (
-                  <button
-                    key={tag}
-                    onClick={() => toggleTag(tag)}
-                    aria-label={`Убрать тег ${tag}`}
-                    className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all bg-primary text-black border-primary flex items-center gap-1.5"
-                  >
-                    {tag}
-                    <X size={13} strokeWidth={3} />
-                  </button>
-                ))}
-
-                {/* Just one more chip in the grid until you press it — then it
-                    becomes the field, so nothing extra sits on screen unused. */}
-                {selectedTags.length < MAX_TAGS && (
-                  isAddingTag ? (
-                    <input
-                      type="text"
-                      autoFocus
-                      value={customTag}
-                      onChange={(e) => setCustomTag(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") { e.preventDefault(); addCustomTag(); setIsAddingTag(false); }
-                        if (e.key === "Escape") { setCustomTag(""); setIsAddingTag(false); }
-                      }}
-                      onBlur={() => { addCustomTag(); setIsAddingTag(false); }}
-                      maxLength={MAX_TAG_LENGTH}
-                      aria-label="Свой тег"
-                      placeholder="Свой тег"
-                      className="w-[130px] px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border border-primary bg-card text-foreground placeholder:text-muted placeholder:normal-case placeholder:tracking-normal placeholder:font-medium focus:outline-none"
-                    />
-                  ) : (
-                    <button
-                      onClick={() => setIsAddingTag(true)}
-                      className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border border-dashed border-border text-muted hover:border-primary hover:text-primary transition-all flex items-center gap-1.5"
-                    >
-                      <Plus size={14} strokeWidth={3} />
-                      Свой тег
-                    </button>
-                  )
-                )}
-              </div>
+              <TagPicker value={selectedTags} onChange={setSelectedTags} />
             </div>
           </>
         )}
@@ -325,7 +223,7 @@ export default function CreateClubPage() {
             </div>
 
             <p className="text-xs text-muted leading-relaxed text-center px-4">
-              Название и эмблему можно поменять позже на странице клуба.
+              Всё это можно поменять позже на странице клуба.
             </p>
           </div>
         )}

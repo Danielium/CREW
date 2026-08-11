@@ -9,6 +9,7 @@ import ClubBadge from "@/components/ClubBadge";
 import BottomSheet from "@/components/BottomSheet";
 import ClubQRCard from "@/components/ClubQRCard";
 import ClubLogoPicker, { DEFAULT_SIMPLE_LOGO, type SimpleLogoConfig } from "@/components/ClubLogoPicker";
+import TagPicker from "@/components/TagPicker";
 import { globalCache } from "@/lib/cache";
 
 export default function ClubProfilePage() {
@@ -32,6 +33,10 @@ export default function ClubProfilePage() {
   const [isSavingDescription, setIsSavingDescription] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
+
+  const [isEditingTags, setIsEditingTags] = useState(false);
+  const [draftTags, setDraftTags] = useState<string[]>([]);
+  const [isSavingTags, setIsSavingTags] = useState(false);
 
   const fetchClub = async () => {
     try {
@@ -202,6 +207,34 @@ export default function ClubProfilePage() {
     }
   };
 
+  const openTagEditor = () => {
+    setDraftTags(tags);
+    setIsEditingTags(true);
+  };
+
+  const handleSaveTags = async () => {
+    setIsSavingTags(true);
+    try {
+      const res = await fetch(`/api/clubs/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tags: draftTags })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setClub({ ...club, tags: data.club.tags });
+        setIsEditingTags(false);
+      } else {
+        alert("Ошибка при сохранении тегов");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Сетевая ошибка");
+    } finally {
+      setIsSavingTags(false);
+    }
+  };
+
   const handleMemberAction = async (userId: string, action: "approve" | "reject") => {
     setProcessingIds((prev) => new Set(prev).add(userId));
     try {
@@ -301,13 +334,34 @@ export default function ClubProfilePage() {
           {/* Share sits inline with the tags: the banner's top-right corner belongs
               to Telegram's own controls and anything placed there collides with them. */}
           <div className="flex items-start justify-between gap-3 mb-3">
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag: string) => (
-                <span key={tag} className="px-2 py-1 bg-background text-[10px] font-bold uppercase tracking-wider rounded-md text-primary">
-                  #{tag}
-                </span>
-              ))}
-            </div>
+            {isFounder ? (
+              <button
+                type="button"
+                onClick={openTagEditor}
+                aria-label="Изменить теги клуба"
+                className="flex flex-wrap items-center gap-2 group/tags text-left"
+              >
+                {tags.length > 0 ? (
+                  tags.map((tag: string) => (
+                    <span key={tag} className="px-2 py-1 bg-background text-[10px] font-bold uppercase tracking-wider rounded-md text-primary group-hover/tags:text-white transition-colors">
+                      #{tag}
+                    </span>
+                  ))
+                ) : (
+                  <span className="px-2 py-1 bg-background text-[10px] font-bold uppercase tracking-wider rounded-md text-muted group-hover/tags:text-primary transition-colors flex items-center gap-1">
+                    <Plus size={11} strokeWidth={3} /> Добавить теги
+                  </span>
+                )}
+              </button>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag: string) => (
+                  <span key={tag} className="px-2 py-1 bg-background text-[10px] font-bold uppercase tracking-wider rounded-md text-primary">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
             <button
               type="button"
               onClick={handleShareClub}
@@ -604,6 +658,24 @@ export default function ClubProfilePage() {
         }
       >
         <ClubLogoPicker value={draftLogo} onChange={setDraftLogo} startExpanded={!draftLogo.imageUrl} />
+      </BottomSheet>
+
+      <BottomSheet
+        open={isEditingTags}
+        onClose={() => setIsEditingTags(false)}
+        title="Вайб клуба"
+        locked={isSavingTags}
+        footer={
+          <button
+            onClick={handleSaveTags}
+            disabled={isSavingTags}
+            className="w-full py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#b3e600] active:scale-[0.98] transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(204,255,0,0.3)]"
+          >
+            {isSavingTags ? <Loader2 className="animate-spin" size={20} /> : <><Check size={20} /> Сохранить</>}
+          </button>
+        }
+      >
+        <TagPicker value={draftTags} onChange={setDraftTags} />
       </BottomSheet>
 
       <BottomSheet
