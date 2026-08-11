@@ -25,6 +25,18 @@ export function TelegramInit() {
         if (await isTMA()) {
           init(); // Initialize SDK
 
+          // Link the numeric Telegram id so the bot can send notifications.
+          // Done on every open (not just sign-in) because a valid JWT skips the
+          // auth provider entirely, leaving long-lived sessions unlinked.
+          const initData = (window as any).Telegram?.WebApp?.initData;
+          if (initData) {
+            fetch("/api/telegram/link", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ initData }),
+            }).catch(() => {});
+          }
+
           // Set colors and disable swipes via vanilla object as a safe fallback
           const tg = (window as any).Telegram?.WebApp;
           const isMobilePlatform = tg?.platform === "ios" || tg?.platform === "android";

@@ -3,28 +3,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-
-// Verify Telegram WebApp initData HMAC signature
-function verifyTelegramInitData(initData: string, botToken: string): boolean {
-  try {
-    const params = new URLSearchParams(initData);
-    const hash = params.get("hash");
-    if (!hash) return false;
-
-    params.delete("hash");
-    const dataCheckString = Array.from(params.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([k, v]) => `${k}=${v}`)
-      .join("\n");
-
-    const secretKey = crypto.createHmac("sha256", "WebAppData").update(botToken).digest();
-    const expectedHash = crypto.createHmac("sha256", secretKey).update(dataCheckString).digest("hex");
-
-    return expectedHash === hash;
-  } catch {
-    return false;
-  }
-}
+import { verifyTelegramInitData, parseTelegramUser } from "@/lib/telegramInitData";
+import { linkTelegramAccount } from "@/lib/telegram";
 
 export const authOptions: NextAuthOptions = {
   // No adapter — pure JWT mode, no DB sessions needed
@@ -177,29 +157,12 @@ export const authOptions: NextAuthOptions = {
 
             // Extract numeric Telegram ID from initData and save to Account
             try {
-              const params = new URLSearchParams(initData);
-              const userParam = params.get("user");
-              if (userParam) {
-                const tgUser = JSON.parse(userParam);
-                if (tgUser && tgUser.id) {
-                  // Upsert Account record
-                  const accountExists = await prisma.account.findFirst({
-                    where: { provider: 'telegram', providerAccountId: String(tgUser.id) }
-                  });
-                  if (!accountExists) {
-                    await prisma.account.create({
-                      data: {
-                        userId: user.id,
-                        type: "oauth",
-                        provider: "telegram",
-                        providerAccountId: String(tgUser.id),
-                      }
-                    });
-                  }
-                }
+              const tgUser = parseTelegramUser(initData);
+              if (tgUser) {
+                await linkTelegramAccount(user.id, tgUser.id);
               }
             } catch (e) {
-              console.error("Failed to parse initData user:", e);
+              console.error("Failed to link Telegram account on sign-in:", e);
             }
 
             return {

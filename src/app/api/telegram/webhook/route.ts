@@ -24,20 +24,9 @@ export async function POST(req: Request) {
         username = '@' + username.toLowerCase();
         const user = await prisma.user.findUnique({ where: { telegramUsername: username } });
         if (user) {
-          const accountExists = await prisma.account.findFirst({
-            where: { provider: 'telegram', providerAccountId: String(telegramId) }
-          });
-          if (!accountExists) {
-            await prisma.account.create({
-              data: {
-                userId: user.id,
-                type: "oauth",
-                provider: "telegram",
-                providerAccountId: String(telegramId),
-              }
-            });
-            console.log(`Linked Telegram ID ${telegramId} to user ${user.id} via /start`);
-          }
+          const { linkTelegramAccount } = await import('@/lib/telegram');
+          const result = await linkTelegramAccount(user.id, String(telegramId));
+          console.log(`Telegram ID ${telegramId} -> user ${user.id} via /start: ${result}`);
         }
       }
       

@@ -37,7 +37,7 @@ export default function LoginPage() {
     let fallbackTimeout: NodeJS.Timeout;
     let loginStarted = false;
 
-    const doLogin = (tUsername: string, tName: string, tImage: string) => {
+    const doLogin = (tUsername: string, tName: string, tImage: string, tInitData: string) => {
       if (loginStarted) return;
       loginStarted = true;
       setTelegramUsername(tUsername);
@@ -50,6 +50,7 @@ export default function LoginPage() {
         telegramUsername: tUsername,
         password: "dummy_tg_auth",
         isTgWebApp: "true",
+        initData: tInitData,
         name: tName,
         image: tImage,
         redirect: false,
@@ -82,11 +83,14 @@ export default function LoginPage() {
         ? user.first_name + (user.last_name ? ' ' + user.last_name : '')
         : tUsername;
       const tImage = user.photo_url || "";
+      // Raw signed payload — the server needs it to verify the login and to
+      // extract the numeric Telegram id for bot notifications.
+      const tInitData = tg.initData || "";
 
       console.log("[CREW] TG user detected:", tUsername, tName);
       clearInterval(checkInterval);
       clearTimeout(fallbackTimeout);
-      doLogin(tUsername, tName, tImage);
+      doLogin(tUsername, tName, tImage, tInitData);
       return true;
     };
 

@@ -1,6 +1,39 @@
 import { prisma } from '@/lib/prisma';
 
 /**
+ * Links a numeric Telegram id to a CREW user so the bot can message them.
+ * Idempotent: re-linking an id that already points at this user is a no-op.
+ */
+export async function linkTelegramAccount(userId: string, telegramId: string) {
+  const existing = await prisma.account.findUnique({
+    where: { provider_providerAccountId: { provider: 'telegram', providerAccountId: telegramId } }
+  });
+
+  if (existing) {
+    // Same Telegram account moved to a different CREW user (e.g. username changed
+    // and a new User row was created) — repoint it instead of leaving it stale.
+    if (existing.userId !== userId) {
+      await prisma.account.update({
+        where: { id: existing.id },
+        data: { userId }
+      });
+      return 'relinked';
+    }
+    return 'already-linked';
+  }
+
+  await prisma.account.create({
+    data: {
+      userId,
+      type: 'oauth',
+      provider: 'telegram',
+      providerAccountId: telegramId,
+    }
+  });
+  return 'linked';
+}
+
+/**
  * Sends a message to a user via the Telegram Bot API.
  * Looks up the user's Telegram chat_id via the Account table.
  */
