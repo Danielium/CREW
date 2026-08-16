@@ -718,18 +718,18 @@ export default function ChallengesTab() {
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-bold text-[15px] leading-tight truncate">{c.title}</p>
+                  <p className="font-bold text-[15px] leading-tight truncate">{c.title}</p>
+                  <p className="text-[13px] text-muted truncate">{goalMetric(c)} · {c.partner}</p>
+                  <div className="flex items-center justify-between gap-2 mt-0.5">
+                    <p className={`text-[13px] truncate ${exhausted ? "text-muted" : "text-primary"}`}>
+                      {exhausted ? "Промокоды закончились" : c.reward}
+                    </p>
                     {c.claim === "promo" && c.remainingCodes !== null && !exhausted && (
                       <span className={`shrink-0 text-[11px] font-bold ${scarce ? "text-primary" : "text-muted"}`}>
                         {c.remainingCodes} {codesWord(c.remainingCodes)}
                       </span>
                     )}
                   </div>
-                  <p className="text-[13px] text-muted truncate">{goalMetric(c)} · {c.partner}</p>
-                  <p className={`text-[13px] truncate mt-0.5 ${exhausted ? "text-muted" : "text-primary"}`}>
-                    {exhausted ? "Промокоды закончились" : c.reward}
-                  </p>
                 </div>
                 {!exhausted && <ChevronRight size={18} className="text-muted shrink-0" />}
               </button>
