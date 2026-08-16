@@ -26,7 +26,9 @@
  */
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronRight, Flag, Lock, MapPin, Gift, Flame, Route as RouteIcon } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { Check, ChevronRight, Flag, Lock, MapPin, Gift, Flame, Route as RouteIcon, Loader2, PartyPopper, X } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 
 type Tier = { at: number; reward: string };
@@ -43,34 +45,38 @@ export type Goal = {
 };
 type ActiveGoal = Goal & { progress: number };
 
-/* ── Данные ───────────────────────────────────────────────────────────────
- * Пока заводятся вручную. Реальных партнёров ещё нет — массив пуст
- * намеренно, чтобы на экране не висели выдуманные акции.
- * Первая акция появится здесь, когда будут известны её условия.
- */
-const GOALS: Goal[] = [
-  {
-    id: "drinkit-15",
-    partner: "Дринкит",
-    title: "Первые пятнадцать",
-    metric: "km",
-    target: 15,
-    // ФОРМУЛИРОВКА НАГРАДЫ — ЗАГЛУШКА. Заменить на то, что реально даёт
-    // закупленный промокод (напиток / скидка / номинал), до запуска акции.
-    reward: "Напиток в подарок",
-    city: "Везде",
-    claim: "promo",
-    tiers: [{ at: 15, reward: "Напиток в подарок" }],
-  },
-];
+/* ── Данные с сервера ─────────────────────────────────────────────────── */
 
-/* Активная цель приходит с сервера. На старте её нет ни у кого:
- * цель берётся осознанно, сама по себе не назначается. */
-const ACTIVE_GOAL: ActiveGoal | null = null;
+type ApiChallenge = {
+  id: string; slug: string; partner: string; title: string;
+  metric: "KM" | "STREAK"; target: number; city: string;
+  claimType: "PROMO" | "QR"; rewardLabel: string;
+};
+type ApiParticipation = {
+  id: string; challengeId: string; status: string; progress: number;
+  activatedAt: string; completedAt: string | null;
+  challenge: ApiChallenge;
+};
+type ApiResponse = {
+  challenges: ApiChallenge[];
+  active: ApiParticipation | null;
+  paused: ApiParticipation[];
+  completed: ApiParticipation | null;
+  stravaConnected: boolean;
+};
 
-/* Подключена ли Strava — единственный источник километров.
- * Придёт из /api/users/[id]; до этого считаем, что нет. */
-const STRAVA_CONNECTED = false;
+const toGoal = (c: ApiChallenge): Goal => ({
+  id: c.id,
+  partner: c.partner,
+  title: c.title,
+  metric: c.metric === "KM" ? "km" : "streak",
+  target: c.target,
+  reward: c.rewardLabel,
+  city: c.city,
+  claim: c.claimType === "PROMO" ? "promo" : "qr",
+  tiers: [{ at: c.target, reward: c.rewardLabel }],
+});
+const toActiveGoal = (p: ApiParticipation): ActiveGoal => ({ ...toGoal(p.challenge), progress: p.progress });
 
 const TRACK = "M 26 224 C 70 214, 84 176, 62 150 C 40 124, 66 92, 108 96 C 150 100, 168 74, 152 48 C 140 28, 168 12, 200 20 C 236 29, 248 58, 236 84 C 226 106, 246 124, 272 122";
 const VB = { w: 300, h: 250 };
@@ -99,7 +105,15 @@ const goalMetric = (g: Goal) => (g.metric === "km" ? `${g.target} км` : `${g.t
 
 /* ── Карточка активной цели ──────────────────────────────────────────── */
 
-function GoalCard({ goal, preview = false }: { goal: ActiveGoal; preview?: boolean }) {
+function GoalCard({
+  goal, preview = false, stravaConnected = false, activating = false, onActivate,
+}: {
+  goal: ActiveGoal;
+  preview?: boolean;
+  stravaConnected?: boolean;
+  activating?: boolean;
+  onActivate?: () => void;
+}) {
   const pathRef = useRef<SVGPathElement>(null);
   const progressRef = useRef<SVGPathElement>(null);
   const markerRef = useRef<SVGGElement>(null);
@@ -118,7 +132,6 @@ function GoalCard({ goal, preview = false }: { goal: ActiveGoal; preview?: boole
 
   const frac = Math.min(1, goal.progress / goal.target);
   const nextTier = goal.tiers.find((t) => t.at > goal.progress);
-  const reached = goal.tiers.filter((t) => t.at <= goal.progress).length;
 
   // Геометрия: точки наград и километровые засечки с нормалями
   useEffect(() => {
@@ -404,39 +417,31 @@ function GoalCard({ goal, preview = false }: { goal: ActiveGoal; preview?: boole
         {preview ? (
           <>
             <button
-              onClick={() => triggerHaptic("light")}
-              className="w-full bg-primary text-black font-bold text-[15px] py-3 rounded-full transition-[transform,background-color] duration-150 hover:bg-[#b3e600] active:scale-[0.97]"
+              onClick={onActivate}
+              disabled={activating}
+              className="w-full bg-primary text-black font-bold text-[15px] py-3 rounded-full transition-[transform,background-color] duration-150 hover:bg-[#b3e600] active:scale-[0.97] disabled:opacity-60 flex items-center justify-center gap-2"
             >
+              {activating && <Loader2 size={16} className="animate-spin" />}
               Взять цель
             </button>
-            {!STRAVA_CONNECTED && (
+            {!stravaConnected && (
               <p className="text-[11px] text-muted mt-2.5 text-center">
                 Понадобится Strava — подключим сразу после
               </p>
             )}
           </>
         ) : (
-          <>
-        <p className="text-[13px] text-muted mb-3">
-          {nextTier ? (
-            <>
-              Следующая награда через{" "}
-              <span className="text-foreground font-bold">{(nextTier.at - goal.progress).toFixed(1)} км</span>
-              {" "}— {nextTier.reward}
-            </>
-          ) : (
-            "Цель закрыта, все награды забраны"
-          )}
-        </p>
-        {reached > 0 && (
-          <button
-            onClick={() => triggerHaptic("light")}
-            className="w-full bg-primary text-black font-bold text-[15px] py-3 rounded-full transition-[transform,background-color] duration-150 hover:bg-[#b3e600] active:scale-[0.97]"
-          >
-            Забрать награду
-          </button>
-        )}
-          </>
+          <p className="text-[13px] text-muted">
+            {nextTier ? (
+              <>
+                До награды —{" "}
+                <span className="text-foreground font-bold">{(nextTier.at - goal.progress).toFixed(1)} км</span>
+                . Придёт сообщением от бота в Telegram, как только доберёшься.
+              </>
+            ) : (
+              "Цель выполнена — награда уже в Telegram"
+            )}
+          </p>
         )}
       </footer>
     </section>
@@ -446,12 +451,83 @@ function GoalCard({ goal, preview = false }: { goal: ActiveGoal; preview?: boole
 /* ── Экран ────────────────────────────────────────────────────────────── */
 
 export default function ChallengesTab() {
+  const { status: sessionStatus } = useSession();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [data, setData] = useState<ApiResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activatingId, setActivatingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [banner, setBanner] = useState<{ kind: "success" | "error"; text: string } | null>(null);
+
   const [city, setCity] = useState(CITY_ALL);
   const [claim, setClaim] = useState<"all" | "promo" | "qr">("all");
   const [shown, setShown] = useState(5);
 
-  const active = ACTIVE_GOAL;
-  const catalog = useMemo(() => GOALS.filter((g) => g.id !== active?.id), [active]);
+  const fetchChallenges = async () => {
+    try {
+      const res = await fetch("/api/challenges", { cache: "no-store" });
+      if (res.ok) setData(await res.json());
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchChallenges(); }, []);
+
+  // Возврат из Strava (см. /api/strava/callback): сообщаем, что случилось,
+  // и убираем параметры из адресной строки, чтобы не сработали повторно.
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const error = searchParams.get("error");
+    if (!success && !error) return;
+
+    if (success === "goal_activated") setBanner({ kind: "success", text: "Цель взята! Километры уже считаются." });
+    else if (error === "activation_failed") setBanner({ kind: "error", text: "Strava подключилась, а цель — нет. Попробуй взять её ещё раз." });
+    else if (error === "strava_auth_failed" || error === "token_exchange_failed") setBanner({ kind: "error", text: "Не получилось подключить Strava. Попробуй ещё раз." });
+    else if (error === "strava_already_linked") setBanner({ kind: "error", text: "Этот аккаунт Strava уже привязан к другому профилю CREW." });
+
+    router.replace("/challenges");
+    fetchChallenges();
+  }, [searchParams]);
+
+  const handleActivate = async (challengeId: string) => {
+    if (sessionStatus !== "authenticated") return;
+    triggerHaptic("light");
+    setActionError(null);
+    setActivatingId(challengeId);
+    try {
+      const res = await fetch(`/api/challenges/${challengeId}/activate`, { method: "POST" });
+      if (res.status === 409) {
+        const body = await res.json().catch(() => ({}));
+        if (body.error === "STRAVA_REQUIRED") {
+          const returnTo = encodeURIComponent("/challenges");
+          window.location.href = `/api/strava/connect?returnTo=${returnTo}&challengeId=${challengeId}`;
+          return;
+        }
+        setActionError(body.error || "Эту цель сейчас нельзя взять");
+        setActivatingId(null);
+        return;
+      }
+      if (!res.ok) {
+        setActionError("Не получилось. Попробуй ещё раз.");
+        setActivatingId(null);
+        return;
+      }
+      await fetchChallenges();
+    } catch (e) {
+      console.error(e);
+      setActionError("Не получилось. Попробуй ещё раз.");
+    } finally {
+      setActivatingId(null);
+    }
+  };
+
+  const active = data?.active ? toActiveGoal(data.active) : null;
+  const catalog = useMemo(() => (data?.challenges ?? []).map(toGoal), [data]);
 
   const filtered = useMemo(
     () =>
@@ -466,18 +542,65 @@ export default function ChallengesTab() {
     [catalog]
   );
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-[100dvh] items-center justify-center pt-safe pb-28">
+        <Loader2 className="animate-spin text-primary" size={28} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-[100dvh] text-foreground pb-28 pt-safe relative z-10">
       <h1 className="px-4 mt-2 mb-4 font-display text-[30px] font-extrabold tracking-[-0.03em] leading-none">
         Цели
       </h1>
 
+      {banner && (
+        <div
+          className={`mx-4 mb-4 rounded-[16px] border px-4 py-3 flex items-start gap-2.5 ${
+            banner.kind === "success" ? "bg-primary/10 border-primary/25 text-foreground" : "bg-white/[0.04] border-white/10 text-muted"
+          }`}
+        >
+          <p className="text-[13px] leading-snug flex-1">{banner.text}</p>
+          <button
+            onClick={() => setBanner(null)}
+            aria-label="Закрыть"
+            className="shrink-0 -m-2.5 p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-muted hover:text-foreground"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {data?.completed && !active && (
+        <div className="mx-4 mb-4 bg-card/40 backdrop-blur-md border border-primary/20 rounded-[22px] px-5 py-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+            <PartyPopper size={18} className="text-primary" />
+          </div>
+          <div className="min-w-0">
+            <p className="font-bold text-[15px] leading-tight">«{data.completed.challenge.title}» выполнена</p>
+            <p className="text-[13px] text-muted mt-0.5">Награда от {data.completed.challenge.partner} уже пришла в Telegram</p>
+          </div>
+        </div>
+      )}
+
+      {actionError && (
+        <p className="mx-4 mb-3 text-[13px] text-red-400">{actionError}</p>
+      )}
+
       {active && <GoalCard goal={active} />}
 
       {/* Одна акция и цель не взята — показываем её карточкой, а не строчкой:
           человек видит механику до того, как решится. */}
       {!active && catalog.length === 1 && (
-        <GoalCard goal={{ ...catalog[0], progress: 0 }} preview />
+        <GoalCard
+          goal={{ ...catalog[0], progress: 0 }}
+          preview
+          stravaConnected={!!data?.stravaConnected}
+          activating={activatingId === catalog[0].id}
+          onActivate={() => handleActivate(catalog[0].id)}
+        />
       )}
 
       {/* Каталог */}
@@ -560,12 +683,19 @@ export default function ChallengesTab() {
           filtered.slice(0, shown).map((c, i) => (
             <button
               key={c.id}
-              onClick={() => triggerHaptic("light")}
+              onClick={() => handleActivate(c.id)}
+              disabled={activatingId === c.id}
               style={{ animationDelay: `${Math.min(i, 6) * 45}ms` }}
-              className="row-in w-full text-left bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] px-4 py-4 flex items-center gap-3.5 transition-[transform,border-color] duration-200 hover:border-white/10 active:scale-[0.985]"
+              className="row-in w-full text-left bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] px-4 py-4 flex items-center gap-3.5 transition-[transform,border-color] duration-200 hover:border-white/10 active:scale-[0.985] disabled:opacity-60"
             >
               <div className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/5 flex items-center justify-center shrink-0">
-                {c.metric === "streak" ? <Flame size={17} className="text-muted" /> : <RouteIcon size={17} className="text-muted" />}
+                {activatingId === c.id ? (
+                  <Loader2 size={17} className="text-muted animate-spin" />
+                ) : c.metric === "streak" ? (
+                  <Flame size={17} className="text-muted" />
+                ) : (
+                  <RouteIcon size={17} className="text-muted" />
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-[15px] leading-tight truncate">{c.title}</p>

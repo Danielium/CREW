@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { refreshToken, getAthleteActivities } from "@/lib/strava";
+import { addChallengeProgress } from "@/lib/challenges";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -148,6 +149,8 @@ export async function POST() {
             }
           }
           
+          await addChallengeProgress(account.userId, distanceKm, startTime);
+
           syncedCount++;
         }
       }

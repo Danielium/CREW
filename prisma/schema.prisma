@@ -40,6 +40,8 @@ model User {
   posts         Post[]
   likes         Like[]
   comments      Comment[]
+
+  challengeParticipations ChallengeParticipation[]
 }
 
 model Run {
@@ -219,6 +221,55 @@ model Like {
 
   @@unique([userId, postId])
   @@index([postId])
+}
+
+model Challenge {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  partner     String
+  title       String
+  metric      String   // "KM" | "STREAK"
+  target      Float
+  city        String   @default("Везде")
+  claimType   String   @default("PROMO") // "PROMO" | "QR"
+  rewardLabel String
+  isActive    Boolean  @default(true) // показывать ли в каталоге
+  createdAt   DateTime @default(now())
+
+  participations ChallengeParticipation[]
+  promoCodes     PromoCode[]
+}
+
+model ChallengeParticipation {
+  id           String    @id @default(cuid())
+  userId       String
+  challengeId  String
+  status       String    @default("ACTIVE") // "ACTIVE" | "PAUSED" | "COMPLETED"
+  progress     Float     @default(0)
+  activatedAt  DateTime  @default(now()) // километры считаются только с этого момента
+  completedAt  DateTime?
+  rewardSentAt DateTime?
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeId])
+  @@index([userId, status])
+  @@index([challengeId, status])
+}
+
+model PromoCode {
+  id          String    @id @default(cuid())
+  challengeId String
+  code        String
+  status      String    @default("AVAILABLE") // "AVAILABLE" | "CLAIMED"
+  claimedById String?
+  claimedAt   DateTime?
+
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, code])
+  @@index([challengeId, status])
 }
 
 model Comment {

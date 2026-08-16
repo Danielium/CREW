@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { STRAVA_WEBHOOK_VERIFY_TOKEN, refreshToken, getActivityInfo } from "@/lib/strava";
+import { addChallengeProgress } from "@/lib/challenges";
 
 /**
  * Strava Webhook Verification Endpoint
@@ -146,6 +147,8 @@ export async function POST(request: Request) {
                 }
               });
             }
+
+            await addChallengeProgress(account.userId, distanceKm, startTime);
 
             console.log("Successfully synced Strava run for user:", account.userId);
           }
