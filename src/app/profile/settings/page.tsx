@@ -290,7 +290,7 @@ export default function SettingsPage() {
                 <Activity size={20} className="text-muted" />
                 <div>
                   <p className="font-bold">Недельная норма (км)</p>
-                  <p className="text-[10px] text-muted">Цель для кольца активности</p>
+                  <p className="text-[10px] text-muted">Считается в кольцо активности</p>
                 </div>
               </div>
               <input

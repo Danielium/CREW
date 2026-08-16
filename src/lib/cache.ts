@@ -1,5 +1,6 @@
 export const globalCache: {
   feedPosts: any | null;
+  feedPostsByScope: Record<string, any>;
   userData: any | null;
   clubs: any | null;
   events: any | null;
@@ -8,6 +9,7 @@ export const globalCache: {
   isInitialLoadComplete: boolean;
 } = {
   feedPosts: null,
+  feedPostsByScope: {},
   userData: null,
   clubs: null,
   events: null,

@@ -36,11 +36,20 @@ const MAX_ATTACHMENTS = 10;
 
 type Draft = { file: File; previewUrl: string; type: "image" | "video" };
 
+type FeedScope = "all" | "club";
+
+const SCOPE_TABS: { id: FeedScope; label: string }[] = [
+  { id: "all", label: "Все" },
+  { id: "club", label: "Мой клуб" },
+];
+
 export default function FeedTab() {
   const { data: session, update: updateSession } = useSession();
-  const [posts, setPosts] = useState<Post[]>(globalCache.feedPosts || []);
-  const [isLoading, setIsLoading] = useState(!globalCache.feedPosts);
-  
+  const [scope, setScope] = useState<FeedScope>("all");
+  const [posts, setPosts] = useState<Post[]>(globalCache.feedPostsByScope?.all || globalCache.feedPosts || []);
+  const [isLoading, setIsLoading] = useState(!(globalCache.feedPostsByScope?.all || globalCache.feedPosts));
+  const [hasClub, setHasClub] = useState(true);
+
   // Post Creation State
   const [newPostContent, setNewPostContent] = useState("");
   const [isPosting, setIsPosting] = useState(false);
@@ -78,17 +87,23 @@ export default function FeedTab() {
   }, [session]);
 
   useEffect(() => {
-    fetchFeed();
-  }, []);
+    fetchFeed(scope);
+  }, [scope]);
 
-  const fetchFeed = async () => {
+  const fetchFeed = async (targetScope: FeedScope) => {
+    const cached = globalCache.feedPostsByScope[targetScope];
+    setPosts(cached || []);
+    setIsLoading(!cached);
+
     try {
-      const res = await fetch('/api/feed', { cache: 'no-store' });
+      const res = await fetch(`/api/feed?scope=${targetScope}`, { cache: 'no-store' });
       const data = await res.json();
       if (data.posts) {
         setPosts(data.posts);
-        globalCache.feedPosts = data.posts;
+        globalCache.feedPostsByScope[targetScope] = data.posts;
+        if (targetScope === 'all') globalCache.feedPosts = data.posts;
       }
+      setHasClub(targetScope === 'club' ? data.hasClub !== false : true);
     } catch (e) {
       console.error(e);
     } finally {
@@ -96,9 +111,17 @@ export default function FeedTab() {
     }
   };
 
+  const switchScope = (next: FeedScope) => {
+    if (next === scope) return;
+    triggerHaptic('light');
+    setExpandedCommentsPostId(null);
+    setScope(next);
+  };
+
   useEffect(() => {
     if (posts.length > 0) {
-      globalCache.feedPosts = posts;
+      globalCache.feedPostsByScope[scope] = posts;
+      if (scope === 'all') globalCache.feedPosts = posts;
     }
   }, [posts]);
 
@@ -171,6 +194,8 @@ export default function FeedTab() {
       const data = await res.json();
       if (data.success && data.post) {
         setPosts([data.post, ...posts]);
+        // другая вкладка тоже должна увидеть новый пост при следующем открытии
+        delete globalCache.feedPostsByScope[scope === 'all' ? 'club' : 'all'];
         setNewPostContent("");
         removeAttachment();
       }
@@ -406,6 +431,27 @@ export default function FeedTab() {
         </div>
       </div>
 
+      {/* Scope Tabs */}
+      <div className="bg-card border border-border rounded-full p-1 mt-4 mx-4 relative">
+        <div className="flex relative w-full h-full">
+          <div
+            className="absolute top-0 bottom-0 w-1/2 bg-primary rounded-full transition-transform duration-300 ease-out z-0 shadow-sm"
+            style={{ transform: `translateX(${scope === "all" ? "0%" : "100%"})` }}
+          />
+          {SCOPE_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => switchScope(tab.id)}
+              className={`flex-1 py-2 text-sm font-bold rounded-full transition-colors relative z-10 ${
+                scope === tab.id ? "text-black" : "text-muted hover:text-foreground"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Feed List */}
       <div className="flex flex-col gap-3 px-4 pt-3 pb-4">
         {isLoading ? (
@@ -413,9 +459,21 @@ export default function FeedTab() {
             <Loader2 className="animate-spin text-primary" size={32} />
           </div>
         ) : posts.length === 0 ? (
-          <div className="p-8 text-center text-muted">
-            Пока нет постов. Станьте первым!
-          </div>
+          scope === "club" && !hasClub ? (
+            <div className="p-8 text-center flex flex-col items-center gap-4">
+              <p className="text-muted text-sm">Вы пока не состоите ни в одном клубе</p>
+              <Link
+                href="/club"
+                className="bg-primary text-black font-bold px-5 py-2.5 rounded-full text-sm hover:bg-[#b3e600] transition-colors"
+              >
+                Найти клуб
+              </Link>
+            </div>
+          ) : (
+            <div className="p-8 text-center text-muted">
+              {scope === "club" ? "В вашем клубе пока нет постов" : "Пока нет постов. Станьте первым!"}
+            </div>
+          )
         ) : (
           posts.map((post) => (
             <div key={post.id} className="p-4 bg-card/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[22px] transition-colors cursor-pointer">
