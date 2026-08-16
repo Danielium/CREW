@@ -28,6 +28,9 @@ export async function POST(request: Request, context: any) {
     if (error?.message === "ALREADY_COMPLETED") {
       return NextResponse.json({ error: "Эта цель уже выполнена" }, { status: 409 });
     }
+    if (error?.message === "PROMO_EXHAUSTED") {
+      return NextResponse.json({ error: "Промокоды закончились" }, { status: 409 });
+    }
     console.error("POST /api/challenges/[id]/activate error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

@@ -28,7 +28,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Check, ChevronRight, ChevronDown, Flag, Lock, MapPin, Gift, Flame, Route as RouteIcon, Loader2, PartyPopper, X } from "lucide-react";
+import { Check, ChevronRight, ChevronDown, Flag, Lock, MapPin, Gift, Flame, Route as RouteIcon, Loader2, PartyPopper, X, Ban } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 
 type Tier = { at: number; reward: string };
@@ -42,6 +42,7 @@ export type Goal = {
   city: string;
   claim: "promo" | "qr";
   tiers: Tier[];
+  remainingCodes: number | null; // null — не PROMO (QR не завязан на пул)
 };
 type ActiveGoal = Goal & { progress: number };
 
@@ -50,7 +51,7 @@ type ActiveGoal = Goal & { progress: number };
 type ApiChallenge = {
   id: string; slug: string; partner: string; title: string;
   metric: "KM" | "STREAK"; target: number; city: string;
-  claimType: "PROMO" | "QR"; rewardLabel: string;
+  claimType: "PROMO" | "QR"; rewardLabel: string; remainingCodes: number | null;
 };
 type ApiParticipation = {
   id: string; challengeId: string; status: string; progress: number;
@@ -75,6 +76,7 @@ const toGoal = (c: ApiChallenge): Goal => ({
   city: c.city,
   claim: c.claimType === "PROMO" ? "promo" : "qr",
   tiers: [{ at: c.target, reward: c.rewardLabel }],
+  remainingCodes: c.remainingCodes,
 });
 const toActiveGoal = (p: ApiParticipation): ActiveGoal => ({ ...toGoal(p.challenge), progress: p.progress });
 
@@ -102,6 +104,7 @@ const plural = (n: number, one: string, few: string, many: string) => {
 };
 
 const goalMetric = (g: Goal) => (g.metric === "km" ? `${g.target} км` : `${g.target} ${plural(g.target, "день", "дня", "дней")} подряд`);
+const codesWord = (n: number) => plural(n, "промокод", "промокода", "промокодов");
 
 /* ── Карточка активной цели ──────────────────────────────────────────────
  * Только для ДЕЙСТВИТЕЛЬНО взятой цели. Акции, которые ещё можно взять,
@@ -233,7 +236,7 @@ function GoalCard({ goal }: { goal: ActiveGoal }) {
         if (!el || !p) return null;
         const w = el.offsetWidth, h = el.offsetHeight;
         const cx = (p.x / VB.w) * W, cy = (p.y / VB.h) * H;
-        const left = p.x > VB.w * 0.62 ? cx - 16 - w : cx + 16;
+        const left = p.x > VB.w * 0.62 ? cx - 22 - w : cx + 22;
         return { left, right: left + w, top: cy - h / 2, bottom: cy + h / 2 };
       };
 
@@ -300,9 +303,6 @@ function GoalCard({ goal }: { goal: ActiveGoal }) {
           <p className="font-display font-bold text-[17px] leading-tight truncate">{goal.title}</p>
           <p className="text-[13px] text-muted truncate">{goal.partner}</p>
         </div>
-        <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 rounded-full px-2.5 py-1">
-          Активна
-        </span>
       </header>
 
       <div ref={trackWrapRef} className="relative mt-4 mx-3">
@@ -372,15 +372,19 @@ function GoalCard({ goal }: { goal: ActiveGoal }) {
             <div
               key={i}
               ref={(el) => { tierLabelRefs.current[i] = el; }}
-              className="absolute pointer-events-none"
+              // Фиксированная ширина, не shrink-to-fit: контейнер абсолютно
+              // спозиционирован без width, и text-right внутри такого блока
+              // на разных строках схлопывал ширину до самого узкого слова
+              // («Напиток / в / подарок» — по одному слову на строку).
+              className={`absolute pointer-events-none w-[112px] ${flip ? "text-right" : ""}`}
               style={{
                 left: `${(p.x / VB.w) * 100}%`,
                 top: `${(p.y / VB.h) * 100}%`,
-                transform: `translate(${flip ? "calc(-100% - 16px)" : "16px"}, calc(-50% + ${nudges[i] ?? 0}px))`,
+                transform: `translate(${flip ? "calc(-100% - 22px)" : "22px"}, calc(-50% + ${nudges[i] ?? 0}px))`,
                 transition: "transform 200ms ease-out",
               }}
             >
-              <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <div className={`flex items-center gap-1.5 whitespace-nowrap ${flip ? "justify-end" : ""}`}>
                 {isLast ? <Flag size={12} className={isLit ? "text-primary" : "text-muted"} />
                   : isLit ? <Check size={12} className="text-primary" />
                   : <Lock size={12} className="text-muted" />}
@@ -388,7 +392,7 @@ function GoalCard({ goal }: { goal: ActiveGoal }) {
                   {t.at} км
                 </span>
               </div>
-              <p className={`text-[11px] leading-tight mt-0.5 max-w-[96px] transition-colors duration-300 ${isLit ? "text-primary" : "text-muted"} ${flip ? "text-right ml-auto" : ""}`}>
+              <p className={`text-[11px] leading-tight mt-0.5 transition-colors duration-300 ${isLit ? "text-primary" : "text-muted"}`}>
                 {t.reward}
               </p>
             </div>
@@ -417,6 +421,11 @@ function GoalCard({ goal }: { goal: ActiveGoal }) {
             "Цель выполнена — награда уже в Telegram"
           )}
         </p>
+        {goal.claim === "promo" && goal.remainingCodes !== null && !!nextTier && (
+          <p className="text-[11px] text-muted mt-1.5">
+            Осталось {goal.remainingCodes} {codesWord(goal.remainingCodes)} в пуле
+          </p>
+        )}
       </footer>
     </section>
   );
@@ -686,31 +695,46 @@ export default function ChallengesTab() {
             </button>
           </div>
         ) : (
-          filtered.slice(0, shown).map((c, i) => (
-            <button
-              key={c.id}
-              onClick={() => handleActivate(c.id)}
-              disabled={activatingId === c.id}
-              style={{ animationDelay: `${Math.min(i, 6) * 45}ms` }}
-              className="row-in w-full text-left bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] px-4 py-4 flex items-center gap-3.5 transition-[transform,border-color] duration-200 hover:border-white/10 active:scale-[0.985] disabled:opacity-60"
-            >
-              <div className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/5 flex items-center justify-center shrink-0">
-                {activatingId === c.id ? (
-                  <Loader2 size={17} className="text-muted animate-spin" />
-                ) : c.metric === "streak" ? (
-                  <Flame size={17} className="text-muted" />
-                ) : (
-                  <RouteIcon size={17} className="text-muted" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-bold text-[15px] leading-tight truncate">{c.title}</p>
-                <p className="text-[13px] text-muted truncate">{goalMetric(c)} · {c.partner}</p>
-                <p className="text-[13px] text-primary truncate mt-0.5">{c.reward}</p>
-              </div>
-              <ChevronRight size={18} className="text-muted shrink-0" />
-            </button>
-          ))
+          filtered.slice(0, shown).map((c, i) => {
+            const exhausted = c.claim === "promo" && c.remainingCodes === 0;
+            const scarce = c.claim === "promo" && c.remainingCodes !== null && c.remainingCodes > 0 && c.remainingCodes <= 3;
+            return (
+              <button
+                key={c.id}
+                onClick={() => handleActivate(c.id)}
+                disabled={activatingId === c.id || exhausted}
+                style={{ animationDelay: `${Math.min(i, 6) * 45}ms` }}
+                className="row-in w-full text-left bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] px-4 py-4 flex items-center gap-3.5 transition-[transform,border-color] duration-200 hover:border-white/10 active:scale-[0.985] disabled:cursor-not-allowed disabled:saturate-0 disabled:brightness-90"
+              >
+                <div className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/5 flex items-center justify-center shrink-0">
+                  {activatingId === c.id ? (
+                    <Loader2 size={17} className="text-muted animate-spin" />
+                  ) : exhausted ? (
+                    <Ban size={16} className="text-muted" />
+                  ) : c.metric === "streak" ? (
+                    <Flame size={17} className="text-muted" />
+                  ) : (
+                    <RouteIcon size={17} className="text-muted" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-bold text-[15px] leading-tight truncate">{c.title}</p>
+                    {c.claim === "promo" && c.remainingCodes !== null && !exhausted && (
+                      <span className={`shrink-0 text-[11px] font-bold ${scarce ? "text-primary" : "text-muted"}`}>
+                        {c.remainingCodes} {codesWord(c.remainingCodes)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[13px] text-muted truncate">{goalMetric(c)} · {c.partner}</p>
+                  <p className={`text-[13px] truncate mt-0.5 ${exhausted ? "text-muted" : "text-primary"}`}>
+                    {exhausted ? "Промокоды закончились" : c.reward}
+                  </p>
+                </div>
+                {!exhausted && <ChevronRight size={18} className="text-muted shrink-0" />}
+              </button>
+            );
+          })
         )}
 
         {filtered.length > shown && (

@@ -22,6 +22,16 @@ export async function activateChallenge(userId: string, challengeId: string) {
       throw new Error("ALREADY_COMPLETED");
     }
 
+    // Новую активацию цели с уже пустым пулом не даём — только это
+    // предотвратимо. Гонку «был код при активации, кончился при финише»
+    // всё равно ловит ручной путь в deliverReward, здесь её не избежать.
+    if (challenge.claimType === "PROMO") {
+      const available = await tx.promoCode.count({ where: { challengeId, status: "AVAILABLE" } });
+      if (available === 0) {
+        throw new Error("PROMO_EXHAUSTED");
+      }
+    }
+
     await tx.challengeParticipation.updateMany({
       where: { userId, status: "ACTIVE", NOT: { challengeId } },
       data: { status: "PAUSED" },
