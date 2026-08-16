@@ -48,6 +48,21 @@ export async function activateChallenge(userId: string, challengeId: string) {
 }
 
 /**
+ * Откладывает активную цель: прогресс остаётся как есть, километры
+ * перестают в неё капать. Обратимо — вернуться к ней можно активировав
+ * заново, прогресс не сгорает (см. activateChallenge).
+ */
+export async function pauseChallenge(userId: string, challengeId: string) {
+  const result = await prisma.challengeParticipation.updateMany({
+    where: { userId, challengeId, status: "ACTIVE" },
+    data: { status: "PAUSED" },
+  });
+  if (result.count === 0) {
+    throw new Error("NOT_ACTIVE");
+  }
+}
+
+/**
  * Начисляет километры из подтверждённой пробежки в активную цель
  * пользователя (если она есть). Вызывается из Strava-синка и вебхука —
  * единственных источников пробежек в приложении.

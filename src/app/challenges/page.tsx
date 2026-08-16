@@ -112,7 +112,13 @@ const codesWord = (n: number) => plural(n, "промокод", "промокод
  * в каталоге ниже, при любом их количестве. Хочешь взять — идёшь в список.
  */
 
-function GoalCard({ goal }: { goal: ActiveGoal }) {
+function GoalCard({
+  goal, onPause, pausing,
+}: {
+  goal: ActiveGoal;
+  onPause: () => void;
+  pausing: boolean;
+}) {
   const pathRef = useRef<SVGPathElement>(null);
   const progressRef = useRef<SVGPathElement>(null);
   const markerRef = useRef<SVGGElement>(null);
@@ -410,21 +416,32 @@ function GoalCard({ goal }: { goal: ActiveGoal }) {
       </div>
 
       <footer className="px-5 pb-5 pt-1">
-        <p className="text-[13px] text-muted">
-          {nextTier ? (
-            <>
-              До награды —{" "}
-              <span className="text-foreground font-bold">{(nextTier.at - goal.progress).toFixed(1)} км</span>
-              . Придёт сообщением от бота в Telegram, как только доберёшься.
-            </>
-          ) : (
-            "Цель выполнена — награда уже в Telegram"
-          )}
-        </p>
-        {goal.claim === "promo" && goal.remainingCodes !== null && !!nextTier && (
-          <p className="text-[11px] text-muted mt-1.5">
-            Осталось {goal.remainingCodes} {codesWord(goal.remainingCodes)} в пуле
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[13px] text-muted">
+            {nextTier ? (
+              <>
+                До награды —{" "}
+                <span className="text-foreground font-bold">{(nextTier.at - goal.progress).toFixed(1)} км</span>
+              </>
+            ) : (
+              "Цель выполнена"
+            )}
           </p>
+          {goal.claim === "promo" && goal.remainingCodes !== null && !!nextTier && (
+            <span className={`shrink-0 text-[11px] font-bold ${goal.remainingCodes <= 3 ? "text-primary" : "text-muted"}`}>
+              {goal.remainingCodes} {codesWord(goal.remainingCodes)}
+            </span>
+          )}
+        </div>
+        {!!nextTier && (
+          <button
+            onClick={onPause}
+            disabled={pausing}
+            className="mt-3 w-full min-h-[44px] rounded-full border border-border text-[13px] font-bold text-muted transition-[transform,color,border-color] duration-150 hover:text-foreground hover:border-white/20 active:scale-[0.97] disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            {pausing && <Loader2 size={14} className="animate-spin" />}
+            Отложить цель
+          </button>
         )}
       </footer>
     </section>
@@ -476,8 +493,12 @@ export default function ChallengesTab() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activatingId, setActivatingId] = useState<string | null>(null);
+  const [pausingId, setPausingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [banner, setBanner] = useState<{ kind: "success" | "error"; text: string } | null>(null);
+  const [confirmGoal, setConfirmGoal] = useState<Goal | null>(null);
+  const [touchStartY, setTouchStartY] = useState(0);
+  const [touchOffset, setTouchOffset] = useState(0);
 
   const [city, setCity] = useState(CITY_ALL);
   const [claim, setClaim] = useState<"all" | "promo" | "qr">("all");
@@ -514,6 +535,7 @@ export default function ChallengesTab() {
 
   const handleActivate = async (challengeId: string) => {
     if (sessionStatus !== "authenticated") return;
+    setConfirmGoal(null);
     triggerHaptic("light");
     setActionError(null);
     setActivatingId(challengeId);
@@ -543,6 +565,28 @@ export default function ChallengesTab() {
       setActivatingId(null);
     }
   };
+
+  const handlePause = async (challengeId: string) => {
+    triggerHaptic("light");
+    setPausingId(challengeId);
+    try {
+      const res = await fetch(`/api/challenges/${challengeId}/pause`, { method: "POST" });
+      if (res.ok) await fetchChallenges();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setPausingId(null);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => { setTouchStartY(e.touches[0].clientY); setTouchOffset(0); };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY === 0) return;
+    const diff = e.touches[0].clientY - touchStartY;
+    if (diff > 0) setTouchOffset(diff);
+    if (diff > 120) { setConfirmGoal(null); setTouchStartY(0); setTouchOffset(0); }
+  };
+  const handleTouchEnd = () => { if (touchOffset <= 120) setTouchOffset(0); setTouchStartY(0); };
 
   const active = data?.active ? toActiveGoal(data.active) : null;
   // API отдаёт активную цель и внутри challenges тоже (её можно взять
@@ -613,23 +657,22 @@ export default function ChallengesTab() {
         <p className="mx-4 mb-3 text-[13px] text-red-400">{actionError}</p>
       )}
 
-      {active ? <GoalCard goal={active} /> : <EmptyGoalCard hasCatalog={catalog.length > 0} />}
+      {active ? (
+        <GoalCard goal={active} onPause={() => handlePause(active.id)} pausing={pausingId === active.id} />
+      ) : (
+        <EmptyGoalCard hasCatalog={catalog.length > 0} />
+      )}
 
       {/* Каталог — список при любом количестве акций, хоть одна, хоть сто.
           Взять цель можно только отсюда, никогда из карточки выше. */}
       <div className={`px-4 mt-8`}>
         {active ? (
-          <>
-            <div className="flex items-baseline justify-between">
-              <h2 className="font-display text-[19px] font-bold tracking-[-0.02em]">Другие цели</h2>
-              <span className="text-[13px] text-muted">
-                {filtered.length} {plural(filtered.length, "цель", "цели", "целей")}
-              </span>
-            </div>
-            <p className="text-[13px] text-muted mt-1">
-              Возьмёшь другую — текущая встанет на паузу, накопленные километры сохранятся
-            </p>
-          </>
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-display text-[19px] font-bold tracking-[-0.02em]">Другие цели</h2>
+            <span className="text-[13px] text-muted">
+              {filtered.length} {plural(filtered.length, "цель", "цели", "целей")}
+            </span>
+          </div>
         ) : catalog.length > 0 ? (
           <div className="flex items-baseline justify-between">
             <h2 className="font-display text-[19px] font-bold tracking-[-0.02em]">Доступные цели</h2>
@@ -701,7 +744,7 @@ export default function ChallengesTab() {
             return (
               <button
                 key={c.id}
-                onClick={() => handleActivate(c.id)}
+                onClick={() => { triggerHaptic("light"); setConfirmGoal(c); }}
                 disabled={activatingId === c.id || exhausted}
                 style={{ animationDelay: `${Math.min(i, 6) * 45}ms` }}
                 className="row-in w-full text-left bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] px-4 py-4 flex items-center gap-3.5 transition-[transform,border-color] duration-200 hover:border-white/10 active:scale-[0.985] disabled:cursor-not-allowed disabled:saturate-0 disabled:brightness-90"
@@ -745,6 +788,64 @@ export default function ChallengesTab() {
             Показать ещё {filtered.length - shown}
           </button>
         )}
+      </div>
+
+      {/* Подтверждение перед взятием — раньше тап по строке брал цель мгновенно,
+          без единого шанса передумать. Текст короткий: факты, а не объяснение. */}
+      <div className={`fixed inset-0 z-[100] flex justify-center ${confirmGoal ? "pointer-events-auto" : "pointer-events-none"}`}>
+        <div className="w-full max-w-[480px] h-full relative pointer-events-none flex flex-col justify-end overflow-hidden">
+          <div
+            className={`absolute inset-0 bg-gradient-to-t from-black/80 to-black/40 transition-opacity duration-300 ${confirmGoal ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+            onClick={() => setConfirmGoal(null)}
+          />
+          <div
+            className={`w-full bg-card border-t border-border rounded-t-[32px] p-6 pb-8 relative z-10 shadow-2xl ${touchOffset > 0 ? "transition-none" : "transition-transform duration-300 ease-out"} ${confirmGoal ? "pointer-events-auto" : "pointer-events-none"}`}
+            style={{ transform: confirmGoal ? `translateY(${touchOffset}px)` : "translateY(100%)" }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <div className="flex justify-center mb-5">
+              <div className="w-12 h-1.5 bg-border rounded-full" />
+            </div>
+
+            {confirmGoal && (
+              <>
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-11 h-11 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
+                    <Gift size={19} className="text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-display font-bold text-[17px] leading-tight truncate">{confirmGoal.title}</p>
+                    <p className="text-[13px] text-muted truncate">{goalMetric(confirmGoal)} · {confirmGoal.reward}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5 mb-5 text-[13px] text-muted">
+                  {active && active.id !== confirmGoal.id && (
+                    <p>«{active.title}» встанет на паузу — прогресс сохранится</p>
+                  )}
+                  {!data?.stravaConnected && <p>Понадобится Strava — подключим сразу после</p>}
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setConfirmGoal(null)}
+                    className="flex-1 py-3 rounded-full border border-border text-[15px] font-bold text-foreground transition-[transform,border-color] duration-150 hover:border-white/20 active:scale-[0.97]"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    onClick={() => handleActivate(confirmGoal.id)}
+                    className="flex-1 py-3 rounded-full bg-primary text-black font-bold text-[15px] transition-[transform,background-color] duration-150 hover:bg-[#b3e600] active:scale-[0.97]"
+                  >
+                    Взять цель
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
