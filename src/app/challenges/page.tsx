@@ -28,7 +28,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Check, ChevronRight, Flag, Lock, MapPin, Gift, Flame, Route as RouteIcon, Loader2, PartyPopper, X } from "lucide-react";
+import { Check, ChevronRight, ChevronDown, Flag, Lock, MapPin, Gift, Flame, Route as RouteIcon, Loader2, PartyPopper, X } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 
 type Tier = { at: number; reward: string };
@@ -103,17 +103,13 @@ const plural = (n: number, one: string, few: string, many: string) => {
 
 const goalMetric = (g: Goal) => (g.metric === "km" ? `${g.target} км` : `${g.target} ${plural(g.target, "день", "дня", "дней")} подряд`);
 
-/* ── Карточка активной цели ──────────────────────────────────────────── */
+/* ── Карточка активной цели ──────────────────────────────────────────────
+ * Только для ДЕЙСТВИТЕЛЬНО взятой цели. Акции, которые ещё можно взять,
+ * сюда не попадают ни при каких обстоятельствах — они живут строчками
+ * в каталоге ниже, при любом их количестве. Хочешь взять — идёшь в список.
+ */
 
-function GoalCard({
-  goal, preview = false, stravaConnected = false, activating = false, onActivate,
-}: {
-  goal: ActiveGoal;
-  preview?: boolean;
-  stravaConnected?: boolean;
-  activating?: boolean;
-  onActivate?: () => void;
-}) {
+function GoalCard({ goal }: { goal: ActiveGoal }) {
   const pathRef = useRef<SVGPathElement>(null);
   const progressRef = useRef<SVGPathElement>(null);
   const markerRef = useRef<SVGGElement>(null);
@@ -304,11 +300,9 @@ function GoalCard({
           <p className="font-display font-bold text-[17px] leading-tight truncate">{goal.title}</p>
           <p className="text-[13px] text-muted truncate">{goal.partner}</p>
         </div>
-        {!preview && (
-          <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 rounded-full px-2.5 py-1">
-            Активна
-          </span>
-        )}
+        <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 rounded-full px-2.5 py-1">
+          Активна
+        </span>
       </header>
 
       <div ref={trackWrapRef} className="relative mt-4 mx-3">
@@ -401,49 +395,64 @@ function GoalCard({
           );
         })}
 
-        {!preview && (
-          <div
-            ref={kmBoxRef}
-            className="absolute pointer-events-none whitespace-nowrap font-display text-[19px] font-extrabold tracking-[-0.03em] text-foreground bg-background/85 rounded-full px-2.5 py-0.5"
-            style={{ transform: "translate(-50%, -190%)", opacity: 0, transition: "opacity 300ms ease-out" }}
-          >
-            <span ref={labelRef}>0</span>
-            <span className="font-display text-[13px] font-bold text-muted ml-1">км</span>
-          </div>
-        )}
+        <div
+          ref={kmBoxRef}
+          className="absolute pointer-events-none whitespace-nowrap font-display text-[19px] font-extrabold tracking-[-0.03em] text-foreground bg-background/85 rounded-full px-2.5 py-0.5"
+          style={{ transform: "translate(-50%, -190%)", opacity: 0, transition: "opacity 300ms ease-out" }}
+        >
+          <span ref={labelRef}>0</span>
+          <span className="font-display text-[13px] font-bold text-muted ml-1">км</span>
+        </div>
       </div>
 
       <footer className="px-5 pb-5 pt-1">
-        {preview ? (
-          <>
-            <button
-              onClick={onActivate}
-              disabled={activating}
-              className="w-full bg-primary text-black font-bold text-[15px] py-3 rounded-full transition-[transform,background-color] duration-150 hover:bg-[#b3e600] active:scale-[0.97] disabled:opacity-60 flex items-center justify-center gap-2"
-            >
-              {activating && <Loader2 size={16} className="animate-spin" />}
-              Взять цель
-            </button>
-            {!stravaConnected && (
-              <p className="text-[11px] text-muted mt-2.5 text-center">
-                Понадобится Strava — подключим сразу после
-              </p>
-            )}
-          </>
-        ) : (
-          <p className="text-[13px] text-muted">
-            {nextTier ? (
-              <>
-                До награды —{" "}
-                <span className="text-foreground font-bold">{(nextTier.at - goal.progress).toFixed(1)} км</span>
-                . Придёт сообщением от бота в Telegram, как только доберёшься.
-              </>
-            ) : (
-              "Цель выполнена — награда уже в Telegram"
-            )}
-          </p>
-        )}
+        <p className="text-[13px] text-muted">
+          {nextTier ? (
+            <>
+              До награды —{" "}
+              <span className="text-foreground font-bold">{(nextTier.at - goal.progress).toFixed(1)} км</span>
+              . Придёт сообщением от бота в Telegram, как только доберёшься.
+            </>
+          ) : (
+            "Цель выполнена — награда уже в Telegram"
+          )}
+        </p>
       </footer>
+    </section>
+  );
+}
+
+/* ── Пустое состояние: цель не выбрана ───────────────────────────────────
+ * Тот же трек, что и у активной цели, но нетронутый — пунктиром, без
+ * засечек, без маркера, без наград. Честная картинка: пока нечего
+ * показывать, потому что ничего не взято. Действие — только в списке ниже,
+ * эта карточка сама никогда не кликабельна и не притворяется кнопкой.
+ */
+function EmptyGoalCard({ hasCatalog }: { hasCatalog: boolean }) {
+  return (
+    <section className="mx-4 bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] overflow-hidden">
+      <div className="relative mt-3 mx-3">
+        <svg viewBox={`0 0 ${VB.w} ${VB.h}`} className="w-full block" aria-hidden="true">
+          <path
+            d={TRACK} fill="none" stroke="#232325" strokeWidth={4}
+            strokeLinecap="round" strokeDasharray="1 11"
+          />
+          <circle cx={26} cy={224} r={4} fill="#0A0A0A" stroke="#333335" strokeWidth={2} />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-10">
+          <p className="font-display text-[17px] font-bold text-foreground">Цель не выбрана</p>
+          <p className="text-[13px] text-muted mt-1 max-w-[230px] leading-relaxed">
+            {hasCatalog
+              ? "Возьми одну из списка ниже — километры сразу начнут копиться в неё"
+              : "Пока нет ни одной цели — загляни позже"}
+          </p>
+        </div>
+      </div>
+      {hasCatalog && (
+        <div className="flex justify-center pb-3">
+          <ChevronDown size={18} className="text-muted nudge-down" />
+        </div>
+      )}
     </section>
   );
 }
@@ -527,7 +536,13 @@ export default function ChallengesTab() {
   };
 
   const active = data?.active ? toActiveGoal(data.active) : null;
-  const catalog = useMemo(() => (data?.challenges ?? []).map(toGoal), [data]);
+  // API отдаёт активную цель и внутри challenges тоже (её можно взять
+  // повторно после паузы) — но в «Других целях» ей делать нечего, она уже
+  // и так на экране в виде карточки выше.
+  const catalog = useMemo(
+    () => (data?.challenges ?? []).filter((c) => c.id !== active?.id).map(toGoal),
+    [data, active]
+  );
 
   const filtered = useMemo(
     () =>
@@ -589,22 +604,11 @@ export default function ChallengesTab() {
         <p className="mx-4 mb-3 text-[13px] text-red-400">{actionError}</p>
       )}
 
-      {active && <GoalCard goal={active} />}
+      {active ? <GoalCard goal={active} /> : <EmptyGoalCard hasCatalog={catalog.length > 0} />}
 
-      {/* Одна акция и цель не взята — показываем её карточкой, а не строчкой:
-          человек видит механику до того, как решится. */}
-      {!active && catalog.length === 1 && (
-        <GoalCard
-          goal={{ ...catalog[0], progress: 0 }}
-          preview
-          stravaConnected={!!data?.stravaConnected}
-          activating={activatingId === catalog[0].id}
-          onActivate={() => handleActivate(catalog[0].id)}
-        />
-      )}
-
-      {/* Каталог */}
-      <div className={`px-4 ${active ? "mt-8" : ""}`}>
+      {/* Каталог — список при любом количестве акций, хоть одна, хоть сто.
+          Взять цель можно только отсюда, никогда из карточки выше. */}
+      <div className={`px-4 mt-8`}>
         {active ? (
           <>
             <div className="flex items-baseline justify-between">
@@ -617,11 +621,13 @@ export default function ChallengesTab() {
               Возьмёшь другую — текущая встанет на паузу, накопленные километры сохранятся
             </p>
           </>
-        ) : catalog.length > 1 ? (
-          <p className="text-[15px] text-muted leading-relaxed">
-            Возьми цель — километры из твоих пробежек начнут копиться в неё,
-            а на отметках ждут награды от партнёров.
-          </p>
+        ) : catalog.length > 0 ? (
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-display text-[19px] font-bold tracking-[-0.02em]">Доступные цели</h2>
+            <span className="text-[13px] text-muted">
+              {filtered.length} {plural(filtered.length, "цель", "цели", "целей")}
+            </span>
+          </div>
         ) : null}
       </div>
 
@@ -655,7 +661,7 @@ export default function ChallengesTab() {
       )}
 
       <div key={`${city}-${claim}`} className="flex flex-col gap-2 px-4 mt-4">
-        {!active && catalog.length === 1 ? null : catalog.length === 0 ? (
+        {catalog.length === 0 ? (
           <div className="row-in bg-card/40 border border-white/5 rounded-[22px] px-5 py-10 text-center">
             <p className="text-[15px] text-foreground font-bold mb-1">Пока ни одной акции</p>
             <p className="text-[13px] text-muted">

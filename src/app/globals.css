@@ -66,9 +66,18 @@
   animation: breathe 2.8s ease-in-out infinite;
 }
 
+/* Указатель вниз на список целей в пустом состоянии — амплитуда
+   маленькая и нечастая, читается как подсказка, а не как отвлечение. */
+@keyframes nudgeDown {
+  0%, 100% { transform: translateY(0); opacity: 0.45; }
+  50%      { transform: translateY(4px); opacity: 0.85; }
+}
+.nudge-down { animation: nudgeDown 1.8s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
-  .split-pulse, .row-in, .breathe { animation: none; }
+  .split-pulse, .row-in, .breathe, .nudge-down { animation: none; }
   .row-in { opacity: 1; transform: none; }
+  .nudge-down { opacity: 0.6; }
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
