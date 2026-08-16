@@ -30,6 +30,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Check, ChevronRight, ChevronDown, Flag, Lock, MapPin, Gift, Flame, Route as RouteIcon, Loader2, PartyPopper, X, Ban } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
+import BottomSheet from "@/components/BottomSheet";
+import { SwipeButton } from "@/components/SwipeButton";
 
 type Tier = { at: number; reward: string };
 export type Goal = {
@@ -483,99 +485,6 @@ function EmptyGoalCard({ hasCatalog }: { hasCatalog: boolean }) {
   );
 }
 
-/* ── Слайд-подтверждение ──────────────────────────────────────────────────
- * Замена паре кнопок «Взять/Отмена»: физически сложнее нажать по ошибке,
- * чем таргет-обрезка тапа, и по высоте компактнее двух full-width кнопок.
- * Pointer Events, не нативный input[type=range] — тот же принцип, что и
- * в PaceRangeSlider: надёжнее ведёт себя на тач-устройствах.
- */
-function SlideToConfirm({
-  label, onConfirm, disabled,
-}: {
-  label: string;
-  onConfirm: () => void;
-  disabled?: boolean;
-}) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const draggingRef = useRef(false);
-  const startRef = useRef({ clientX: 0, dragX: 0 });
-  const firedRef = useRef(false);
-  const [dragX, setDragX] = useState(0);
-  const [dragging, setDragging] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
-
-  const THUMB = 48;
-  const PAD = 4;
-
-  const maxX = () => Math.max(0, (trackRef.current?.clientWidth ?? 0) - THUMB - PAD * 2);
-
-  const onPointerDown = (e: React.PointerEvent) => {
-    if (disabled || confirmed) return;
-    e.stopPropagation();
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-    draggingRef.current = true;
-    firedRef.current = false;
-    startRef.current = { clientX: e.clientX, dragX };
-    setDragging(true);
-    triggerHaptic("light");
-  };
-
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!draggingRef.current || firedRef.current) return;
-    e.stopPropagation();
-    const mx = maxX();
-    const next = Math.min(mx, Math.max(0, startRef.current.dragX + (e.clientX - startRef.current.clientX)));
-    setDragX(next);
-    if (mx > 0 && next >= mx * 0.92) {
-      firedRef.current = true;
-      draggingRef.current = false;
-      setDragging(false);
-      setConfirmed(true);
-      setDragX(mx);
-      triggerHaptic("light");
-      onConfirm();
-    }
-  };
-
-  const endDrag = (e: React.PointerEvent) => {
-    e.stopPropagation();
-    draggingRef.current = false;
-    setDragging(false);
-    if (!firedRef.current) setDragX(0);
-  };
-
-  return (
-    <div
-      ref={trackRef}
-      className={`relative h-14 rounded-full bg-white/[0.06] border border-white/10 touch-none select-none overflow-hidden ${disabled ? "opacity-60" : ""}`}
-      style={{ touchAction: "none" }}
-    >
-      <div
-        className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-150"
-        style={{ opacity: Math.max(0, 1 - dragX / Math.max(1, maxX()) * 1.6) }}
-      >
-        <span className="text-[13px] font-bold text-muted">{label}</span>
-      </div>
-      <div
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        className={`absolute top-1 left-1 w-12 h-12 rounded-full bg-primary flex items-center justify-center ${
-          dragging ? "" : "transition-[transform,background-color] duration-300 ease-out"
-        }`}
-        style={{ transform: `translateX(${dragX}px)` }}
-      >
-        {confirmed ? (
-          <Check size={20} className="text-black" strokeWidth={3} />
-        ) : (
-          <ChevronRight size={20} className="text-black" strokeWidth={3} />
-        )}
-      </div>
-    </div>
-  );
-}
-
 /* ── Экран ────────────────────────────────────────────────────────────── */
 
 export default function ChallengesTab() {
@@ -590,8 +499,10 @@ export default function ChallengesTab() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [banner, setBanner] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const [confirmGoal, setConfirmGoal] = useState<Goal | null>(null);
-  const [touchStartY, setTouchStartY] = useState(0);
-  const [touchOffset, setTouchOffset] = useState(0);
+  // Второй шаг той же шторки: swipe сработал, но километры считать нечем.
+  // Раньше отсюда молча выкидывало на strava.com — человек ждал, что берёт
+  // цель, а оказывался на чужом сайте с формой входа.
+  const [needsStrava, setNeedsStrava] = useState(false);
 
   const [city, setCity] = useState(CITY_ALL);
   const [claim, setClaim] = useState<"all" | "promo" | "qr">("all");
@@ -609,17 +520,6 @@ export default function ChallengesTab() {
   };
 
   useEffect(() => { fetchChallenges(); }, []);
-
-  // Тот же паттерн, что в /profile/settings для его шторки: прячем
-  // BottomNav, пока открыт лист подтверждения, а не просто перекрываем
-  // z-index-ом — так он ещё и не мелькает под свайпом слайдера.
-  useEffect(() => {
-    window.dispatchEvent(new Event(confirmGoal ? "hideNav" : "showNav"));
-    // BottomNav живёт в layout.tsx и не размонтируется вместе с этой
-    // страницей — если уйти со страницы с открытой шторкой, showNav
-    // больше некому будет прислать. Гарантируем его при размонтировании.
-    return () => { window.dispatchEvent(new Event("showNav")); };
-  }, [confirmGoal]);
 
   // Возврат из Strava (см. /api/strava/callback): сообщаем, что случилось,
   // и убираем параметры из адресной строки, чтобы не сработали повторно.
@@ -639,7 +539,6 @@ export default function ChallengesTab() {
 
   const handleActivate = async (challengeId: string) => {
     if (sessionStatus !== "authenticated") return;
-    setConfirmGoal(null);
     triggerHaptic("light");
     setActionError(null);
     setActivatingId(challengeId);
@@ -648,22 +547,28 @@ export default function ChallengesTab() {
       if (res.status === 409) {
         const body = await res.json().catch(() => ({}));
         if (body.error === "STRAVA_REQUIRED") {
-          const returnTo = encodeURIComponent("/challenges");
-          window.location.href = `/api/strava/connect?returnTo=${returnTo}&challengeId=${challengeId}`;
+          // Не редиректим молча: показываем в той же шторке, зачем нужна
+          // Strava, и уводим на неё только по осознанному нажатию.
+          setNeedsStrava(true);
+          setActivatingId(null);
           return;
         }
+        setConfirmGoal(null);
         setActionError(body.error || "Эту цель сейчас нельзя взять");
         setActivatingId(null);
         return;
       }
       if (!res.ok) {
+        setConfirmGoal(null);
         setActionError("Не получилось. Попробуй ещё раз.");
         setActivatingId(null);
         return;
       }
+      setConfirmGoal(null);
       await fetchChallenges();
     } catch (e) {
       console.error(e);
+      setConfirmGoal(null);
       setActionError("Не получилось. Попробуй ещё раз.");
     } finally {
       setActivatingId(null);
@@ -682,15 +587,6 @@ export default function ChallengesTab() {
       setPausingId(null);
     }
   };
-
-  const handleTouchStart = (e: React.TouchEvent) => { setTouchStartY(e.touches[0].clientY); setTouchOffset(0); };
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartY === 0) return;
-    const diff = e.touches[0].clientY - touchStartY;
-    if (diff > 0) setTouchOffset(diff);
-    if (diff > 120) { setConfirmGoal(null); setTouchStartY(0); setTouchOffset(0); }
-  };
-  const handleTouchEnd = () => { if (touchOffset <= 120) setTouchOffset(0); setTouchStartY(0); };
 
   const active = data?.active ? toActiveGoal(data.active) : null;
   // API отдаёт активную цель и внутри challenges тоже (её можно взять
@@ -848,7 +744,7 @@ export default function ChallengesTab() {
             return (
               <button
                 key={c.id}
-                onClick={() => { triggerHaptic("light"); setConfirmGoal(c); }}
+                onClick={() => { triggerHaptic("light"); setNeedsStrava(false); setConfirmGoal(c); }}
                 disabled={activatingId === c.id || exhausted}
                 style={{ animationDelay: `${Math.min(i, 6) * 45}ms` }}
                 className="row-in w-full text-left bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] px-4 py-4 flex items-center gap-3.5 transition-[transform,border-color] duration-200 hover:border-white/10 active:scale-[0.985] disabled:cursor-not-allowed disabled:saturate-0 disabled:brightness-90"
@@ -894,63 +790,65 @@ export default function ChallengesTab() {
         )}
       </div>
 
-      {/* Подтверждение перед взятием — раньше тап по строке брал цель мгновенно,
-          без единого шанса передумать. Текст короткий: факты, а не объяснение. */}
-      {/* z-[200], не 100: BottomNav тоже fixed и тоже z-[100], рендерится
-          позже в дереве layout.tsx — при равном z-index он перекрывал
-          собой кнопки шторки, их не было видно и нечем было нажать. */}
-      <div className={`fixed inset-0 z-[200] flex justify-center ${confirmGoal ? "pointer-events-auto" : "pointer-events-none"}`}>
-        <div className="w-full max-w-[480px] h-full relative pointer-events-none flex flex-col justify-end overflow-hidden">
-          <div
-            className={`absolute inset-0 bg-gradient-to-t from-black/80 to-black/40 transition-opacity duration-300 ${confirmGoal ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
-            onClick={() => setConfirmGoal(null)}
-          />
-          <div
-            className={`w-full bg-card border-t border-border rounded-t-[32px] p-6 pb-8 relative z-10 shadow-2xl ${touchOffset > 0 ? "transition-none" : "transition-transform duration-300 ease-out"} ${confirmGoal ? "pointer-events-auto" : "pointer-events-none"}`}
-            style={{ transform: confirmGoal ? `translateY(${touchOffset}px)` : "translateY(100%)" }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <div className="flex justify-center mb-5">
-              <div className="w-12 h-1.5 bg-border rounded-full" />
-            </div>
-
-            {confirmGoal && (
-              <>
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-11 h-11 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
-                    <Gift size={19} className="text-primary" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-display font-bold text-[17px] leading-tight truncate">{confirmGoal.title}</p>
-                    <p className="text-[13px] text-muted truncate">{goalMetric(confirmGoal)} · {confirmGoal.reward}</p>
-                  </div>
+      {/* Общий BottomSheet приложения: он же прячет BottomNav, закрывается
+          свайпом вниз, тапом по фону и Escape — свою шторку здесь городить
+          не нужно было. Подтверждение — общий SwipeButton, как на карте. */}
+      <BottomSheet
+        open={!!confirmGoal}
+        onClose={() => { setConfirmGoal(null); setNeedsStrava(false); }}
+        ariaLabel={needsStrava ? "Подключить Strava" : "Взять цель"}
+        footer={
+          confirmGoal ? (
+            needsStrava ? (
+              <button
+                onClick={() => {
+                  triggerHaptic("light");
+                  const returnTo = encodeURIComponent("/challenges");
+                  window.location.href = `/api/strava/connect?returnTo=${returnTo}&challengeId=${confirmGoal.id}`;
+                }}
+                className="w-full h-16 rounded-full bg-primary text-black font-black uppercase tracking-wider text-sm transition-[transform,background-color] duration-150 hover:bg-[#b3e600] active:scale-[0.98]"
+              >
+                Подключить Strava
+              </button>
+            ) : (
+              <SwipeButton
+                text="Взять цель"
+                successText="Цель взята!"
+                onConfirm={() => handleActivate(confirmGoal.id)}
+              />
+            )
+          ) : undefined
+        }
+      >
+        {confirmGoal && (
+          needsStrava ? (
+            <>
+              <p className="font-display font-bold text-[17px] leading-tight">Километры приходят из Strava</p>
+              <p className="text-[13px] text-muted mt-2 leading-relaxed">
+                Подключи — и прогресс по цели начнёт считаться
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
+                  <Gift size={19} className="text-primary" />
                 </div>
-
-                <div className="flex flex-col gap-1.5 mb-5 text-[13px] text-muted">
-                  {active && active.id !== confirmGoal.id && (
-                    <p>«{active.title}» встанет на паузу — прогресс сохранится</p>
-                  )}
-                  {!data?.stravaConnected && <p>Понадобится Strava — подключим сразу после</p>}
+                <div className="min-w-0">
+                  <p className="font-display font-bold text-[17px] leading-tight truncate">{confirmGoal.title}</p>
+                  <p className="text-[13px] text-muted truncate">{goalMetric(confirmGoal)} · {confirmGoal.reward}</p>
                 </div>
+              </div>
 
-                <SlideToConfirm
-                  label="Проведи, чтобы взять →"
-                  onConfirm={() => { const id = confirmGoal.id; window.setTimeout(() => handleActivate(id), 220); }}
-                  disabled={activatingId === confirmGoal.id}
-                />
-                <button
-                  onClick={() => setConfirmGoal(null)}
-                  className="w-full mt-3 min-h-[44px] text-[13px] font-bold text-muted transition-colors duration-150 hover:text-foreground"
-                >
-                  Отмена
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+              {active && active.id !== confirmGoal.id && (
+                <p className="text-[13px] text-muted mt-4">
+                  «{active.title}» встанет на паузу — прогресс сохранится
+                </p>
+              )}
+            </>
+          )
+        )}
+      </BottomSheet>
     </div>
   );
 }
