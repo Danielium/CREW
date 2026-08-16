@@ -483,6 +483,99 @@ function EmptyGoalCard({ hasCatalog }: { hasCatalog: boolean }) {
   );
 }
 
+/* ── Слайд-подтверждение ──────────────────────────────────────────────────
+ * Замена паре кнопок «Взять/Отмена»: физически сложнее нажать по ошибке,
+ * чем таргет-обрезка тапа, и по высоте компактнее двух full-width кнопок.
+ * Pointer Events, не нативный input[type=range] — тот же принцип, что и
+ * в PaceRangeSlider: надёжнее ведёт себя на тач-устройствах.
+ */
+function SlideToConfirm({
+  label, onConfirm, disabled,
+}: {
+  label: string;
+  onConfirm: () => void;
+  disabled?: boolean;
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const draggingRef = useRef(false);
+  const startRef = useRef({ clientX: 0, dragX: 0 });
+  const firedRef = useRef(false);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+
+  const THUMB = 48;
+  const PAD = 4;
+
+  const maxX = () => Math.max(0, (trackRef.current?.clientWidth ?? 0) - THUMB - PAD * 2);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (disabled || confirmed) return;
+    e.stopPropagation();
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    draggingRef.current = true;
+    firedRef.current = false;
+    startRef.current = { clientX: e.clientX, dragX };
+    setDragging(true);
+    triggerHaptic("light");
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!draggingRef.current || firedRef.current) return;
+    e.stopPropagation();
+    const mx = maxX();
+    const next = Math.min(mx, Math.max(0, startRef.current.dragX + (e.clientX - startRef.current.clientX)));
+    setDragX(next);
+    if (mx > 0 && next >= mx * 0.92) {
+      firedRef.current = true;
+      draggingRef.current = false;
+      setDragging(false);
+      setConfirmed(true);
+      setDragX(mx);
+      triggerHaptic("light");
+      onConfirm();
+    }
+  };
+
+  const endDrag = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    draggingRef.current = false;
+    setDragging(false);
+    if (!firedRef.current) setDragX(0);
+  };
+
+  return (
+    <div
+      ref={trackRef}
+      className={`relative h-14 rounded-full bg-white/[0.06] border border-white/10 touch-none select-none overflow-hidden ${disabled ? "opacity-60" : ""}`}
+      style={{ touchAction: "none" }}
+    >
+      <div
+        className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-150"
+        style={{ opacity: Math.max(0, 1 - dragX / Math.max(1, maxX()) * 1.6) }}
+      >
+        <span className="text-[13px] font-bold text-muted">{label}</span>
+      </div>
+      <div
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        className={`absolute top-1 left-1 w-12 h-12 rounded-full bg-primary flex items-center justify-center ${
+          dragging ? "" : "transition-[transform,background-color] duration-300 ease-out"
+        }`}
+        style={{ transform: `translateX(${dragX}px)` }}
+      >
+        {confirmed ? (
+          <Check size={20} className="text-black" strokeWidth={3} />
+        ) : (
+          <ChevronRight size={20} className="text-black" strokeWidth={3} />
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ── Экран ────────────────────────────────────────────────────────────── */
 
 export default function ChallengesTab() {
@@ -516,6 +609,17 @@ export default function ChallengesTab() {
   };
 
   useEffect(() => { fetchChallenges(); }, []);
+
+  // Тот же паттерн, что в /profile/settings для его шторки: прячем
+  // BottomNav, пока открыт лист подтверждения, а не просто перекрываем
+  // z-index-ом — так он ещё и не мелькает под свайпом слайдера.
+  useEffect(() => {
+    window.dispatchEvent(new Event(confirmGoal ? "hideNav" : "showNav"));
+    // BottomNav живёт в layout.tsx и не размонтируется вместе с этой
+    // страницей — если уйти со страницы с открытой шторкой, showNav
+    // больше некому будет прислать. Гарантируем его при размонтировании.
+    return () => { window.dispatchEvent(new Event("showNav")); };
+  }, [confirmGoal]);
 
   // Возврат из Strava (см. /api/strava/callback): сообщаем, что случилось,
   // и убираем параметры из адресной строки, чтобы не сработали повторно.
@@ -792,7 +896,10 @@ export default function ChallengesTab() {
 
       {/* Подтверждение перед взятием — раньше тап по строке брал цель мгновенно,
           без единого шанса передумать. Текст короткий: факты, а не объяснение. */}
-      <div className={`fixed inset-0 z-[100] flex justify-center ${confirmGoal ? "pointer-events-auto" : "pointer-events-none"}`}>
+      {/* z-[200], не 100: BottomNav тоже fixed и тоже z-[100], рендерится
+          позже в дереве layout.tsx — при равном z-index он перекрывал
+          собой кнопки шторки, их не было видно и нечем было нажать. */}
+      <div className={`fixed inset-0 z-[200] flex justify-center ${confirmGoal ? "pointer-events-auto" : "pointer-events-none"}`}>
         <div className="w-full max-w-[480px] h-full relative pointer-events-none flex flex-col justify-end overflow-hidden">
           <div
             className={`absolute inset-0 bg-gradient-to-t from-black/80 to-black/40 transition-opacity duration-300 ${confirmGoal ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
@@ -828,20 +935,17 @@ export default function ChallengesTab() {
                   {!data?.stravaConnected && <p>Понадобится Strava — подключим сразу после</p>}
                 </div>
 
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setConfirmGoal(null)}
-                    className="flex-1 py-3 rounded-full border border-border text-[15px] font-bold text-foreground transition-[transform,border-color] duration-150 hover:border-white/20 active:scale-[0.97]"
-                  >
-                    Отмена
-                  </button>
-                  <button
-                    onClick={() => handleActivate(confirmGoal.id)}
-                    className="flex-1 py-3 rounded-full bg-primary text-black font-bold text-[15px] transition-[transform,background-color] duration-150 hover:bg-[#b3e600] active:scale-[0.97]"
-                  >
-                    Взять цель
-                  </button>
-                </div>
+                <SlideToConfirm
+                  label="Проведи, чтобы взять →"
+                  onConfirm={() => { const id = confirmGoal.id; window.setTimeout(() => handleActivate(id), 220); }}
+                  disabled={activatingId === confirmGoal.id}
+                />
+                <button
+                  onClick={() => setConfirmGoal(null)}
+                  className="w-full mt-3 min-h-[44px] text-[13px] font-bold text-muted transition-colors duration-150 hover:text-foreground"
+                >
+                  Отмена
+                </button>
               </>
             )}
           </div>
