@@ -57,14 +57,14 @@ type ApiChallenge = {
 };
 type ApiParticipation = {
   id: string; challengeId: string; status: string; progress: number;
-  activatedAt: string; completedAt: string | null;
+  activatedAt: string; completedAt: string | null; rewardSentAt: string | null;
   challenge: ApiChallenge;
 };
 type ApiResponse = {
   challenges: ApiChallenge[];
   active: ApiParticipation | null;
   paused: ApiParticipation[];
-  completed: ApiParticipation | null;
+  completed: ApiParticipation[];
   stravaConnected: boolean;
 };
 
@@ -107,6 +107,25 @@ const plural = (n: number, one: string, few: string, many: string) => {
 
 const goalMetric = (g: Goal) => (g.metric === "km" ? `${g.target} км` : `${g.target} ${plural(g.target, "день", "дня", "дней")} подряд`);
 const codesWord = (n: number) => plural(n, "промокод", "промокода", "промокодов");
+
+/** Чат с ботом, а не мини-апп: NEXT_PUBLIC_BOT_APP_URL указывает на
+ *  .../new — диплинк в приложение. Промокод лежит в переписке, поэтому
+ *  отрезаем последний сегмент и ведём именно туда. */
+const BOT_CHAT_URL = (() => {
+  const raw = process.env.NEXT_PUBLIC_BOT_APP_URL;
+  if (!raw) return null;
+  return raw.match(/^(https:\/\/t\.me\/[^/?#]+)/)?.[1] ?? raw;
+})();
+
+const openBotChat = () => {
+  if (!BOT_CHAT_URL) return false;
+  const tg = (window as any).Telegram?.WebApp;
+  // В Telegram openTelegramLink закрывает мини-апп и открывает чат —
+  // человек оказывается ровно там, где лежит сообщение с кодом.
+  if (tg?.openTelegramLink) tg.openTelegramLink(BOT_CHAT_URL);
+  else window.open(BOT_CHAT_URL, "_blank");
+  return true;
+};
 
 /* ── Карточка активной цели ──────────────────────────────────────────────
  * Только для ДЕЙСТВИТЕЛЬНО взятой цели. Акции, которые ещё можно взять,
@@ -496,6 +515,7 @@ export default function ChallengesTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [activatingId, setActivatingId] = useState<string | null>(null);
   const [pausingId, setPausingId] = useState<string | null>(null);
+  const [claimingId, setClaimingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [banner, setBanner] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const [confirmGoal, setConfirmGoal] = useState<Goal | null>(null);
@@ -575,6 +595,30 @@ export default function ChallengesTab() {
     }
   };
 
+  const handleClaim = async (challengeId: string) => {
+    triggerHaptic("light");
+    setActionError(null);
+    setClaimingId(challengeId);
+    try {
+      const res = await fetch(`/api/challenges/${challengeId}/claim`, { method: "POST" });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setActionError(body.error || "Не получилось. Попробуй ещё раз.");
+        return;
+      }
+      await fetchChallenges();
+      // Код уже в переписке — уводим человека прямо к нему.
+      if (!openBotChat()) {
+        setBanner({ kind: "success", text: "Промокод отправлен в Telegram" });
+      }
+    } catch (e) {
+      console.error(e);
+      setActionError("Не получилось. Попробуй ещё раз.");
+    } finally {
+      setClaimingId(null);
+    }
+  };
+
   const handlePause = async (challengeId: string) => {
     triggerHaptic("light");
     setPausingId(challengeId);
@@ -587,6 +631,9 @@ export default function ChallengesTab() {
       setPausingId(null);
     }
   };
+
+  const unclaimed = useMemo(() => (data?.completed ?? []).filter((p) => !p.rewardSentAt), [data]);
+  const lastClaimed = useMemo(() => (data?.completed ?? []).find((p) => p.rewardSentAt) ?? null, [data]);
 
   const active = data?.active ? toActiveGoal(data.active) : null;
   // API отдаёт активную цель и внутри challenges тоже (её можно взять
@@ -641,15 +688,51 @@ export default function ChallengesTab() {
         </div>
       )}
 
-      {data?.completed && !active && (
-        <div className="mx-4 mb-4 bg-card/40 backdrop-blur-md border border-primary/20 rounded-[22px] px-5 py-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+      {/* Незабранные награды показываем ВСЕ и всегда — даже когда уже взята
+          новая цель. Раньше блок висел на условии !active, и стоило взять
+          следующую цель, как незабранный промокод пропадал с экрана. */}
+      {unclaimed.map((p) => (
+        <div key={p.id} className="mx-4 mb-4 bg-card/40 backdrop-blur-md border border-primary/20 rounded-[22px] px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <PartyPopper size={18} className="text-primary" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-bold text-[15px] leading-tight">«{p.challenge.title}» выполнена</p>
+              <p className="text-[13px] text-muted mt-0.5">
+                {p.challenge.rewardLabel} от {p.challenge.partner}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => handleClaim(p.challengeId)}
+            disabled={claimingId === p.challengeId}
+            className="w-full mt-4 min-h-[48px] rounded-full bg-primary text-black font-bold text-[15px] transition-[transform,background-color] duration-150 hover:bg-[#b3e600] active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            {claimingId === p.challengeId && <Loader2 size={16} className="animate-spin" />}
+            Забрать промокод
+          </button>
+        </div>
+      ))}
+
+      {/* Забранную показываем только одну, самую свежую, и только когда
+          забирать больше нечего — это уже не задача, а путь вернуться к
+          коду, если сообщение потерялось в переписке. */}
+      {unclaimed.length === 0 && lastClaimed && !active && BOT_CHAT_URL && (
+        <div className="mx-4 mb-4 bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] px-5 py-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
             <PartyPopper size={18} className="text-primary" />
           </div>
-          <div className="min-w-0">
-            <p className="font-bold text-[15px] leading-tight">«{data.completed.challenge.title}» выполнена</p>
-            <p className="text-[13px] text-muted mt-0.5">Награда от {data.completed.challenge.partner} уже пришла в Telegram</p>
+          <div className="min-w-0 flex-1">
+            <p className="font-bold text-[15px] leading-tight truncate">«{lastClaimed.challenge.title}» выполнена</p>
+            <p className="text-[13px] text-muted mt-0.5">Промокод от {lastClaimed.challenge.partner} — в Telegram</p>
           </div>
+          <button
+            onClick={() => { triggerHaptic("light"); openBotChat(); }}
+            className="shrink-0 min-h-[44px] px-4 rounded-full border border-border text-[13px] font-bold text-muted transition-[transform,color,border-color] duration-150 hover:text-foreground hover:border-white/20 active:scale-[0.97]"
+          >
+            Открыть
+          </button>
         </div>
       )}
 

@@ -90,51 +90,78 @@ export async function addChallengeProgress(userId: string, distanceKm: number, r
   });
 
   if (justCompleted) {
-    await deliverReward(userId, active.challengeId);
+    await notifyGoalCompleted(userId, active.challengeId);
   }
 }
 
 /**
- * Выдаёт промокод из пула партнёра и присылает его сообщением от бота —
- * промо не показывается в приложении, только в Telegram.
+ * Сообщает, что цель закрыта и награду можно забрать. Промокод здесь НЕ
+ * расходуется: он резервируется только по явному нажатию «Забрать» —
+ * см. claimReward. Иначе код списывался бы в момент завершения, и если
+ * сообщение не уходило (бот заблокирован, /start не нажат, сбой сети),
+ * он сгорал молча и без возможности повторить.
  */
-async function deliverReward(userId: string, challengeId: string) {
-  const result = await prisma.$transaction(async (tx) => {
-    const code = await tx.promoCode.findFirst({
-      where: { challengeId, status: "AVAILABLE" },
-    });
-    if (!code) return null;
+async function notifyGoalCompleted(userId: string, challengeId: string) {
+  const challenge = await prisma.challenge.findUnique({ where: { id: challengeId } });
+  if (!challenge) return;
 
+  await sendTelegramMessageToUser(
+    userId,
+    `🎉 <b>Цель выполнена!</b>\n\n«${challenge.title}» от ${challenge.partner} — готово.\n\n` +
+      `Забери награду в приложении, и я пришлю промокод сюда.`
+  );
+}
+
+/**
+ * Выдаёт промокод по явному действию пользователя: резервирует код,
+ * отправляет его сообщением от бота и только при успешной отправке
+ * оставляет код израсходованным. Если отправить не удалось — возвращает
+ * код в пул, чтобы человек мог повторить, а не потерять награду.
+ */
+export async function claimReward(userId: string, challengeId: string) {
+  const participation = await prisma.challengeParticipation.findUnique({
+    where: { userId_challengeId: { userId, challengeId } },
+    include: { challenge: true },
+  });
+
+  if (!participation || participation.status !== "COMPLETED") throw new Error("NOT_COMPLETED");
+  if (participation.rewardSentAt) throw new Error("ALREADY_CLAIMED");
+
+  // Резервируем код атомарно, чтобы два параллельных нажатия не забрали один
+  const reserved = await prisma.$transaction(async (tx) => {
+    const code = await tx.promoCode.findFirst({ where: { challengeId, status: "AVAILABLE" } });
+    if (!code) return null;
     await tx.promoCode.update({
       where: { id: code.id },
       data: { status: "CLAIMED", claimedById: userId, claimedAt: new Date() },
     });
-    await tx.challengeParticipation.updateMany({
-      where: { userId, challengeId },
-      data: { rewardSentAt: new Date() },
-    });
-
-    const challenge = await tx.challenge.findUnique({ where: { id: challengeId } });
-    return { code, challenge };
+    return code;
   });
 
-  if (!result) {
-    // Пул промокодов пуст — цель выполнена, но выдать нечего.
-    // Не молчим: шлём то, что есть, чтобы человек не подумал, что бота сломали,
-    // и даём ручной путь получить код, пока склад не пополнили.
+  if (!reserved) {
     console.error(`PromoCode pool exhausted for challenge ${challengeId}, user ${userId}`);
-    await sendTelegramMessageToUser(
-      userId,
-      `🎉 Ты выполнил цель в CREW! Промокоды на складе закончились — ` +
-        `напиши @Danielium с сообщением «Промокод Дринкит», и код пришлют вручную.`
-    );
-    return;
+    throw new Error("PROMO_EXHAUSTED");
   }
 
-  const { code, challenge } = result;
-  await sendTelegramMessageToUser(
+  const { challenge } = participation;
+  const sent = await sendTelegramMessageToUser(
     userId,
-    `🎉 <b>Цель выполнена!</b>\n\n«${challenge!.title}» от ${challenge!.partner} — готово.\n\n` +
-      `${challenge!.rewardLabel}\nТвой промокод: <code>${code.code}</code>`
+    `🎁 <b>${challenge.rewardLabel}</b>\n\n«${challenge.title}» от ${challenge.partner}\n\n` +
+      `Твой промокод: <code>${reserved.code}</code>`
   );
+
+  if (!sent) {
+    // Отправить не смогли — возвращаем код в пул. Лучше дать повторить,
+    // чем списать награду, которую человек так и не получил.
+    await prisma.promoCode.update({
+      where: { id: reserved.id },
+      data: { status: "AVAILABLE", claimedById: null, claimedAt: null },
+    });
+    throw new Error("TELEGRAM_FAILED");
+  }
+
+  await prisma.challengeParticipation.update({
+    where: { id: participation.id },
+    data: { rewardSentAt: new Date() },
+  });
 }

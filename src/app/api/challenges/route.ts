@@ -49,18 +49,21 @@ export async function GET() {
 
     const active = participations.find((p) => p.status === "ACTIVE") ?? null;
     const paused = participations.filter((p) => p.status === "PAUSED");
-    const completed = participations.find((p) => p.status === "COMPLETED") ?? null;
+    // Массив, а не одна: выполнить можно несколько целей и ни одной не
+    // забрать — при .find() награда за вторую была бы не видна и не
+    // забираема вовсе. Свежие первыми (orderBy completedAt desc выше).
+    const completed = participations.filter((p) => p.status === "COMPLETED");
 
     // Уже выполненную цель нельзя брать повторно — второй промокод за ту
     // же цель не положен, поэтому не показываем её в каталоге.
-    const completedIds = new Set(participations.filter((p) => p.status === "COMPLETED").map((p) => p.challengeId));
+    const completedIds = new Set(completed.map((p) => p.challengeId));
     const catalog = visibleChallenges.filter((c) => !completedIds.has(c.id));
 
     return NextResponse.json({
       challenges: catalog,
       active: active ? withParticipationRemaining(active) : null,
       paused: paused.map(withParticipationRemaining),
-      completed: completed ? withParticipationRemaining(completed) : null,
+      completed: completed.map(withParticipationRemaining),
       stravaConnected: !!stravaAccount,
     });
   } catch (error) {
