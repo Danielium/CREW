@@ -92,6 +92,10 @@ const tickStep = (target: number) => {
 };
 const DRAW_MS = 1500;
 const CITY_ALL = "Все города";
+// Сколько подтверждение о забранной награде живёт на экране. Его работа —
+// подтвердить действие и дать вернуться к коду, если сообщение потерялось;
+// дальше это просто мусор, поэтому уходит само.
+const CLAIMED_CARD_TTL_MS = 48 * 60 * 60 * 1000;
 
 type Pt = { x: number; y: number };
 type Tick = { x: number; y: number; nx: number; ny: number; frac: number };
@@ -633,7 +637,13 @@ export default function ChallengesTab() {
   };
 
   const unclaimed = useMemo(() => (data?.completed ?? []).filter((p) => !p.rewardSentAt), [data]);
-  const lastClaimed = useMemo(() => (data?.completed ?? []).find((p) => p.rewardSentAt) ?? null, [data]);
+  const lastClaimed = useMemo(() => {
+    const claimed = (data?.completed ?? []).find((p) => p.rewardSentAt);
+    if (!claimed?.rewardSentAt) return null;
+    // Иначе подтверждение висело бы вечно: условие показа не смотрело на время.
+    const fresh = Date.now() - new Date(claimed.rewardSentAt).getTime() < CLAIMED_CARD_TTL_MS;
+    return fresh ? claimed : null;
+  }, [data]);
 
   const active = data?.active ? toActiveGoal(data.active) : null;
   // API отдаёт активную цель и внутри challenges тоже (её можно взять
@@ -717,21 +727,25 @@ export default function ChallengesTab() {
 
       {/* Забранную показываем только одну, самую свежую, и только когда
           забирать больше нечего — это уже не задача, а путь вернуться к
-          коду, если сообщение потерялось в переписке. */}
+          коду, если сообщение потерялось в переписке. Кнопка под текстом,
+          а не сбоку: рядом с заголовком она отжимала его в truncate, и
+          название цели обрезалось многоточием. */}
       {unclaimed.length === 0 && lastClaimed && !active && BOT_CHAT_URL && (
-        <div className="mx-4 mb-4 bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] px-5 py-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-            <PartyPopper size={18} className="text-primary" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-bold text-[15px] leading-tight truncate">«{lastClaimed.challenge.title}» выполнена</p>
-            <p className="text-[13px] text-muted mt-0.5">Промокод от {lastClaimed.challenge.partner} — в Telegram</p>
+        <div className="mx-4 mb-4 bg-card/40 backdrop-blur-md border border-white/5 rounded-[22px] px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <PartyPopper size={18} className="text-primary" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-bold text-[15px] leading-tight">«{lastClaimed.challenge.title}» выполнена</p>
+              <p className="text-[13px] text-muted mt-0.5">Промокод от {lastClaimed.challenge.partner} — в Telegram</p>
+            </div>
           </div>
           <button
             onClick={() => { triggerHaptic("light"); openBotChat(); }}
-            className="shrink-0 min-h-[44px] px-4 rounded-full border border-border text-[13px] font-bold text-muted transition-[transform,color,border-color] duration-150 hover:text-foreground hover:border-white/20 active:scale-[0.97]"
+            className="w-full mt-4 min-h-[44px] rounded-full border border-border text-[13px] font-bold text-muted transition-[transform,color,border-color] duration-150 hover:text-foreground hover:border-white/20 active:scale-[0.98]"
           >
-            Открыть
+            Открыть бота
           </button>
         </div>
       )}
