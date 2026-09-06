@@ -6,6 +6,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Search, MapPin, Loader2, LocateFixed } from "lucide-react";
 import UserLocationMarker from "./UserLocationMarker";
+import { MAP_TILE_URL } from "@/lib/mapTiles";
 
 // Fix default icons in leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -290,7 +291,7 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, o
         >
           <TileLayer
             attribution='&copy; <a href="https://carto.com/">CartoDB</a>'
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            url={MAP_TILE_URL}
           />
           
           <UserLocationMarker triggerLocate={triggerLocate} onLocationFound={(loc) => setUserLocation(loc)} />

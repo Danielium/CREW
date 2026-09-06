@@ -3,6 +3,7 @@
 import { MapContainer, TileLayer, Polyline, CircleMarker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { MAP_TILE_URL } from "@/lib/mapTiles";
 
 interface RunRouteMapProps {
   routeData: string; // JSON stringified array of {lat, lng}
@@ -44,7 +45,7 @@ export default function RunRouteMap({ routeData }: RunRouteMapProps) {
       dragging={false}
       attributionControl={false}
     >
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+      <TileLayer url={MAP_TILE_URL} />
       <Polyline positions={positions} color="#CCFF00" weight={4} opacity={0.9} />
       {/* Start marker */}
       <CircleMarker center={positions[0]} radius={6} pathOptions={{ color: "#CCFF00", fillColor: "#000", fillOpacity: 1, weight: 3 }} />

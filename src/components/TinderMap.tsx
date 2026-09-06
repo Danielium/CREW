@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { Zap, Flame, Skull, Sword, Shield, Mountain, Anchor, Crown, Star, Heart, Activity, Target, Trophy, Ghost, Crosshair, HelpCircle } from "lucide-react";
 import UserLocationMarker from "./UserLocationMarker";
 import ClubBadge from "./ClubBadge";
+import { MAP_TILE_URL } from "@/lib/mapTiles";
 
 const ICON_MAP: Record<string, any> = {
   Zap, Flame, Skull, Sword, Shield, Mountain, Anchor, Crown, Star, Heart, Activity, Target, Trophy, Ghost, Crosshair
@@ -94,7 +95,7 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
         zoomControl={false}
         attributionControl={false}
       >
-        <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+        <TileLayer url={MAP_TILE_URL} />
         
         <MapController onMapClick={onMapClick} forceCenter={forceCenter || initialCenter} />
 
