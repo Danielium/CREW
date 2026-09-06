@@ -1,15 +1,17 @@
 "use client";
 
-import { MapContainer, TileLayer, Polyline, CircleMarker } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import { MAP_TILE_URL } from "@/lib/mapTiles";
+import { useEffect, useRef } from "react";
+import * as maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+import { MAP_STYLE_URL } from "@/lib/mapTiles";
 
 interface RunRouteMapProps {
   routeData: string; // JSON stringified array of {lat, lng}
 }
 
 export default function RunRouteMap({ routeData }: RunRouteMapProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
   let points: any[] = [];
   try {
     let parsed = JSON.parse(routeData);
@@ -20,37 +22,57 @@ export default function RunRouteMap({ routeData }: RunRouteMapProps) {
       points = parsed;
     }
   } catch {
-    return null;
+    points = [];
   }
 
-  if (!points || points.length < 2) return null;
+  const hasRoute = points && points.length >= 2;
 
-  const positions: L.LatLngTuple[] = points.map((p) => [p.lat, p.lng]);
+  useEffect(() => {
+    if (!hasRoute || !containerRef.current) return;
 
-  // Calculate bounds to fit the route
-  const lats = points.map((p) => p.lat);
-  const lngs = points.map((p) => p.lng);
-  const bounds: L.LatLngBoundsExpression = [
-    [Math.min(...lats), Math.min(...lngs)],
-    [Math.max(...lats), Math.max(...lngs)],
-  ];
+    const coords: [number, number][] = points.map((p) => [p.lng, p.lat]);
+    const lats = points.map((p) => p.lat);
+    const lngs = points.map((p) => p.lng);
+    const bounds: [[number, number], [number, number]] = [
+      [Math.min(...lngs), Math.min(...lats)],
+      [Math.max(...lngs), Math.max(...lats)],
+    ];
 
-  return (
-    <MapContainer
-      bounds={bounds}
-      boundsOptions={{ padding: [30, 30] }}
-      style={{ width: "100%", height: "100%" }}
-      zoomControl={false}
-      scrollWheelZoom={false}
-      dragging={false}
-      attributionControl={false}
-    >
-      <TileLayer url={MAP_TILE_URL} />
-      <Polyline positions={positions} color="#CCFF00" weight={4} opacity={0.9} />
-      {/* Start marker */}
-      <CircleMarker center={positions[0]} radius={6} pathOptions={{ color: "#CCFF00", fillColor: "#000", fillOpacity: 1, weight: 3 }} />
-      {/* End marker */}
-      <CircleMarker center={positions[positions.length - 1]} radius={6} pathOptions={{ color: "#FF4444", fillColor: "#FF4444", fillOpacity: 1, weight: 2 }} />
-    </MapContainer>
-  );
+    const map = new maplibregl.Map({
+      container: containerRef.current,
+      style: MAP_STYLE_URL,
+      bounds,
+      fitBoundsOptions: { padding: 30 },
+      attributionControl: false,
+      interactive: false,
+    });
+
+    map.on("load", () => {
+      map.addSource("route", {
+        type: "geojson",
+        data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: coords } },
+      });
+      map.addLayer({
+        id: "route-line",
+        type: "line",
+        source: "route",
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint: { "line-color": "#CCFF00", "line-width": 4, "line-opacity": 0.9 },
+      });
+
+      const startEl = document.createElement("div");
+      startEl.style.cssText = "width:14px;height:14px;border-radius:50%;background:#000;border:3px solid #CCFF00;";
+      new maplibregl.Marker({ element: startEl }).setLngLat(coords[0]).addTo(map);
+
+      const endEl = document.createElement("div");
+      endEl.style.cssText = "width:14px;height:14px;border-radius:50%;background:#FF4444;border:2px solid #FF4444;";
+      new maplibregl.Marker({ element: endEl }).setLngLat(coords[coords.length - 1]).addTo(map);
+    });
+
+    return () => map.remove();
+  }, [routeData]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!hasRoute) return null;
+
+  return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
 }

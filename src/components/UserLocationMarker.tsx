@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useMap, CircleMarker } from "react-leaflet";
+import { useEffect, useRef } from "react";
+import * as maplibregl from "maplibre-gl";
 
-export default function UserLocationMarker({ 
-  onLocationFound, 
-  triggerLocate 
-}: { 
+export default function UserLocationMarker({
+  map,
+  onLocationFound,
+  triggerLocate,
+}: {
+  map: maplibregl.Map | null;
   onLocationFound?: (latlng: [number, number]) => void;
   triggerLocate?: number;
 }) {
-  const [position, setPosition] = useState<[number, number] | null>(null);
-  const map = useMap();
+  const markerRef = useRef<maplibregl.Marker | null>(null);
   const hasFlownForTrigger = useRef(0);
   const onLocationFoundRef = useRef(onLocationFound);
 
@@ -19,9 +20,26 @@ export default function UserLocationMarker({
     onLocationFoundRef.current = onLocationFound;
   }, [onLocationFound]);
 
+  // Create the marker element once, detached until the first fix arrives.
+  useEffect(() => {
+    const el = document.createElement("div");
+    el.style.width = "20px";
+    el.style.height = "20px";
+    el.style.position = "relative";
+    el.innerHTML = `
+      <div style="position:absolute;inset:0;border-radius:50%;background:rgba(204,255,0,0.3);"></div>
+      <div style="position:absolute;top:4px;left:4px;width:12px;height:12px;border-radius:50%;background:#CCFF00;border:2px solid #FFFFFF;"></div>
+    `;
+    markerRef.current = new maplibregl.Marker({ element: el });
+    return () => {
+      markerRef.current?.remove();
+      markerRef.current = null;
+    };
+  }, []);
+
   // On button press (triggerLocate > 0): request geo
   useEffect(() => {
-    if (!triggerLocate) return; // don't run on initial mount (triggerLocate = 0)
+    if (!triggerLocate || !map) return; // don't run on initial mount (triggerLocate = 0)
 
     let watchId: number | null = null;
     let tgInterval: NodeJS.Timeout | null = null;
@@ -29,13 +47,13 @@ export default function UserLocationMarker({
 
     const saveAndShow = (lat: number, lng: number) => {
       const coords: [number, number] = [lat, lng];
-      setPosition(coords);
+      markerRef.current?.setLngLat([lng, lat]).addTo(map);
       if (onLocationFoundRef.current) onLocationFoundRef.current(coords);
 
       // Only fly once per triggerLocate button press
       if (hasFlownForTrigger.current !== triggerLocate) {
         hasFlownForTrigger.current = triggerLocate;
-        map.flyTo(coords, 14, { duration: 1 });
+        map.flyTo({ center: [lng, lat], zoom: 14, duration: 1000 });
       }
     };
 
@@ -84,7 +102,7 @@ export default function UserLocationMarker({
               console.warn("TG Geo error:", e);
             }
           };
-          
+
           fetchTg(); // Initial fetch
           // Poll every 5 seconds for live updates (TG doesn't have watchPosition)
           tgInterval = setInterval(fetchTg, 5000);
@@ -116,22 +134,7 @@ export default function UserLocationMarker({
         clearInterval(tgInterval);
       }
     };
-  }, [triggerLocate]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [triggerLocate, map]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!position) return null;
-
-  return (
-    <>
-      <CircleMarker 
-        center={position} 
-        radius={10} 
-        pathOptions={{ color: "#CCFF00", fillColor: "#CCFF00", fillOpacity: 0.3, weight: 1 }} 
-      />
-      <CircleMarker 
-        center={position} 
-        radius={6} 
-        pathOptions={{ color: "#FFFFFF", fillColor: "#CCFF00", fillOpacity: 1, weight: 2 }} 
-      />
-    </>
-  );
+  return null;
 }

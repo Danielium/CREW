@@ -37,14 +37,30 @@
   --color-muted: var(--muted);
 }
 
-/* Тайлы OpenStreetMap идут только в светлом виде — красим в тёмный CSS-фильтром,
-   т.к. бесплатные тёмные тайлы CartoDB закрыли анонимный доступ (требуют ключ).
-   Полностью обесцвечиваем перед инверсией: invert без grayscale даёт случайные
-   цветовые проколы (розовая вода, ядовито-зелёные парки), т.к. invert — это
-   поканальная RGB-операция, а не честный поворот тона. Ч/б карта к тому же
-   ближе бренду CREW — единственный цветовой акцент в приложении лайм. */
-.leaflet-tile-pane {
-  filter: grayscale(1) invert(1) brightness(0.85) contrast(1.35);
+/* MapLibre GL канвас карты — убираем focus-outline, он не нужен на touch-интерфейсе. */
+.maplibregl-canvas:focus {
+  outline: none;
+}
+
+/* Атрибуция OpenFreeMap/OSM на главной карте — поднимаем над плавающим нижним меню,
+   иначе текст наезжает на "Цели/Клуб/Профиль". Карты поменьше (билдер маршрута,
+   превью пробежки) не задевают меню и не помечены этим классом. */
+.map-fullscreen .maplibregl-ctrl-bottom-right {
+  bottom: 84px !important;
+}
+
+/* MapLibre с compact:true почему-то инициализируется в РАЗВЁРНУТОМ виде (полный
+   текст) и сворачивается только по клику — держим её всегда свёрнутой (только
+   значок "i"), сама атрибуция обязательна по условиям использования OSM-тайлов,
+   но не должна быть заметнее самого приложения. */
+.maplibregl-ctrl-attrib.maplibregl-compact-show {
+  padding: 2px 24px 2px 0 !important;
+}
+.maplibregl-ctrl-attrib {
+  opacity: 0.01;
+}
+.maplibregl-ctrl-attrib.maplibregl-compact-show .maplibregl-ctrl-attrib-inner {
+  display: none !important;
 }
 
 /* ── Motion ───────────────────────────────────────────────────────────
