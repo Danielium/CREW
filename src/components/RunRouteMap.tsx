@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { MAP_STYLE_URL } from "@/lib/mapTiles";
+import { isLoopRoute } from "@/lib/routeLoop";
 
 interface RunRouteMapProps {
   routeData: string; // JSON stringified array of {lat, lng}
@@ -62,11 +63,25 @@ export default function RunRouteMap({ routeData }: RunRouteMapProps) {
 
       const startEl = document.createElement("div");
       startEl.style.cssText = "width:14px;height:14px;border-radius:50%;background:#000;border:3px solid #CCFF00;";
-      new maplibregl.Marker({ element: startEl }).setLngLat(coords[0]).addTo(map);
 
-      const endEl = document.createElement("div");
-      endEl.style.cssText = "width:14px;height:14px;border-radius:50%;background:#FF4444;border:2px solid #FF4444;";
-      new maplibregl.Marker({ element: endEl }).setLngLat(coords[coords.length - 1]).addTo(map);
+      const loop = isLoopRoute(points);
+      if (loop) {
+        // Start and finish coincide — one marker, with a small red badge standing
+        // in for the finish dot instead of drawing a second marker on top of it.
+        const wrap = document.createElement("div");
+        wrap.style.cssText = "position:relative;width:14px;height:14px;";
+        wrap.appendChild(startEl);
+        const badge = document.createElement("div");
+        badge.style.cssText = "position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:#FF4444;border:1.5px solid #000;";
+        wrap.appendChild(badge);
+        new maplibregl.Marker({ element: wrap }).setLngLat(coords[0]).addTo(map);
+      } else {
+        new maplibregl.Marker({ element: startEl }).setLngLat(coords[0]).addTo(map);
+
+        const endEl = document.createElement("div");
+        endEl.style.cssText = "width:14px;height:14px;border-radius:50%;background:#FF4444;border:2px solid #FF4444;";
+        new maplibregl.Marker({ element: endEl }).setLngLat(coords[coords.length - 1]).addTo(map);
+      }
     });
 
     return () => map.remove();

@@ -6,6 +6,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { Search, MapPin, Loader2, LocateFixed } from "lucide-react";
 import UserLocationMarker from "./UserLocationMarker";
 import { MAP_STYLE_URL } from "@/lib/mapTiles";
+import { isLoopRoute } from "@/lib/routeLoop";
 
 type LatLng = { lat: number; lng: number };
 
@@ -25,13 +26,37 @@ function haversine(a: LatLng, b: LatLng) {
   return 2 * R * Math.asin(Math.sqrt(s));
 }
 
-const ROUTE_SOURCE_ID = "route-builder-segments";
-const ROUTE_LAYER_ID = "route-builder-segments-line";
+function createStartMarkerEl() {
+  const el = document.createElement("div");
+  el.style.cssText = "width:18px;height:18px;border-radius:50%;background:#000;border:3px solid #CCFF00;";
+  return el;
+}
+
+function createEndMarkerEl() {
+  const el = document.createElement("div");
+  el.style.cssText = "width:18px;height:18px;border-radius:50%;background:#FF4444;border:2px solid #FF4444;";
+  return el;
+}
+
+// Start and finish coincide (a loop) — one marker, keeping both color cues: the
+// lime start ring, plus a small red badge standing in for the finish dot.
+function createLoopMarkerEl() {
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "position:relative;width:18px;height:18px;";
+  wrap.appendChild(createStartMarkerEl());
+  const badge = document.createElement("div");
+  badge.style.cssText = "position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#FF4444;border:1.5px solid #000;";
+  wrap.appendChild(badge);
+  return wrap;
+}
+
+const ROUTE_SOURCE_ID = "route-builder-line";
+const ROUTE_LAYER_ID = "route-builder-line-layer";
+const JOINTS_SOURCE_ID = "route-builder-joints";
+const JOINTS_LAYER_ID = "route-builder-joints-layer";
 
 export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, onAddressFound, initialRouteData }: MapRouteBuilderProps) {
   const [waypoints, setWaypoints] = useState<LatLng[]>([]);
-  const [segments, setSegments] = useState<LatLng[][]>([]);
-  const [isRouting, setIsRouting] = useState(false);
   const [distance, setDistance] = useState("0.00");
   const [search, setSearch] = useState("");
   const [triggerLocate, setTriggerLocate] = useState(0);
@@ -44,41 +69,31 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, o
   const startMarkerRef = useRef<maplibregl.Marker | null>(null);
   const endMarkerRef = useRef<maplibregl.Marker | null>(null);
   const waypointsRef = useRef<LatLng[]>([]);
-  const segmentsRef = useRef<LatLng[][]>([]);
-  const isRoutingRef = useRef(false);
   const styleLoadedRef = useRef(false);
 
   useEffect(() => { waypointsRef.current = waypoints; }, [waypoints]);
-  useEffect(() => { segmentsRef.current = segments; }, [segments]);
-  useEffect(() => { isRoutingRef.current = isRouting; }, [isRouting]);
 
-  // Recompute distance/route whenever the route itself changes, and report it to the
-  // parent from an effect (not from inside the click handler) — calling a parent's
-  // setState synchronously from a maplibre click callback raced with React's own
-  // render of this component and triggered "Cannot update a component while
-  // rendering a different component"; an effect is the phase React guarantees is
-  // safe for updating another component.
+  // Report distance/route to the parent from an effect (not from inside the click
+  // handler) — calling a parent's setState synchronously from a maplibre click
+  // callback raced with React's own render of this component and triggered
+  // "Cannot update a component while rendering a different component"; an effect
+  // is the phase React guarantees is safe for updating another component.
   useEffect(() => {
     let totalDist = 0;
-    for (const segment of segments) {
-      for (let i = 0; i < segment.length - 1; i++) {
-        totalDist += haversine(segment[i], segment[i + 1]);
-      }
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      totalDist += haversine(waypoints[i], waypoints[i + 1]);
     }
     const distStr = (totalDist / 1000).toFixed(2);
     setDistance(distStr);
 
     if (onDistanceChange) onDistanceChange(distStr);
     if (onRouteDataChange) {
-      const flattened = segments.length === 0 ? waypoints : segments.flat();
-      onRouteDataChange(JSON.stringify(flattened.map(p => ({ lat: p.lat, lng: p.lng }))));
+      onRouteDataChange(JSON.stringify(waypoints.map(p => ({ lat: p.lat, lng: p.lng }))));
     }
-  }, [waypoints, segments]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [waypoints]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMapClickRef = useRef<(latlng: LatLng) => void>(() => {});
-  handleMapClickRef.current = async (newPoint: LatLng) => {
-    if (isRoutingRef.current) return;
-
+  handleMapClickRef.current = (newPoint: LatLng) => {
     const currentWaypoints = waypointsRef.current;
 
     if (currentWaypoints.length === 0) {
@@ -111,35 +126,7 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, o
       return;
     }
 
-    setIsRouting(true);
-    const lastPoint = currentWaypoints[currentWaypoints.length - 1];
-
-    try {
-      const res = await fetch(`https://router.project-osrm.org/route/v1/foot/${lastPoint.lng},${lastPoint.lat};${newPoint.lng},${newPoint.lat}?geometries=geojson`);
-      const data = await res.json();
-
-      let segmentCoords: LatLng[] = [];
-      if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
-        const coords = data.routes[0].geometry.coordinates; // [lon, lat][]
-        segmentCoords = coords.map((c: number[]) => ({ lat: c[1], lng: c[0] }));
-      } else {
-        segmentCoords = [lastPoint, newPoint];
-      }
-
-      const newWaypoints = [...currentWaypoints, newPoint];
-      const newSegments = [...segmentsRef.current, segmentCoords];
-      setWaypoints(newWaypoints);
-      setSegments(newSegments);
-
-    } catch (err) {
-      console.error(err);
-      const newWaypoints = [...currentWaypoints, newPoint];
-      const newSegments = [...segmentsRef.current, [lastPoint, newPoint]];
-      setWaypoints(newWaypoints);
-      setSegments(newSegments);
-    } finally {
-      setIsRouting(false);
-    }
+    setWaypoints([...currentWaypoints, newPoint]);
   };
 
   // Preload an existing route (edit mode).
@@ -148,9 +135,7 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, o
       try {
         const parsed = JSON.parse(initialRouteData);
         if (parsed && parsed.length > 0) {
-          const latLngs: LatLng[] = parsed.map((p: any) => ({ lat: p.lat, lng: p.lng }));
-          setWaypoints([latLngs[0], latLngs[latLngs.length - 1]]);
-          setSegments([latLngs]);
+          setWaypoints(parsed.map((p: any) => ({ lat: p.lat, lng: p.lng })));
         }
       } catch (e) {
         console.error("Failed to parse initialRouteData", e);
@@ -186,6 +171,21 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, o
         layout: { "line-join": "round", "line-cap": "round" },
         paint: { "line-color": "#CCFF00", "line-width": 5, "line-opacity": 0.9 },
       });
+      instance.addSource(JOINTS_SOURCE_ID, {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      instance.addLayer({
+        id: JOINTS_LAYER_ID,
+        type: "circle",
+        source: JOINTS_SOURCE_ID,
+        paint: {
+          "circle-radius": 5,
+          "circle-color": "#CCFF00",
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#000000",
+        },
+      });
     });
     mapRef.current = instance;
     setMap(instance);
@@ -197,64 +197,68 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, o
     };
   }, []);
 
-  // Keep the polyline segments in sync.
+  // Keep the polyline in sync.
   useEffect(() => {
     if (!map || !styleLoadedRef.current) return;
     const source = map.getSource(ROUTE_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
     if (!source) return;
     source.setData({
       type: "FeatureCollection",
-      features: segments.map(segment => ({
+      features: waypoints.length < 2 ? [] : [{
         type: "Feature",
         properties: {},
-        geometry: { type: "LineString", coordinates: segment.map(p => [p.lng, p.lat]) },
+        geometry: { type: "LineString", coordinates: waypoints.map(p => [p.lng, p.lat]) },
+      }],
+    });
+  }, [waypoints, map]);
+
+  // Keep the visible "joint" dots (every waypoint except start/finish) in sync.
+  useEffect(() => {
+    if (!map || !styleLoadedRef.current) return;
+    const source = map.getSource(JOINTS_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
+    if (!source) return;
+    const joints = waypoints.slice(1, -1);
+    source.setData({
+      type: "FeatureCollection",
+      features: joints.map(p => ({
+        type: "Feature",
+        properties: {},
+        geometry: { type: "Point", coordinates: [p.lng, p.lat] },
       })),
     });
-  }, [segments, map]);
+  }, [waypoints, map]);
 
-  // Keep the first/last waypoint markers in sync.
+  // Keep the start/finish markers in sync.
   useEffect(() => {
     if (!map) return;
 
-    if (waypoints.length === 0) {
-      startMarkerRef.current?.remove();
-      startMarkerRef.current = null;
-      endMarkerRef.current?.remove();
-      endMarkerRef.current = null;
-      return;
-    }
+    startMarkerRef.current?.remove();
+    startMarkerRef.current = null;
+    endMarkerRef.current?.remove();
+    endMarkerRef.current = null;
+
+    if (waypoints.length === 0) return;
 
     const start = waypoints[0];
-    if (!startMarkerRef.current) {
-      startMarkerRef.current = new maplibregl.Marker({ color: "#CCFF00" })
-        .setLngLat([start.lng, start.lat])
-        .addTo(map);
-    } else {
-      startMarkerRef.current.setLngLat([start.lng, start.lat]);
-    }
+    const loop = isLoopRoute(waypoints);
 
-    if (waypoints.length > 1) {
+    startMarkerRef.current = new maplibregl.Marker({ element: loop ? createLoopMarkerEl() : createStartMarkerEl() })
+      .setLngLat([start.lng, start.lat])
+      .addTo(map);
+
+    if (waypoints.length > 1 && !loop) {
       const end = waypoints[waypoints.length - 1];
-      if (!endMarkerRef.current) {
-        endMarkerRef.current = new maplibregl.Marker({ color: "#CCFF00" }).setLngLat([end.lng, end.lat]).addTo(map);
-      } else {
-        endMarkerRef.current.setLngLat([end.lng, end.lat]);
-      }
-    } else {
-      endMarkerRef.current?.remove();
-      endMarkerRef.current = null;
+      endMarkerRef.current = new maplibregl.Marker({ element: createEndMarkerEl() }).setLngLat([end.lng, end.lat]).addTo(map);
     }
   }, [waypoints, map]);
 
   const handleUndo = () => {
     if (waypoints.length === 0) return;
     setWaypoints(prev => prev.slice(0, -1));
-    setSegments(prev => prev.slice(0, -1));
   };
 
   const handleClear = () => {
     setWaypoints([]);
-    setSegments([]);
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -287,17 +291,18 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, o
     }
   };
 
+  const loop = isLoopRoute(waypoints);
+
   return (
     <div className="flex flex-col gap-3 w-full">
       <div className="flex justify-between items-end">
         <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Маршрут (Кликайте по карте)</label>
         <div className="flex gap-2 items-center">
-          {isRouting && <span className="text-[10px] text-primary font-bold uppercase animate-pulse pr-2">Строим...</span>}
           {waypoints.length > 0 && (
-            <button type="button" onClick={handleUndo} className="text-[10px] text-muted hover:text-foreground font-bold uppercase transition-colors" disabled={isRouting}>Отменить точку</button>
+            <button type="button" onClick={handleUndo} className="text-[10px] text-muted hover:text-foreground font-bold uppercase transition-colors">Отменить точку</button>
           )}
           {waypoints.length > 1 && (
-            <button type="button" onClick={handleClear} className="text-[10px] text-red-500 hover:text-red-400 font-bold uppercase transition-colors" disabled={isRouting}>Очистить</button>
+            <button type="button" onClick={handleClear} className="text-[10px] text-red-500 hover:text-red-400 font-bold uppercase transition-colors">Очистить</button>
           )}
         </div>
       </div>
@@ -340,6 +345,7 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, o
         <div className="absolute bottom-4 left-4 z-[400] bg-background/95 backdrop-blur-md border border-border px-5 py-3 rounded-[20px] shadow-[0_0_20px_rgba(0,0,0,0.5)] flex flex-col pointer-events-none">
           <span className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1">Дистанция</span>
           <span className="text-2xl font-black font-mono leading-none text-primary">{distance} <span className="text-xs text-foreground font-sans">КМ</span></span>
+          {loop && <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider mt-1">Старт и финиш совпадают</span>}
         </div>
       </div>
     </div>
