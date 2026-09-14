@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Lock, Sunrise, Loader2, Users, Info } from "lucide-react";
+import { Lock, Sunrise, Users, Info } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import AvatarProgress from "@/components/AvatarProgress";
+import { SkeletonScreen } from "@/components/Loading";
 import { RankInfoModal, getRankName } from "@/components/RankInfoModal";
 
 export default function PublicProfilePage() {
@@ -183,7 +184,7 @@ export default function PublicProfilePage() {
   };
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={40} /></div>;
+    return <SkeletonScreen variant="profile" />;
   }
 
   if (!userData) {

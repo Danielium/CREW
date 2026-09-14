@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
-import { Bell, User, Users, Search, ChevronRight, Trophy, Info, Loader2, Map, Flag, Crown, Edit2, Trash2, Calendar, Clock, Activity, BarChart2, MapPin, Plus, Check, Shield, Star, Target, UserCheck, UserX, ChevronLeft, Share2, Copy } from "lucide-react";
+import { Bell, User, Users, Search, ChevronRight, Trophy, Info, Map, Flag, Crown, Edit2, Trash2, Calendar, Clock, Activity, BarChart2, MapPin, Plus, Check, Shield, Star, Target, UserCheck, UserX, ChevronLeft, Share2, Copy } from "lucide-react";
 import Link from "next/link";
+import { SkeletonScreen, Spinner } from "@/components/Loading";
 import ClubBadge, { parseClubLogo } from "@/components/ClubBadge";
 import BottomSheet from "@/components/BottomSheet";
 import ClubQRCard from "@/components/ClubQRCard";
@@ -297,7 +298,7 @@ export default function ClubProfilePage() {
     }
   };
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={40}/></div>;
+  if (isLoading) return <SkeletonScreen variant="hero" />;
   if (!club) return <div className="p-8 text-center text-muted">Клуб не найден</div>;
 
   const myMembership = session ? club.members.find((m: any) => m.userId === (session.user as any).id) : null;
@@ -377,7 +378,7 @@ export default function ClubProfilePage() {
                     <div className={`relative ${isUploadingLogo ? 'opacity-50' : 'opacity-100'} transition-opacity drop-shadow-xl`}>
                       <ClubBadge {...logo} size={64} />
                       <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center text-black shadow-lg pointer-events-none">
-                        {isUploadingLogo ? <Loader2 size={12} className="animate-spin" /> : <Edit2 size={12} />}
+                        {isUploadingLogo ? <Spinner size={12} /> : <Edit2 size={12} />}
                       </div>
                     </div>
                   );
@@ -402,7 +403,7 @@ export default function ClubProfilePage() {
                     autoFocus
                   />
                   <button onClick={handleSaveName} disabled={isSavingName} className="p-2 bg-primary text-black rounded-xl shrink-0">
-                    {isSavingName ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                    {isSavingName ? <Spinner size={16} /> : <Check size={16} />}
                   </button>
                 </div>
               ) : (
@@ -462,7 +463,7 @@ export default function ClubProfilePage() {
                   Отмена
                 </button>
                 <button onClick={handleSaveDescription} disabled={isSavingDescription} className="px-4 py-2 bg-primary text-black rounded-xl flex items-center gap-2 text-xs font-bold uppercase">
-                  {isSavingDescription ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                  {isSavingDescription ? <Spinner size={14} /> : <Check size={14} />}
                   Сохранить
                 </button>
               </div>
@@ -489,7 +490,7 @@ export default function ClubProfilePage() {
                 disabled={isJoining}
                 className="w-full py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#b3e600] transition-all"
               >
-                {isJoining ? <Loader2 className="animate-spin" size={20} /> : (club.joinType === "OPEN" ? "Вступить" : "Подать заявку")}
+                {isJoining ? <Spinner size={20} /> : (club.joinType === "OPEN" ? "Вступить" : "Подать заявку")}
               </button>
             )}
 
@@ -594,7 +595,7 @@ export default function ClubProfilePage() {
                             className="w-10 h-10 rounded-xl bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center hover:bg-green-500/20 transition-all active:scale-95 disabled:opacity-50"
                           >
                             {processingIds.has(member.userId) ? (
-                              <Loader2 size={16} className="animate-spin" />
+                              <Spinner size={16} />
                             ) : (
                               <UserCheck size={18} />
                             )}
@@ -650,7 +651,7 @@ export default function ClubProfilePage() {
             disabled={isUploadingLogo}
             className="w-full py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#b3e600] active:scale-[0.98] transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(204,255,0,0.3)]"
           >
-            {isUploadingLogo ? <Loader2 className="animate-spin" size={20} /> : <><Check size={20} /> Сохранить</>}
+            {isUploadingLogo ? <Spinner size={20} /> : <><Check size={20} /> Сохранить</>}
           </button>
         }
       >
@@ -668,7 +669,7 @@ export default function ClubProfilePage() {
             disabled={isSavingTags}
             className="w-full py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#b3e600] active:scale-[0.98] transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(204,255,0,0.3)]"
           >
-            {isSavingTags ? <Loader2 className="animate-spin" size={20} /> : <><Check size={20} /> Сохранить</>}
+            {isSavingTags ? <Spinner size={20} /> : <><Check size={20} /> Сохранить</>}
           </button>
         }
       >

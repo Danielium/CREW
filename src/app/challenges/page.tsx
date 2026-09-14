@@ -28,9 +28,10 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Check, ChevronRight, ChevronDown, Flag, Lock, MapPin, Gift, Flame, Route as RouteIcon, Loader2, PartyPopper, X, Ban } from "lucide-react";
+import { Check, ChevronRight, ChevronDown, Flag, Lock, MapPin, Gift, Flame, Route as RouteIcon, PartyPopper, X, Ban } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import BottomSheet from "@/components/BottomSheet";
+import { SkeletonScreen, Spinner } from "@/components/Loading";
 import { SwipeButton } from "@/components/SwipeButton";
 
 type Tier = { at: number; reward: string };
@@ -464,7 +465,7 @@ function GoalCard({
             disabled={pausing}
             className="mt-3 w-full min-h-[44px] rounded-full border border-border text-[13px] font-bold text-muted transition-[transform,color,border-color] duration-150 hover:text-foreground hover:border-white/20 active:scale-[0.97] disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            {pausing && <Loader2 size={14} className="animate-spin" />}
+            {pausing && <Spinner size={14} />}
             Отложить цель
           </button>
         )}
@@ -669,9 +670,7 @@ export default function ChallengesTab() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col min-h-[100dvh] items-center justify-center pt-safe pb-28">
-        <Loader2 className="animate-spin text-primary" size={28} />
-      </div>
+      <SkeletonScreen className="min-h-[100dvh]" />
     );
   }
 
@@ -719,7 +718,7 @@ export default function ChallengesTab() {
             disabled={claimingId === p.challengeId}
             className="w-full mt-4 min-h-[48px] rounded-full bg-primary text-black font-bold text-[15px] transition-[transform,background-color] duration-150 hover:bg-[#b3e600] active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            {claimingId === p.challengeId && <Loader2 size={16} className="animate-spin" />}
+            {claimingId === p.challengeId && <Spinner size={16} />}
             Забрать промокод
           </button>
         </div>
@@ -848,7 +847,7 @@ export default function ChallengesTab() {
               >
                 <div className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/5 flex items-center justify-center shrink-0">
                   {activatingId === c.id ? (
-                    <Loader2 size={17} className="text-muted animate-spin" />
+                    <Spinner size={17} className="text-muted" />
                   ) : exhausted ? (
                     <Ban size={16} className="text-muted" />
                   ) : c.metric === "streak" ? (

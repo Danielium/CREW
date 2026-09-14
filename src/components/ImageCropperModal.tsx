@@ -2,7 +2,8 @@ import React, { useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '@/lib/cropImage';
-import { Loader2, X, Check } from 'lucide-react';
+import { X, Check } from 'lucide-react';
+import { Spinner } from "@/components/Loading";
 
 interface ImageCropperModalProps {
   imageSrc: string;
@@ -55,7 +56,7 @@ export function ImageCropperModal({ imageSrc, onCropComplete, onClose, cropShape
         </button>
         <h3 className="font-bold uppercase font-display">Обрезать фото</h3>
         <button onClick={handleSave} disabled={isProcessing} className="p-2 text-primary font-bold hover:text-white transition-colors flex items-center gap-1 disabled:opacity-50">
-          {isProcessing ? <Loader2 size={20} className="animate-spin" /> : <Check size={20} />}
+          {isProcessing ? <Spinner size={20} /> : <Check size={20} />}
           Готово
         </button>
       </div>

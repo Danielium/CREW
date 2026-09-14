@@ -3,9 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Send, Lock, User, Target, ChevronRight, Check, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Send, Lock, User, Target, ChevronRight, Check, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
+import { SkeletonScreen, Spinner } from "@/components/Loading";
 import { triggerHaptic } from "@/lib/haptics";
 import Image from "next/image";
 
@@ -272,9 +273,7 @@ export default function LoginPage() {
 
   if (isCheckingTg || isTgLogin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="animate-spin text-primary" size={40} />
-      </div>
+      <SkeletonScreen />
     );
   }
 
@@ -333,7 +332,7 @@ export default function LoginPage() {
               </div>
 
               <button type="submit" disabled={isLoading} className="w-full bg-foreground text-background font-black uppercase tracking-wider py-4 rounded-[20px] flex justify-center items-center mt-6 hover:bg-muted transition-all disabled:opacity-70 active:scale-95">
-                {isLoading ? <Loader2 className="animate-spin" size={24} /> : "Войти"}
+                {isLoading ? <Spinner size={24} /> : "Войти"}
               </button>
 
               <div className="mt-auto mb-8 text-center">
@@ -370,7 +369,7 @@ export default function LoginPage() {
               </div>
 
               <button type="submit" disabled={isLoading} className="w-full bg-primary text-black font-black uppercase tracking-wider py-4 rounded-[20px] flex justify-center items-center mt-auto mb-8 hover:bg-[#b3e600] active:scale-95 transition-all disabled:opacity-50">
-                {isLoading ? <Loader2 className="animate-spin" size={24} /> : <>Далее <ChevronRight size={20} className="ml-1" /></>}
+                {isLoading ? <Spinner size={24} /> : <>Далее <ChevronRight size={20} className="ml-1" /></>}
               </button>
             </form>
           </div>
@@ -439,7 +438,7 @@ export default function LoginPage() {
             </div>
 
             <button onClick={handleRegister} disabled={isLoading} className="w-full bg-primary text-black font-black uppercase tracking-wider py-4 rounded-[20px] flex justify-center items-center mt-4 mb-8 hover:bg-[#b3e600] active:scale-95 transition-all shrink-0">
-              {isLoading ? <Loader2 className="animate-spin" size={24} /> : "Завершить и Войти"}
+              {isLoading ? <Spinner size={24} /> : "Завершить и Войти"}
             </button>
           </div>
         )}

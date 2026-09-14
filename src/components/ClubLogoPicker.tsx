@@ -1,9 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Image as ImageIcon, Loader2 } from "lucide-react";
+import { Image as ImageIcon } from "lucide-react";
 import ClubBadge from "@/components/ClubBadge";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
+import { Spinner } from "@/components/Loading";
 import { uploadImage } from "@/lib/uploadImage";
 
 export type SimpleLogoConfig = {
@@ -79,7 +80,7 @@ export default function ClubLogoPicker({
         <ClubBadge {...value} size={128} />
         {isUploading && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-[22px]">
-            <Loader2 size={24} className="animate-spin text-white" />
+            <Spinner size={24} className="text-white" />
           </div>
         )}
       </div>

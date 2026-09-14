@@ -1,8 +1,9 @@
 "use client";
 import { Suspense, useState, useEffect, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
-import { Bell, MapPin, Clock, Users, X, Search, Activity, ArrowLeft, LocateFixed, Share, Plus, Minus, Loader2 } from "lucide-react";
+import { Bell, MapPin, Clock, Users, X, Search, Activity, ArrowLeft, LocateFixed, Share, Plus, Minus } from "lucide-react";
 import { SwipeButton } from "@/components/SwipeButton";
+import { Spinner } from "@/components/Loading";
 import { triggerHaptic } from "@/lib/haptics";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -752,7 +753,7 @@ function MapContent() {
               <label className="text-[10px] font-bold text-muted uppercase tracking-widest pl-4">Локация</label>
               <div className="bg-card border border-border rounded-2xl flex items-center p-3 gap-3 focus-within:border-primary transition-colors">
                 {isFetchingAddress ? (
-                  <Loader2 size={18} className="text-primary animate-spin shrink-0" />
+                  <Spinner size={18} className="text-primary" />
                 ) : (
                   <MapPin size={18} className="text-primary shrink-0" />
                 )}
@@ -786,7 +787,7 @@ function MapContent() {
                 Отмена
               </button>
               <button onClick={handleCreateSubmit} disabled={isSubmittingCreate || !createDate || !createTime} className="py-3 bg-primary text-black rounded-2xl font-black uppercase tracking-wider active:scale-95 transition-transform disabled:opacity-50 text-sm">
-                {isSubmittingCreate ? <Loader2 className="animate-spin mx-auto" size={18} /> : "Поставить маячок"}
+                {isSubmittingCreate ? <Spinner className="mx-auto" size={18} /> : "Поставить маячок"}
               </button>
             </div>
           </div>

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Loader2, User, Trash2, MoreVertical, Crown, Flag } from "lucide-react";
+import { User, Trash2, MoreVertical, Crown, Flag } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { Spinner, SkeletonRows } from "@/components/Loading";
 
 import { globalCache } from "@/lib/cache";
 
@@ -114,7 +115,7 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
       });
   }, [clubId]);
 
-  if (isLoading) return <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" size={32} /></div>;
+  if (isLoading) return <div className="px-4"><SkeletonRows /></div>;
 
   return (
     <div className="flex flex-col px-4">
@@ -153,7 +154,7 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
                           }} 
                           className="p-1 text-muted hover:text-white transition-colors"
                         >
-                          {processingIds.has(user.id) ? <Loader2 size={18} className="animate-spin text-primary" /> : <MoreVertical size={18} />}
+                          {processingIds.has(user.id) ? <Spinner size={18} className="text-primary" /> : <MoreVertical size={18} />}
                         </button>
                         
                         {openMenuId === user.id && (

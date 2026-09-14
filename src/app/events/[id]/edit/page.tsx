@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Loader2, MapPin, Activity, Image as ImageIcon, Clock, Eye, EyeOff } from "lucide-react";
+import { MapPin, Activity, Image as ImageIcon, Clock, Eye, EyeOff } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { uploadImage } from "@/lib/uploadImage";
+import { SkeletonScreen, Spinner } from "@/components/Loading";
 import dynamic from 'next/dynamic';
 import { DateTimeCard } from "@/components/DateTimeCard";
 import { PaceRangeSlider, formatPace, parsePaceRange } from "@/components/PaceRangeSlider";
@@ -135,7 +136,7 @@ export default function EditEventPage() {
   };
 
   if (isFetching) {
-    return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={32} /></div>;
+    return <SkeletonScreen variant="hero" />;
   }
 
   return (
@@ -262,7 +263,7 @@ export default function EditEventPage() {
           disabled={isLoading}
           className="mt-6 w-full py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#b3e600] transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(204,255,0,0.2)]"
         >
-          {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Сохранить изменения"}
+          {isLoading ? <Spinner size={20} /> : "Сохранить изменения"}
         </button>
 
       </form>

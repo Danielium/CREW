@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Flag, Users, Shield, Lock, ClipboardCheck, Loader2, Check, ArrowRight } from "lucide-react";
+import { Flag, Users, Shield, Lock, ClipboardCheck, Check, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Spinner } from "@/components/Loading";
 import ClubLogoPicker, { DEFAULT_SIMPLE_LOGO, type SimpleLogoConfig } from "@/components/ClubLogoPicker";
 import ClubBadge from "@/components/ClubBadge";
 import TagPicker from "@/components/TagPicker";
@@ -237,7 +238,7 @@ export default function CreateClubPage() {
           className="w-full py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#b3e600] active:scale-[0.98] transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(204,255,0,0.3)]"
         >
           {isLoading
-            ? <Loader2 className="animate-spin" size={20} />
+            ? <Spinner size={20} />
             : isLastStep
               ? <><Check size={20} /> Зарегистрировать</>
               : <>Далее <ArrowRight size={20} /></>}

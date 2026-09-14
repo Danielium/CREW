@@ -1,6 +1,7 @@
 "use client";
-import { ArrowLeft, Bell, Globe, Shield, LogOut, ChevronRight, X, Loader2, Activity, Trophy, Check } from "lucide-react";
+import { ArrowLeft, Bell, Globe, Shield, LogOut, ChevronRight, X, Activity, Trophy, Check } from "lucide-react";
 import Link from "next/link";
+import { Spinner } from "@/components/Loading";
 import { useState, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { globalCache } from "@/lib/cache";
@@ -384,7 +385,7 @@ export default function SettingsPage() {
                     disabled={isSyncingStrava || isDisconnectingStrava}
                     className="w-full bg-border hover:bg-border/80 text-foreground text-xs font-bold uppercase tracking-widest py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
                   >
-                    {isSyncingStrava ? <Loader2 size={16} className="animate-spin" /> : <Activity size={16} />}
+                    {isSyncingStrava ? <Spinner size={16} /> : <Activity size={16} />}
                     {isSyncingStrava ? "Синхронизация..." : "Синхронизировать тренировки"}
                   </button>
                 </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
+import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { triggerHaptic } from '@/lib/haptics';
 
 interface SwipeButtonProps {

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, Star, Trophy, Users, Edit3, Lock, Sunrise, Sun, Moon, CloudSun, LogOut, LogIn, X, Loader2, Camera, Check, Info } from "lucide-react";
+import { Settings, Star, Trophy, Users, Edit3, Lock, Sunrise, Sun, Moon, CloudSun, LogOut, LogIn, X, Camera, Check, Info } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { SkeletonScreen, Spinner } from "@/components/Loading";
 import { uploadImage } from "@/lib/uploadImage";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
@@ -293,7 +294,7 @@ export default function ProfileTab() {
   };
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={40} /></div>;
+    return <SkeletonScreen variant="profile" />;
   }
 
   return (
@@ -714,7 +715,7 @@ export default function ProfileTab() {
               disabled={isSaving || !editName.trim()}
               className="w-full mt-8 py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#b3e600] active:scale-[0.98] transition-all disabled:opacity-50"
             >
-              {isSaving ? <Loader2 className="animate-spin" size={20} /> : <><Check size={20} /> Сохранить</>}
+              {isSaving ? <Spinner size={20} /> : <><Check size={20} /> Сохранить</>}
             </button>
 
           </div>

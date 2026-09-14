@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Edit2, Trash2, Calendar, MapPin, Activity, Clock, User, KeyRound, Lock, Check, Plus, Footprints, Play, X, Share } from "lucide-react";
+import { Edit2, Trash2, Calendar, MapPin, Activity, Clock, User, KeyRound, Lock, Check, Plus, Footprints, Play, X, Share } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { globalCache } from "@/lib/cache";
+import { SkeletonEventCard } from "@/components/Loading";
 import { parseClubLogo } from "@/components/ClubBadge";
 
 export default function FeedEvents({ userData }: { userData: any }) {
@@ -73,7 +74,12 @@ export default function FeedEvents({ userData }: { userData: any }) {
   };
 
 
-  if (isLoading) return <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-primary" size={32} /></div>;
+  if (isLoading) return (
+    <div className="flex flex-col gap-6">
+      <SkeletonEventCard />
+      <SkeletonEventCard />
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-6">

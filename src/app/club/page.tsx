@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Bell, User, Users, Search, ChevronRight, Trophy, Info, Loader2, Map as MapIcon, Flag, Crown, Edit2, Trash2, Calendar, Clock, Activity, BarChart2, MapPin, Plus, Check, QrCode, ScanLine } from "lucide-react";
+import { Bell, User, Users, Search, ChevronRight, Trophy, Info, Map as MapIcon, Flag, Crown, Edit2, Trash2, Calendar, Clock, Activity, BarChart2, MapPin, Plus, Check, QrCode, ScanLine } from "lucide-react";
 import Link from "next/link";
+import { SkeletonScreen } from "@/components/Loading";
 import ClubBadge, { parseClubLogo } from "@/components/ClubBadge";
 import { useSession } from "next-auth/react";
 import FeedEvents from "@/components/FeedEvents";
@@ -48,7 +49,7 @@ export default function ClubTab() {
   const tabs = inClub ? ["События", "Атлеты", "Клубы"] : ["Клубы"];
 
   if (isLoadingUser) {
-    return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-primary" size={40} /></div>;
+    return <SkeletonScreen />;
   }
 
   return (

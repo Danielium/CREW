@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { ArrowLeft, MapPin, Calendar, Clock, Trash2, ChevronDown, ChevronUp, Loader2, User } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Clock, Trash2, ChevronDown, ChevronUp, User } from "lucide-react";
 import dynamic from 'next/dynamic';
+import { SkeletonScreen } from "@/components/Loading";
 
 const RunRouteMap = dynamic(() => import('@/components/RunRouteMap'), {
   ssr: false,
@@ -70,7 +71,7 @@ export default function EventDetailsPage() {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={40} /></div>;
+    return <SkeletonScreen variant="hero" />;
   }
 
   if (!event) {

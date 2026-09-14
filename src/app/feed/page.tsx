@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Search, Heart, MessageSquare, MapPin, Send, Loader2, User, ImageIcon, X, Trash2 } from "lucide-react";
+import { Search, Heart, MessageSquare, MapPin, Send, User, ImageIcon, X, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { Spinner, SkeletonRows } from "@/components/Loading";
 import { triggerHaptic } from "@/lib/haptics";
 
 // Types based on Prisma
@@ -425,7 +426,7 @@ export default function FeedTab() {
               disabled={(!newPostContent.trim() && attachedDrafts.length === 0) || isPosting || isUploadingImage || !session}
               className="bg-primary text-black font-bold px-5 py-2 rounded-full text-sm hover:bg-[#b3e600] transition-colors disabled:opacity-50 flex items-center justify-center min-w-[90px]"
             >
-              {isPosting || isUploadingImage ? <Loader2 size={16} className="animate-spin" /> : "Опубликовать"}
+              {isPosting || isUploadingImage ? <Spinner size={16} /> : "Опубликовать"}
             </button>
           </div>
         </div>
@@ -455,9 +456,7 @@ export default function FeedTab() {
       {/* Feed List */}
       <div className="flex flex-col gap-3 px-4 pt-3 pb-4">
         {isLoading ? (
-          <div className="flex justify-center p-12">
-            <Loader2 className="animate-spin text-primary" size={32} />
-          </div>
+          <SkeletonRows />
         ) : posts.length === 0 ? (
           scope === "club" && !hasClub ? (
             <div className="p-8 text-center flex flex-col items-center gap-4">
@@ -546,7 +545,15 @@ export default function FeedTab() {
               {expandedCommentsPostId === post.id && (
                 <div className="mt-4 pt-4 border-t border-white/5 animate-in fade-in slide-in-from-top-2 duration-300">
                   {!commentsData[post.id] ? (
-                    <div className="flex justify-center py-4"><Loader2 className="animate-spin text-muted" size={20} /></div>
+                    <div className="flex flex-col gap-2.5 py-1">
+                      <div className="flex items-center gap-2.5">
+                        <div className="crew-skeleton w-9 h-9 rounded-full shrink-0" />
+                        <div className="flex-1 flex flex-col gap-1.5">
+                          <div className="crew-skeleton h-2.5 w-1/3 rounded-full" />
+                          <div className="crew-skeleton h-2.5 w-2/3 rounded-full" />
+                        </div>
+                      </div>
+                    </div>
                   ) : commentsData[post.id].length === 0 ? (
                     <p className="text-[15px] text-muted text-center py-2">Пока нет комментариев</p>
                   ) : (
@@ -659,7 +666,7 @@ export default function FeedTab() {
                         disabled={(!newCommentContent[post.id]?.trim() && (commentDrafts[post.id]?.length || 0) === 0) || isPostingComment}
                         className="w-9 h-9 rounded-full bg-primary text-black flex items-center justify-center disabled:opacity-30 shrink-0 transition-opacity"
                       >
-                        {isPostingComment ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+                        {isPostingComment ? <Spinner size={15} /> : <Send size={15} />}
                       </button>
                     </div>
                   </div>

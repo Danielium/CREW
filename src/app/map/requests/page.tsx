@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Check, X, Loader2, Send, MapPin } from "lucide-react";
+import { ArrowLeft, Check, X, Send, MapPin } from "lucide-react";
 import Link from "next/link";
+import { SkeletonRows } from "@/components/Loading";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { triggerHaptic } from "@/lib/haptics";
@@ -84,7 +85,7 @@ export default function RequestsInbox() {
       {/* Content */}
       <div className="flex-1 p-4 overflow-y-auto">
         {isLoading ? (
-          <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" size={32} /></div>
+          <SkeletonRows />
         ) : activeTab === "REQUESTS" ? (
           <div className="flex flex-col gap-4">
             {data.incomingPending.length === 0 ? (

@@ -3,8 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Search, MapPin, Loader2, LocateFixed } from "lucide-react";
+import { Search, MapPin, LocateFixed } from "lucide-react";
 import UserLocationMarker from "./UserLocationMarker";
+import { Spinner } from "@/components/Loading";
 import { MAP_STYLE_URL } from "@/lib/mapTiles";
 import { isLoopRoute } from "@/lib/routeLoop";
 
@@ -326,7 +327,7 @@ export default function MapRouteBuilder({ onDistanceChange, onRouteDataChange, o
               }
             }}
           />
-          {isSearching && <Loader2 size={14} className="animate-spin text-primary" />}
+          {isSearching && <Spinner size={14} className="text-primary" />}
         </div>
         <button
           type="button"
