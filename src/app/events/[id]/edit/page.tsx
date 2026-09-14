@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { MapPin, Activity, Image as ImageIcon, Clock, Eye, EyeOff } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { uploadImage } from "@/lib/uploadImage";
-import { SkeletonScreen, Spinner } from "@/components/Loading";
+import { EventFormSkeleton, Spinner } from "@/components/Loading";
 import dynamic from 'next/dynamic';
 import { DateTimeCard } from "@/components/DateTimeCard";
 import { PaceRangeSlider, formatPace, parsePaceRange } from "@/components/PaceRangeSlider";
@@ -136,7 +136,7 @@ export default function EditEventPage() {
   };
 
   if (isFetching) {
-    return <SkeletonScreen variant="hero" />;
+    return <EventFormSkeleton />;
   }
 
   return (

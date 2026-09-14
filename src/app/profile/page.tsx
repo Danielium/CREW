@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Settings, Star, Trophy, Users, Edit3, Lock, Sunrise, Sun, Moon, CloudSun, LogOut, LogIn, X, Camera, Check, Info } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { SkeletonScreen, Spinner } from "@/components/Loading";
+import { ProfileSkeleton, Spinner } from "@/components/Loading";
 import { uploadImage } from "@/lib/uploadImage";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
@@ -294,7 +294,7 @@ export default function ProfileTab() {
   };
 
   if (isLoading) {
-    return <SkeletonScreen variant="profile" />;
+    return <ProfileSkeleton />;
   }
 
   return (

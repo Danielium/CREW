@@ -31,7 +31,7 @@ import { useSession } from "next-auth/react";
 import { Check, ChevronRight, ChevronDown, Flag, Lock, MapPin, Gift, Flame, Route as RouteIcon, PartyPopper, X, Ban } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import BottomSheet from "@/components/BottomSheet";
-import { SkeletonScreen, Spinner } from "@/components/Loading";
+import { ChallengesSkeleton, Spinner } from "@/components/Loading";
 import { SwipeButton } from "@/components/SwipeButton";
 
 type Tier = { at: number; reward: string };
@@ -670,7 +670,7 @@ export default function ChallengesTab() {
 
   if (isLoading) {
     return (
-      <SkeletonScreen className="min-h-[100dvh]" />
+      <ChallengesSkeleton />
     );
   }
 

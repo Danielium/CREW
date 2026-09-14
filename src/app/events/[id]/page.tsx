@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ArrowLeft, MapPin, Calendar, Clock, Trash2, ChevronDown, ChevronUp, User } from "lucide-react";
 import dynamic from 'next/dynamic';
-import { SkeletonScreen } from "@/components/Loading";
+import { EventDetailSkeleton } from "@/components/Loading";
 
 const RunRouteMap = dynamic(() => import('@/components/RunRouteMap'), {
   ssr: false,
@@ -71,7 +71,7 @@ export default function EventDetailsPage() {
   };
 
   if (loading) {
-    return <SkeletonScreen variant="hero" />;
+    return <EventDetailSkeleton />;
   }
 
   if (!event) {

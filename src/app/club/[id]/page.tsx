@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 import { Bell, User, Users, Search, ChevronRight, Trophy, Info, Map, Flag, Crown, Edit2, Trash2, Calendar, Clock, Activity, BarChart2, MapPin, Plus, Check, Shield, Star, Target, UserCheck, UserX, ChevronLeft, Share2, Copy } from "lucide-react";
 import Link from "next/link";
-import { SkeletonScreen, Spinner } from "@/components/Loading";
+import { ClubDetailSkeleton, Spinner } from "@/components/Loading";
 import ClubBadge, { parseClubLogo } from "@/components/ClubBadge";
 import BottomSheet from "@/components/BottomSheet";
 import ClubQRCard from "@/components/ClubQRCard";
@@ -298,7 +298,7 @@ export default function ClubProfilePage() {
     }
   };
 
-  if (isLoading) return <SkeletonScreen variant="hero" />;
+  if (isLoading) return <ClubDetailSkeleton />;
   if (!club) return <div className="p-8 text-center text-muted">Клуб не найден</div>;
 
   const myMembership = session ? club.members.find((m: any) => m.userId === (session.user as any).id) : null;

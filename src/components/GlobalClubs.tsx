@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import ClubBadge, { parseClubLogo } from "@/components/ClubBadge";
 import { Users, Search } from "lucide-react";
-import { SkeletonRows } from "@/components/Loading";
+import { ClubRowsSkeleton } from "@/components/Loading";
 
 import { globalCache } from "@/lib/cache";
 import { JOIN_TYPE_LABELS } from "@/lib/club";
@@ -30,7 +30,7 @@ export default function GlobalClubs() {
       });
   }, []);
 
-  if (isLoading) return <div className="px-4"><SkeletonRows avatarShape="square" /></div>;
+  if (isLoading) return <div className="px-4"><ClubRowsSkeleton /></div>;
 
   const query = searchQuery.trim().toLowerCase();
   

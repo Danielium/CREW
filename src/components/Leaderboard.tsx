@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { User, Trash2, MoreVertical, Crown, Flag } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Spinner, SkeletonRows } from "@/components/Loading";
+import { Spinner, LeaderboardRowsSkeleton } from "@/components/Loading";
 
 import { globalCache } from "@/lib/cache";
 
@@ -115,7 +115,7 @@ export default function Leaderboard({ clubId }: { clubId?: string }) {
       });
   }, [clubId]);
 
-  if (isLoading) return <div className="px-4"><SkeletonRows /></div>;
+  if (isLoading) return <div className="px-4"><LeaderboardRowsSkeleton /></div>;
 
   return (
     <div className="flex flex-col px-4">

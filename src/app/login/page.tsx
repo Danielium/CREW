@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Send, Lock, User, Target, ChevronRight, Check, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { ImageCropperModal } from "@/components/ImageCropperModal";
-import { SkeletonScreen, Spinner } from "@/components/Loading";
+import { LoginSkeleton, Spinner } from "@/components/Loading";
 import { triggerHaptic } from "@/lib/haptics";
 import Image from "next/image";
 
@@ -273,7 +273,7 @@ export default function LoginPage() {
 
   if (isCheckingTg || isTgLogin) {
     return (
-      <SkeletonScreen />
+      <LoginSkeleton />
     );
   }
 

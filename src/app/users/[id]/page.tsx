@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Lock, Sunrise, Users, Info } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import AvatarProgress from "@/components/AvatarProgress";
-import { SkeletonScreen } from "@/components/Loading";
+import { ProfileSkeleton } from "@/components/Loading";
 import { RankInfoModal, getRankName } from "@/components/RankInfoModal";
 
 export default function PublicProfilePage() {
@@ -184,7 +184,7 @@ export default function PublicProfilePage() {
   };
 
   if (isLoading) {
-    return <SkeletonScreen variant="profile" />;
+    return <ProfileSkeleton showSettings={false} />;
   }
 
   if (!userData) {

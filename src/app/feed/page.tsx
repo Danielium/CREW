@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Search, Heart, MessageSquare, MapPin, Send, User, ImageIcon, X, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { Spinner, SkeletonRows } from "@/components/Loading";
+import { Spinner, FeedPostSkeleton } from "@/components/Loading";
 import { triggerHaptic } from "@/lib/haptics";
 
 // Types based on Prisma
@@ -456,7 +456,7 @@ export default function FeedTab() {
       {/* Feed List */}
       <div className="flex flex-col gap-3 px-4 pt-3 pb-4">
         {isLoading ? (
-          <SkeletonRows />
+          <FeedPostSkeleton />
         ) : posts.length === 0 ? (
           scope === "club" && !hasClub ? (
             <div className="p-8 text-center flex flex-col items-center gap-4">
