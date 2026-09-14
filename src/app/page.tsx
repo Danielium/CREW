@@ -13,6 +13,40 @@ import BottomSheet, { BOTTOM_SHEET_TRANSITION_MS } from "@/components/BottomShee
 import ClubBadge, { parseClubLogo } from "@/components/ClubBadge";
 import { globalCache } from "@/lib/cache";
 
+// Telegram's WebView can report a non-ru locale, which rendered "19.09.2026" as
+// "9/19/2026" inside an otherwise Russian UI — so the locale is pinned. The two
+// days a runner actually acts on get named instead of spelled out as a date.
+function formatRunDay(value: string | Date) {
+  const d = new Date(value);
+  const startOfDay = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((startOfDay(d) - startOfDay(new Date())) / 86400000);
+  if (days === 0) return "Сегодня";
+  if (days === 1) return "Завтра";
+  if (days === 2) return "Послезавтра";
+  return d.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+}
+
+function formatRunTime(value: string | Date) {
+  return new Date(value).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+}
+
+// toLocaleDateString gives the nominative ("июнь") plus a " г." suffix, which reads
+// wrong after the preposition "с" and overflowed the line. Genitive, and the year is
+// only worth printing once the account is older than the current one.
+const MONTHS_GENITIVE = [
+  "января", "февраля", "марта", "апреля", "мая", "июня",
+  "июля", "августа", "сентября", "октября", "ноября", "декабря",
+];
+
+function formatMemberSince(value?: string | Date | null) {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  const month = MONTHS_GENITIVE[d.getMonth()];
+  const year = d.getFullYear();
+  return year === new Date().getFullYear() ? month : `${month} ${year}`;
+}
+
 function ParticipantStepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
     <div className="bg-card border border-border rounded-2xl flex items-center justify-between p-2">
@@ -443,15 +477,23 @@ function MapContent() {
   };
 
   const handleDeleteProposal = async () => {
-    if (!selectedProposal || !confirm("Точно удалить маячок?")) return;
+    if (!selectedProposal) return;
+    const accepted = selectedProposal._count?.requests || 0;
+    const warning = accepted > 0
+      ? `Удалить маячок? ${accepted === 1 ? "Тому, кто уже записался" : "Тем, кто уже записался"}, встреча не состоится.`
+      : "Удалить маячок?";
+    if (!confirm(warning)) return;
     try {
       const res = await fetch(`/api/proposals/${selectedProposal.id}`, { method: "DELETE" });
       if (res.ok) {
         closeSheet();
         fetchProposals();
+      } else {
+        alert("Не удалось удалить маячок. Попробуй ещё раз.");
       }
     } catch (e) {
       console.error(e);
+      alert("Не удалось удалить маячок. Проверь соединение.");
     }
   };
 
@@ -613,7 +655,12 @@ function MapContent() {
         </button>
       </div>
 
-      <BottomSheet open={isSheetOpen} onClose={closeSheet} ariaLabel={isCreatingProposal ? "Новый маячок" : "Пробежка"}>
+      <BottomSheet
+        open={isSheetOpen}
+        onClose={closeSheet}
+        ariaLabel={isCreatingProposal ? "Новый маячок" : "Пробежка"}
+        title={!isCreatingProposal && !isEditingProposal && selectedProposal && selectedProposal.type !== "CLUB" ? "Совместная пробежка" : undefined}
+      >
         {isCreatingProposal ? (
           <div className="flex flex-col gap-4">
             <h2 className="text-2xl font-bold uppercase tracking-normal font-display">Новый маячок</h2>
@@ -688,33 +735,34 @@ function MapContent() {
                 </div>
               </div>
               <button 
+                aria-label="Поделиться пробежкой"
                 onClick={() => {
                   const botAppUrl = process.env.NEXT_PUBLIC_BOT_APP_URL;
                   const link = botAppUrl ? `${botAppUrl}?startapp=focus_${selectedProposal.id}` : `${window.location.origin}/?focus=${selectedProposal.id}`;
                   navigator.clipboard.writeText(link);
                   alert("Ссылка скопирована!");
                 }}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary active:scale-95 transition-transform shrink-0 mt-1"
+                className="w-11 h-11 flex items-center justify-center rounded-full bg-white/5 border border-primary/30 text-primary active:scale-95 transition-transform shrink-0 mt-1"
               >
                 <Share size={18} />
               </button>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-2">
-              <div className="bg-muted/30 rounded-2xl p-4 flex flex-col gap-1">
+              <div className="bg-white/[0.04] border border-white/5 rounded-[22px] p-4 flex flex-col gap-1">
                 <div className="flex items-center gap-2 text-muted">
                   <Clock size={16} />
                   <span className="text-xs uppercase font-bold tracking-wider">Старт</span>
                 </div>
                 <span className="font-bold text-lg">
-                  {new Date(selectedProposal.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                  {formatRunTime(selectedProposal.startTime)}
                 </span>
                 <span className="text-xs text-muted">
-                  {new Date(selectedProposal.startTime).toLocaleDateString()}
+                  {formatRunDay(selectedProposal.startTime)}
                 </span>
               </div>
               
-              <div className="bg-muted/30 rounded-2xl p-4 flex flex-col gap-1">
+              <div className="bg-white/[0.04] border border-white/5 rounded-[22px] p-4 flex flex-col gap-1">
                 <div className="flex items-center gap-2 text-muted">
                   <Activity size={16} />
                   <span className="text-xs uppercase font-bold tracking-wider">Темп</span>
@@ -742,16 +790,45 @@ function MapContent() {
           </div>
         ) : selectedProposal && (
           <div className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold uppercase tracking-normal font-display">Совместная пробежка</h2>
+            {/* The old <h2> read "Совместная пробежка" on every one of these — a constant
+                set in 24px while the only variable, who is calling, sat below it in 14px.
+                The category moved to the sheet's own title slot; the person leads here. */}
+            <div className="flex items-start justify-between gap-3">
+              <Link
+                href={`/users/${selectedProposal.creator?.id}`}
+                onClick={closeSheet}
+                className="flex items-center gap-3 min-w-0 active:opacity-70 transition-opacity"
+              >
+                {selectedProposal.creator?.image ? (
+                  <img src={selectedProposal.creator.image} alt="" className="w-14 h-14 rounded-full object-cover shrink-0 bg-white/10" />
+                ) : (
+                  <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center text-xl font-bold shrink-0">
+                    {selectedProposal.creator?.name?.charAt(0).toUpperCase() || "?"}
+                  </div>
+                )}
+                <div className="flex flex-col min-w-0">
+                  <span className="text-2xl font-bold font-display leading-none truncate">
+                    {selectedProposal.creator?.name || "Без имени"}
+                  </span>
+                  {/* No pace and no Strava for almost anyone, so the only honest trust signal
+                      left is tenure — not the Telegram handle, which stays private until the
+                      author chooses to share it in DM after accepting a request. */}
+                  <span className="text-xs text-muted mt-1.5 truncate">
+                    {formatMemberSince(selectedProposal.creator?.createdAt)
+                      ? `В CREW с ${formatMemberSince(selectedProposal.creator?.createdAt)}`
+                      : "Зовёт на пробежку"}
+                  </span>
+                </div>
+              </Link>
               <button 
+                aria-label="Поделиться маячком"
                 onClick={() => {
                   const botAppUrl = process.env.NEXT_PUBLIC_BOT_APP_URL;
                   const link = botAppUrl ? `${botAppUrl}?startapp=focus_${selectedProposal.id}` : `${window.location.origin}/?focus=${selectedProposal.id}`;
                   navigator.clipboard.writeText(link);
                   alert("Ссылка скопирована!");
                 }}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary active:scale-95 transition-transform shrink-0"
+                className="w-11 h-11 flex items-center justify-center rounded-full bg-white/5 border border-primary/30 text-primary active:scale-95 transition-transform shrink-0"
               >
                 <Share size={18} />
               </button>
@@ -792,39 +869,21 @@ function MapContent() {
               </div>
             ) : (
               <>
-                <div className="bg-muted/30 rounded-2xl p-4 flex items-center gap-3">
-                  {selectedProposal.creator?.image ? (
-                    <img
-                      src={selectedProposal.creator.image}
-                      alt=""
-                      className="w-10 h-10 rounded-full object-cover shrink-0 bg-white/10"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold shrink-0">
-                      {selectedProposal.creator?.name?.charAt(0).toUpperCase() || "?"}
-                    </div>
-                  )}
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[10px] font-bold text-muted uppercase tracking-widest mb-0.5">Автор</span>
-                    <span className="font-medium text-sm leading-tight truncate">{selectedProposal.creator?.name || "Без имени"}</span>
-                  </div>
-                </div>
-
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-muted/30 rounded-2xl p-4 flex flex-col gap-1">
+                  <div className="bg-white/[0.04] border border-white/5 rounded-[22px] p-4 flex flex-col gap-1">
                     <div className="flex items-center gap-2 text-muted">
                       <Clock size={16} />
                       <span className="text-xs uppercase font-bold tracking-wider">Старт</span>
                     </div>
                     <span className="font-bold text-lg">
-                      {new Date(selectedProposal.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      {formatRunTime(selectedProposal.startTime)}
                     </span>
                     <span className="text-xs text-muted">
-                      {new Date(selectedProposal.startTime).toLocaleDateString()}
+                      {formatRunDay(selectedProposal.startTime)}
                     </span>
                   </div>
                   
-                  <div className="bg-muted/30 rounded-2xl p-4 flex flex-col gap-1">
+                  <div className="bg-white/[0.04] border border-white/5 rounded-[22px] p-4 flex flex-col gap-1">
                     <div className="flex items-center gap-2 text-muted">
                       <Activity size={16} />
                       <span className="text-xs uppercase font-bold tracking-wider">Темп</span>
@@ -835,7 +894,7 @@ function MapContent() {
                 </div>
 
                 {selectedProposal.address && (
-                  <div className="bg-muted/30 rounded-2xl p-4 flex items-center gap-3">
+                  <div className="bg-white/[0.04] border border-white/5 rounded-[22px] p-4 flex items-center gap-3">
                     <MapPin size={20} className="text-primary flex-shrink-0" />
                     <div className="flex flex-col">
                       <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-0.5">Локация</span>
@@ -844,13 +903,16 @@ function MapContent() {
                   </div>
                 )}
 
-                <div className="bg-muted/30 rounded-2xl p-4 flex items-center justify-between">
+                <div className="bg-white/[0.04] border border-white/5 rounded-[22px] p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Users size={20} className="text-primary" />
                     <span className="font-medium text-sm">Участники</span>
                   </div>
                   <span className="font-black">
-                    {selectedProposal._count?.requests || 0} / {selectedProposal.maxParticipants === 0 ? '∞' : selectedProposal.maxParticipants}
+                    {selectedProposal._count?.requests || 0}
+                    {selectedProposal.maxParticipants === 0
+                      ? <span className="text-[10px] font-bold text-muted uppercase tracking-widest ml-2 before:content-['·'] before:mr-2 before:text-muted">без лимита</span>
+                      : ` / ${selectedProposal.maxParticipants}`}
                   </span>
                 </div>
 
@@ -878,12 +940,12 @@ function MapContent() {
                       />
                     )
                   ) : selectedProposal.creator?.id === (session?.user as any)?.id ? (
-                    <div className="grid grid-cols-2 gap-4">
-                      <button onClick={handleDeleteProposal} className="py-4 bg-red-500/10 text-red-500 rounded-2xl font-bold uppercase tracking-wider active:scale-95 transition-transform text-sm">
-                        Удалить
-                      </button>
-                      <button onClick={handleEditClick} className="py-4 bg-primary/20 text-primary rounded-2xl font-bold uppercase tracking-wider active:scale-95 transition-transform text-sm">
+                    <div className="flex flex-col gap-1">
+                      <button onClick={handleEditClick} className="w-full py-4 bg-primary text-black rounded-2xl font-black uppercase tracking-wider active:scale-95 transition-transform text-sm">
                         Изменить
+                      </button>
+                      <button onClick={handleDeleteProposal} className="w-full py-3 text-red-400 font-bold uppercase tracking-widest text-xs active:opacity-70 transition-opacity">
+                        Удалить маячок
                       </button>
                     </div>
                   ) : (

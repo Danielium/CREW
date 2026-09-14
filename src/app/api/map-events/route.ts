@@ -68,6 +68,7 @@ export async function GET(req: Request) {
             id: true, // Needed to check if it's our own
             name: true,
             image: true,
+            createdAt: true,
           }
         },
         requests: {
