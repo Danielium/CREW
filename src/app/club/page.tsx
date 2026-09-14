@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Bell, User, Users, Search, ChevronRight, Trophy, Info, Loader2, Map as MapIcon, Flag, Crown, Edit2, Trash2, Calendar, Clock, Activity, BarChart2, MapPin, Plus, Check, QrCode, ScanLine } from "lucide-react";
 import Link from "next/link";
-import ClubBadge from "@/components/ClubBadge";
+import ClubBadge, { parseClubLogo } from "@/components/ClubBadge";
 import { useSession } from "next-auth/react";
 import FeedEvents from "@/components/FeedEvents";
 import GlobalClubs from "@/components/GlobalClubs";
@@ -67,12 +67,9 @@ export default function ClubTab() {
                 <>
                   <div className="shrink-0">
                     {(() => {
-                      try {
-                        const logo = JSON.parse(userData.clubMembers[0].club.logoConfig);
-                        return <ClubBadge {...logo} size={48} />;
-                      } catch(e) {
-                        return <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center text-primary text-xl font-black">{userData.clubMembers[0].club.name.charAt(0)}</div>;
-                      }
+                      const logo = parseClubLogo(userData.clubMembers[0].club.logoConfig);
+                      if (!logo) return <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center text-primary text-xl font-black">{userData.clubMembers[0].club.name.charAt(0)}</div>;
+                      return <ClubBadge {...logo} size={48} />;
                     })()}
                   </div>
                   <div>

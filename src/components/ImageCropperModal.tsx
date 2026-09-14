@@ -8,9 +8,11 @@ interface ImageCropperModalProps {
   imageSrc: string;
   onCropComplete: (croppedFile: File, croppedUrl: string) => void;
   onClose: () => void;
+  /** Round for avatars, rect for the club badge (a rounded square). */
+  cropShape?: 'round' | 'rect';
 }
 
-export function ImageCropperModal({ imageSrc, onCropComplete, onClose }: ImageCropperModalProps) {
+export function ImageCropperModal({ imageSrc, onCropComplete, onClose, cropShape = 'round' }: ImageCropperModalProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
@@ -64,7 +66,7 @@ export function ImageCropperModal({ imageSrc, onCropComplete, onClose }: ImageCr
           crop={crop}
           zoom={zoom}
           aspect={1}
-          cropShape="round"
+          cropShape={cropShape}
           showGrid={false}
           onCropChange={setCrop}
           onCropComplete={onCropCompleteInternal}

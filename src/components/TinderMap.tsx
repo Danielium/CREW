@@ -42,21 +42,14 @@ function clubPinHtml(p: any) {
 
   const bg = logoConfig.color1 || "#CCFF00";
   const iconColor = logoConfig.iconColor || "#000000";
-  const shape = logoConfig.shape || "circle";
   const IconComp = ICON_MAP[logoConfig.iconName] || HelpCircle;
 
-  const iconSize = shape === "triangle" ? 18 : 22;
-  const iconY = shape === "triangle" ? 12 : 9;
+  const iconSize = 22;
+  const iconY = 9;
   let iconHtml = renderToStaticMarkup(<IconComp size={iconSize} color={iconColor} strokeWidth={2.5} />);
 
-  let svgShape = `<circle cx="20" cy="20" r="18.5" fill="${bg}" stroke="white" stroke-width="3" />`;
-  if (shape === "triangle") {
-    svgShape = `<polygon points="20,2 2,38 38,38" fill="${bg}" stroke="white" stroke-width="3" stroke-linejoin="round" />`;
-  } else if (shape === "octagon") {
-    svgShape = `<polygon points="12,2 28,2 38,12 38,28 28,38 12,38 2,28 2,12" fill="${bg}" stroke="white" stroke-width="3" stroke-linejoin="round" />`;
-  } else if (shape === "square") {
-    svgShape = `<rect x="2" y="2" width="36" height="36" rx="6" fill="${bg}" stroke="white" stroke-width="3" />`;
-  }
+  // Single silhouette for every club — a rounded square, same as <ClubBadge />.
+  let svgShape = `<rect x="2" y="2" width="36" height="36" rx="10" fill="${bg}" stroke="white" stroke-width="3" />`;
 
   let defs = "";
   let imageTag = "";

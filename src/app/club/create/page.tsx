@@ -19,7 +19,7 @@ const JOIN_TYPES = [
 // Punchy heading, functional subtitle — same pairing the club tab uses for
 // "Создать клуб / Собери свою беговую банду".
 const STEPS = [
-  { title: "Лицо клуба", hint: "Эмблема, название и описание" },
+  { title: "Лицо клуба", hint: "Фото, название и описание" },
   { title: "Кто в деле", hint: "Как вступают и какой у вас вайб" },
   { title: "Всё верно?", hint: "Так клуб увидят другие бегуны" },
 ];

@@ -131,7 +131,7 @@ export default function ClubQRCard({ value, clubName, logo }: ClubQRCardProps) {
           </svg>
           {logo && (
             <div
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white p-1.5"
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-1.5"
               aria-hidden="true"
             >
               <ClubBadge {...logo} size={BADGE_SIZE} />

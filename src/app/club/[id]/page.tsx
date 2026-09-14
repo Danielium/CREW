@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 import { Bell, User, Users, Search, ChevronRight, Trophy, Info, Loader2, Map, Flag, Crown, Edit2, Trash2, Calendar, Clock, Activity, BarChart2, MapPin, Plus, Check, Shield, Star, Target, UserCheck, UserX, ChevronLeft, Share2, Copy } from "lucide-react";
 import Link from "next/link";
-import ClubBadge from "@/components/ClubBadge";
+import ClubBadge, { parseClubLogo } from "@/components/ClubBadge";
 import BottomSheet from "@/components/BottomSheet";
 import ClubQRCard from "@/components/ClubQRCard";
 import ClubLogoPicker, { DEFAULT_SIMPLE_LOGO, type SimpleLogoConfig } from "@/components/ClubLogoPicker";
@@ -59,12 +59,8 @@ export default function ClubProfilePage() {
   }, [id]);
 
   const openLogoEditor = () => {
-    try {
-      const current = JSON.parse(club.logoConfig);
-      setDraftLogo({ ...DEFAULT_SIMPLE_LOGO, ...current });
-    } catch {
-      setDraftLogo(DEFAULT_SIMPLE_LOGO);
-    }
+    // parseClubLogo drops the legacy "shape" field, so re-saving never writes it back.
+    setDraftLogo({ ...DEFAULT_SIMPLE_LOGO, ...(parseClubLogo(club.logoConfig) ?? {}) });
     setIsEditingLogo(true);
   };
 
@@ -81,7 +77,7 @@ export default function ClubProfilePage() {
         setIsEditingLogo(false);
         await fetchClub();
       } else {
-        alert("Ошибка при сохранении эмблемы");
+        alert("Ошибка при сохранении фото");
       }
     } catch (e) {
       console.error(e);
@@ -311,11 +307,7 @@ export default function ClubProfilePage() {
   
   const tags = JSON.parse(club.tags || "[]");
 
-  let clubLogo: Record<string, any> | null = null;
-  try {
-    const parsed = JSON.parse(club.logoConfig);
-    if (parsed && parsed.shape) clubLogo = parsed;
-  } catch (e) {}
+  const clubLogo = parseClubLogo(club.logoConfig);
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground relative z-10">
@@ -376,31 +368,26 @@ export default function ClubProfilePage() {
               <button
                 type="button"
                 onClick={openLogoEditor}
-                aria-label="Изменить эмблему клуба"
+                aria-label="Изменить фото клуба"
                 className="relative group shrink-0 -m-1 p-1 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
               >
                 {(() => {
-                  try {
-                    const logo = JSON.parse(club.logoConfig);
-                    return (
-                      <div className={`relative ${isUploadingLogo ? 'opacity-50' : 'opacity-100'} transition-opacity drop-shadow-xl`}>
-                        <ClubBadge {...logo} size={64} />
-                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center text-black shadow-lg pointer-events-none">
-                          {isUploadingLogo ? <Loader2 size={12} className="animate-spin" /> : <Edit2 size={12} />}
-                        </div>
+                  const logo = parseClubLogo(club.logoConfig) ?? {};
+                  return (
+                    <div className={`relative ${isUploadingLogo ? 'opacity-50' : 'opacity-100'} transition-opacity drop-shadow-xl`}>
+                      <ClubBadge {...logo} size={64} />
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center text-black shadow-lg pointer-events-none">
+                        {isUploadingLogo ? <Loader2 size={12} className="animate-spin" /> : <Edit2 size={12} />}
                       </div>
-                    );
-                  } catch(e) {}
-                  return null;
+                    </div>
+                  );
                 })()}
               </button>
             ) : (
               (() => {
-                try {
-                  const logo = JSON.parse(club.logoConfig);
-                  if (logo && logo.shape) return <div className="flex-shrink-0 drop-shadow-xl"><ClubBadge {...logo} size={64} /></div>;
-                } catch(e) {}
-                return null;
+                const logo = parseClubLogo(club.logoConfig);
+                if (!logo) return null;
+                return <div className="flex-shrink-0 drop-shadow-xl"><ClubBadge {...logo} size={64} /></div>;
               })()
             )}
             
@@ -645,7 +632,7 @@ export default function ClubProfilePage() {
       <BottomSheet
         open={isEditingLogo}
         onClose={() => setIsEditingLogo(false)}
-        title="Эмблема клуба"
+        title="Фото клуба"
         locked={isUploadingLogo}
         footer={
           <button
@@ -657,7 +644,7 @@ export default function ClubProfilePage() {
           </button>
         }
       >
-        <ClubLogoPicker value={draftLogo} onChange={setDraftLogo} startExpanded={!draftLogo.imageUrl} />
+        <ClubLogoPicker value={draftLogo} onChange={setDraftLogo} />
       </BottomSheet>
 
       <BottomSheet
