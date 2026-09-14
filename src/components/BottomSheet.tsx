@@ -35,6 +35,7 @@ export default function BottomSheet({ open, onClose, title, locked = false, aria
   const offsetRef = useRef(0);
   const isDragging = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   // Slide in on the frame after mount so the transform actually animates;
   // on close, keep rendering for one transition's worth before unmounting.
@@ -46,8 +47,15 @@ export default function BottomSheet({ open, onClose, title, locked = false, aria
       // so the transition has nothing to animate from — confirmed on real hardware
       // and reproducible in desktop Chrome too. Nest two rAFs so the first one's
       // callback runs only after the off-screen frame has actually painted.
+      // Some Android WebViews (Telegram's included) still occasionally collapse
+      // both rAFs into a single frame under load, making the sheet snap open with
+      // no visible slide — reported as "works most of the time, sometimes instant".
+      // Forcing a synchronous reflow between the two rAFs is a stronger guarantee
+      // than scheduling alone: it makes the browser actually commit the off-screen
+      // layout before the visible state is ever set.
       let raf2 = 0;
       const raf1 = requestAnimationFrame(() => {
+        if (panelRef.current) void panelRef.current.getBoundingClientRect();
         raf2 = requestAnimationFrame(() => setIsMounted(true));
       });
       return () => {
@@ -120,6 +128,7 @@ export default function BottomSheet({ open, onClose, title, locked = false, aria
         onClick={() => !locked && onClose()}
       />
       <div
+        ref={panelRef}
         // duration-500 below must match TRANSITION_MS above — it's what the unmount timer waits out.
         className={`relative w-full max-w-[480px] bg-card border-t border-border rounded-t-[32px] px-6 pt-2 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${dragOffset > 0 ? "transition-none" : "transition-transform duration-500 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"}`}
         style={{
