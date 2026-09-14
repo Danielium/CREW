@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { PaceRangeSlider, paceRangeToString, parsePaceRange } from "@/components/PaceRangeSlider";
 import { DateTimeCard } from "@/components/DateTimeCard";
 import BottomSheet, { BOTTOM_SHEET_TRANSITION_MS } from "@/components/BottomSheet";
+import ClubBadge, { parseClubLogo } from "@/components/ClubBadge";
 import { globalCache } from "@/lib/cache";
 
 function ParticipantStepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
@@ -670,9 +671,16 @@ function MapContent() {
           <div className="flex flex-col gap-4">
             <div className="flex items-start justify-between w-full mb-4 gap-2">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-black font-black text-xl overflow-hidden shadow-[0_0_15px_rgba(204,255,0,0.3)] shrink-0">
-                  {selectedProposal.event.club?.name?.charAt(0).toUpperCase()}
-                </div>
+                {(() => {
+                  // Same badge the map pin and the club list use — tapping a photo must open that photo.
+                  const logo = parseClubLogo(selectedProposal.event.club?.logoConfig);
+                  if (logo) return <div className="shrink-0 drop-shadow-xl"><ClubBadge {...logo} size={48} /></div>;
+                  return (
+                    <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-black font-black text-xl overflow-hidden shadow-[0_0_15px_rgba(204,255,0,0.3)] shrink-0">
+                      {selectedProposal.event.club?.name?.charAt(0).toUpperCase()}
+                    </div>
+                  );
+                })()}
                 <div className="flex flex-col">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Клубная пробежка</span>
                   <h2 className="text-2xl font-bold uppercase tracking-normal leading-none mt-0.5 font-display">{selectedProposal.event.title}</h2>
@@ -784,6 +792,24 @@ function MapContent() {
               </div>
             ) : (
               <>
+                <div className="bg-muted/30 rounded-2xl p-4 flex items-center gap-3">
+                  {selectedProposal.creator?.image ? (
+                    <img
+                      src={selectedProposal.creator.image}
+                      alt=""
+                      className="w-10 h-10 rounded-full object-cover shrink-0 bg-white/10"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold shrink-0">
+                      {selectedProposal.creator?.name?.charAt(0).toUpperCase() || "?"}
+                    </div>
+                  )}
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[10px] font-bold text-muted uppercase tracking-widest mb-0.5">Автор</span>
+                    <span className="font-medium text-sm leading-tight truncate">{selectedProposal.creator?.name || "Без имени"}</span>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-muted/30 rounded-2xl p-4 flex flex-col gap-1">
                     <div className="flex items-center gap-2 text-muted">

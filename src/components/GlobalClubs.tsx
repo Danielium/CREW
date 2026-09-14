@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import ClubBadge from "@/components/ClubBadge";
+import ClubBadge, { parseClubLogo } from "@/components/ClubBadge";
 import { Loader2, Users, Search } from "lucide-react";
 
 import { globalCache } from "@/lib/cache";
@@ -81,20 +81,25 @@ export default function GlobalClubs() {
           <Link href={`/club/${club.id}`} key={club.id}>
             <div className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[24px] p-5 flex items-center justify-between hover:border-primary/50 hover:bg-black/20 transition-all shadow-lg group">
               <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xl italic tracking-tighter border-2 flex-shrink-0 shadow-lg ${
-                  club.rank === 1 ? 'bg-primary border-primary text-black shadow-primary/30' : 
-                  club.rank === 2 ? 'bg-slate-300 border-slate-300 text-black shadow-slate-300/30' : 
-                  club.rank === 3 ? 'bg-amber-700 border-amber-700 text-white shadow-amber-700/30' : 
-                  'bg-black/50 border-white/20 text-white/70'
-                }`}>
-                  <span className="pr-1">{club.rank}</span>
+                {/* Rank is metadata, not an entity: no plate, no border, no shadow — otherwise it
+                    competes with the club badge sitting right next to it. The medal lives in the
+                    bar under the digit, where colour reads as an award rather than a text category. */}
+                <div className="w-[34px] flex flex-col items-center gap-1.5 flex-shrink-0">
+                  <span className={`text-[22px] font-black italic tracking-tight leading-none ${
+                    club.rank <= 3 ? 'text-foreground' : 'text-muted'
+                  }`}>{club.rank}</span>
+                  {club.rank <= 3 && (
+                    <span className={`w-4 h-0.5 rounded-full ${
+                      club.rank === 1 ? 'bg-primary' :
+                      club.rank === 2 ? 'bg-slate-300' :
+                      'bg-amber-600'
+                    }`} />
+                  )}
                 </div>
                 {(() => {
-                  try {
-                    const logo = JSON.parse(club.logoConfig);
-                    if (logo && logo.shape) return <div className="flex-shrink-0 drop-shadow-md group-hover:scale-105 transition-transform"><ClubBadge {...logo} size={44} /></div>;
-                  } catch(e) {}
-                  return null;
+                  const logo = parseClubLogo(club.logoConfig);
+                  if (!logo) return null;
+                  return <div className="flex-shrink-0 drop-shadow-md group-hover:scale-105 transition-transform"><ClubBadge {...logo} size={44} /></div>;
                 })()}
                 <div className="ml-1">
                   <h3 className={`font-bold uppercase tracking-normal font-display ${club.name.length > 12 ? 'text-sm break-all' : 'text-lg'} leading-none mb-2 text-foreground/90 group-hover:text-white transition-colors`}>{club.name}</h3>

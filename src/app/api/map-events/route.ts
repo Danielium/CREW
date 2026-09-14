@@ -66,6 +66,8 @@ export async function GET(req: Request) {
         creator: {
           select: {
             id: true, // Needed to check if it's our own
+            name: true,
+            image: true,
           }
         },
         requests: {
