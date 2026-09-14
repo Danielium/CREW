@@ -249,7 +249,7 @@ export default function EditEventPage() {
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-sm">Показывать на общей карте</span>
-              <span className="text-xs text-muted-foreground">Если выключено, пробежку увидят только в клубе</span>
+              <span className="text-xs text-muted-foreground">Всем видно только в открытом клубе, иначе — только участникам</span>
             </div>
           </div>
           <div className={`w-12 h-6 rounded-full transition-colors relative flex items-center shrink-0 ${form.showOnMap ? 'bg-primary' : 'bg-border'}`}>
