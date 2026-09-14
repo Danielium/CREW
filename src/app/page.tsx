@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useState, useEffect, useRef } from "react";
+import { Suspense, useState, useEffect, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { Bell, MapPin, Clock, Users, X, Search, Activity, ArrowLeft, LocateFixed, Share, Plus, Minus, Loader2 } from "lucide-react";
 import { SwipeButton } from "@/components/SwipeButton";
@@ -30,21 +30,30 @@ function formatRunTime(value: string | Date) {
   return new Date(value).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
 }
 
-// toLocaleDateString gives the nominative ("июнь") plus a " г." suffix, which reads
-// wrong after the preposition "с" and overflowed the line. Genitive, and the year is
-// only worth printing once the account is older than the current one.
-const MONTHS_GENITIVE = [
-  "января", "февраля", "марта", "апреля", "мая", "июня",
-  "июля", "августа", "сентября", "октября", "ноября", "декабря",
-];
+// Absolute month ("с июня") was ambiguous whenever the account is older than a year but
+// the join-year happens to equal the current year — no date in the string, no way to
+// tell. Duration is self-contained and needs no year at all.
+function ruPlural(n: number, forms: [string, string, string]) {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return forms[0];
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return forms[1];
+  return forms[2];
+}
 
 function formatMemberSince(value?: string | Date | null) {
   if (!value) return null;
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return null;
-  const month = MONTHS_GENITIVE[d.getMonth()];
-  const year = d.getFullYear();
-  return year === new Date().getFullYear() ? month : `${month} ${year}`;
+  const joined = new Date(value);
+  if (Number.isNaN(joined.getTime())) return null;
+  const now = new Date();
+  const months = Math.max(
+    0,
+    (now.getFullYear() - joined.getFullYear()) * 12 + (now.getMonth() - joined.getMonth())
+  );
+  if (months < 1) return "Новичок в CREW";
+  if (months < 12) return `${months} ${ruPlural(months, ["месяц", "месяца", "месяцев"])} в CREW`;
+  const years = Math.floor(months / 12);
+  return `${years} ${ruPlural(years, ["год", "года", "лет"])} в CREW`;
 }
 
 function ParticipantStepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
@@ -77,6 +86,13 @@ function MapContent() {
   const searchParams = useSearchParams();
   
   const [proposals, setProposals] = useState<any[]>(globalCache.mapProposals || []);
+  // Session-only, not a persisted setting — the point is decluttering the current view,
+  // not a preference someone needs to remember they set.
+  const [mapFilter, setMapFilter] = useState<"all" | "club" | "duo">("all");
+  const visibleProposals = useMemo(() => {
+    if (mapFilter === "all") return proposals;
+    return proposals.filter((p) => (mapFilter === "club" ? p.type === "CLUB" : p.type !== "CLUB"));
+  }, [proposals, mapFilter]);
   const [selectedProposal, setSelectedProposal] = useState<any | null>(null);
   const [hasUnreadRequests, setHasUnreadRequests] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -611,30 +627,67 @@ function MapContent() {
 
   return (
     <div className="absolute inset-0 bg-black text-foreground flex flex-col overflow-hidden">
-      <TinderMap proposals={proposals} onSelectProposal={handleSelectProposal} onMapClick={handleMapClick} forceCenter={forceCenter} triggerLocate={triggerLocate} onLocationFound={handleLocationFound} draftPosition={createPosition} />
+      <TinderMap proposals={visibleProposals} onSelectProposal={handleSelectProposal} onMapClick={handleMapClick} forceCenter={forceCenter} triggerLocate={triggerLocate} onLocationFound={handleLocationFound} draftPosition={createPosition} currentUser={session?.user as any} />
 
       {/* Top UI Overlay */}
-      <div className="absolute top-0 left-0 w-full px-6 pb-6 pt-safe flex items-center pointer-events-none z-10 gap-3">
-        {/* Search Input always visible */}
-        <form onSubmit={handleSearch} className="flex-1 pointer-events-auto relative">
-          <input 
-            type="text" 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Найти локацию..."
-            className="w-full bg-black/40 backdrop-blur-md text-white border border-white/10 rounded-full pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-primary placeholder:text-white/50"
-          />
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" />
-        </form>
+      <div className="absolute top-0 left-0 w-full px-6 pb-6 pt-safe flex flex-col gap-3 pointer-events-none z-10">
+        <div className="flex items-center gap-3">
+          {/* Search Input always visible */}
+          <form onSubmit={handleSearch} className="flex-1 pointer-events-auto relative">
+            <input 
+              type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Найти локацию..."
+              className="w-full bg-black/40 backdrop-blur-md text-white border border-white/10 rounded-full pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-primary placeholder:text-white/50"
+            />
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" />
+          </form>
 
-        <Link href="/map/requests" className="pointer-events-auto flex-shrink-0">
-          <div className="relative w-12 h-12 bg-black/40 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center active:scale-95 transition-transform">
-            <Bell size={24} />
-            {hasUnreadRequests && (
-              <div className="absolute top-3 right-3 w-3 h-3 bg-primary rounded-full border-2 border-black" />
-            )}
+          <Link href="/map/requests" className="pointer-events-auto flex-shrink-0">
+            <div className="relative w-12 h-12 bg-black/40 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center active:scale-95 transition-transform">
+              <Bell size={24} />
+              {hasUnreadRequests && (
+                <div className="absolute top-3 right-3 w-3 h-3 bg-primary rounded-full border-2 border-black" />
+              )}
+            </div>
+          </Link>
+        </div>
+
+        {/* Solo runners now look like people and club runs look like clubs right on the
+            map — this filter is what keeps that readable once there are more than a
+            handful of pins on screen at once. */}
+        <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-full p-1 pointer-events-auto self-start relative">
+          <div className="flex relative">
+            <div
+              className="absolute top-0 bottom-0 w-1/3 bg-primary rounded-full transition-transform duration-300 ease-out z-0"
+              style={{
+                transform: `translateX(${mapFilter === "all" ? "0%" : mapFilter === "club" ? "100%" : "200%"})`,
+              }}
+            />
+            {[
+              { id: "all" as const, label: "Все" },
+              { id: "club" as const, label: "Клубы" },
+              { id: "duo" as const, label: "Соло" },
+            ].map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => {
+                  setMapFilter(f.id);
+                  if (typeof window !== "undefined") {
+                    (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred("light");
+                  }
+                }}
+                className={`flex-1 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full transition-colors relative z-10 ${
+                  mapFilter === f.id ? "text-black" : "text-white/70"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
-        </Link>
+        </div>
       </div>
 
       {/* Pin Cycler Buttons (Left) */}
@@ -814,9 +867,7 @@ function MapContent() {
                       left is tenure — not the Telegram handle, which stays private until the
                       author chooses to share it in DM after accepting a request. */}
                   <span className="text-xs text-muted mt-1.5 truncate">
-                    {formatMemberSince(selectedProposal.creator?.createdAt)
-                      ? `В CREW с ${formatMemberSince(selectedProposal.creator?.createdAt)}`
-                      : "Зовёт на пробежку"}
+                    {formatMemberSince(selectedProposal.creator?.createdAt) || "Зовёт на пробежку"}
                   </span>
                 </div>
               </Link>
@@ -908,12 +959,16 @@ function MapContent() {
                     <Users size={20} className="text-primary" />
                     <span className="font-medium text-sm">Участники</span>
                   </div>
-                  <span className="font-black">
-                    {selectedProposal._count?.requests || 0}
-                    {selectedProposal.maxParticipants === 0
-                      ? <span className="text-[10px] font-bold text-muted uppercase tracking-widest ml-2 before:content-['·'] before:mr-2 before:text-muted">без лимита</span>
-                      : ` / ${selectedProposal.maxParticipants}`}
-                  </span>
+                  {selectedProposal.maxParticipants === 0 ? (
+                    <div className="flex flex-col items-end">
+                      <span className="font-black leading-none">{selectedProposal._count?.requests || 0}</span>
+                      <span className="text-[10px] font-bold text-muted uppercase tracking-widest mt-1">Без лимита</span>
+                    </div>
+                  ) : (
+                    <span className="font-black">
+                      {selectedProposal._count?.requests || 0} / {selectedProposal.maxParticipants}
+                    </span>
+                  )}
                 </div>
 
                 <div className="mt-2">

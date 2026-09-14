@@ -3,80 +3,82 @@ import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Zap, Flame, Skull, Sword, Shield, Mountain, Anchor, Crown, Star, Heart, Activity, Target, Trophy, Ghost, Crosshair, HelpCircle } from "lucide-react";
 import UserLocationMarker from "./UserLocationMarker";
 import { MAP_STYLE_URL } from "@/lib/mapTiles";
+import ClubBadge, { parseClubLogo, BADGE_CLIP_PATH } from "@/components/ClubBadge";
 
-const ICON_MAP: Record<string, any> = {
-  Zap, Flame, Skull, Sword, Shield, Mountain, Anchor, Crown, Star, Heart, Activity, Target, Trophy, Ghost, Crosshair
-};
+// One pin chassis for every marker on the map: a photo (person = circle, club = squircle,
+// same shapes as everywhere else in the app) ringed in the brand lime so forty different
+// photos still read as one system, sitting on a tail that gives the exact meeting point —
+// a plain photo has no "this pixel is the coordinate" the way a teardrop does.
+const PIN_SIZE = 44;
+const PIN_RING = 3;
+const PIN_GAP = 2;
+const PIN_TAIL_H = 8;
+const PIN_TAIL_W = 14;
+const RING_BOX = PIN_SIZE + PIN_RING * 2;
+const GAP_BOX = PIN_SIZE + PIN_GAP * 2;
+const CHASSIS_H = RING_BOX + PIN_TAIL_H;
 
-function crewPinHtml() {
-  return `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#CCFF00" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 32px; height: 32px; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.5));">
-      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-      <circle cx="12" cy="10" r="3" fill="#000"></circle>
-    </svg>
-  `;
+function escapeHtml(s: string) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-// Draft pin shown while placing a new run proposal (before it's saved)
-function draftPinHtml() {
+function escapeCssUrl(url: string) {
+  return url.replace(/'/g, "%27");
+}
+
+function pinChassisHtml(shape: "circle" | "squircle", contentHtml: string) {
+  const shapeCss = shape === "circle" ? "border-radius:50%;" : `clip-path:${BADGE_CLIP_PATH};`;
   return `
-    <div style="position: relative; width: 32px; height: 32px;">
-      <div style="position: absolute; top: 8px; left: 8px; width: 16px; height: 16px; border-radius: 50%; background: rgba(204,255,0,0.35); animation: draftPulse 1.6s ease-out infinite;"></div>
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#CCFF00" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; width: 32px; height: 32px; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.5));">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-        <circle cx="12" cy="10" r="3" fill="#000"></circle>
-      </svg>
-      <style>@keyframes draftPulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.4); opacity: 0; } }</style>
+    <div class="crew-pin" style="position:relative; width:${RING_BOX}px; height:${CHASSIS_H}px; transform:scale(1); transform-origin:bottom center; transition:transform 150ms ease-out;">
+      <div style="position:absolute; top:0; left:0; width:${RING_BOX}px; height:${RING_BOX}px; background:#CCFF00; ${shapeCss}"></div>
+      <div style="position:absolute; top:${PIN_RING}px; left:${PIN_RING}px; width:${GAP_BOX}px; height:${GAP_BOX}px; background:#FFFFFF; ${shapeCss}"></div>
+      <div style="position:absolute; top:${PIN_RING + PIN_GAP}px; left:${PIN_RING + PIN_GAP}px; width:${PIN_SIZE}px; height:${PIN_SIZE}px; overflow:hidden; ${shapeCss}">
+        ${contentHtml}
+      </div>
+      <div style="position:absolute; top:${RING_BOX - 1}px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:${PIN_TAIL_W / 2}px solid transparent; border-right:${PIN_TAIL_W / 2}px solid transparent; border-top:${PIN_TAIL_H + 1}px solid #CCFF00;"></div>
     </div>
   `;
 }
 
-function clubPinHtml(p: any) {
-  let logoConfig: any = {};
-  try {
-    logoConfig = JSON.parse(p.event.club.logoConfig);
-  } catch (e) {}
-
-  const bg = logoConfig.color1 || "#CCFF00";
-  const iconColor = logoConfig.iconColor || "#000000";
-  const IconComp = ICON_MAP[logoConfig.iconName] || HelpCircle;
-
-  const iconSize = 22;
-  const iconY = 9;
-  let iconHtml = renderToStaticMarkup(<IconComp size={iconSize} color={iconColor} strokeWidth={2.5} />);
-
-  // Single silhouette for every club — a rounded square, same as <ClubBadge />.
-  let svgShape = `<rect x="2" y="2" width="36" height="36" rx="10" fill="${bg}" stroke="white" stroke-width="3" />`;
-
-  let defs = "";
-  let imageTag = "";
-  if (logoConfig.imageUrl) {
-    defs = `<defs><clipPath id="clip-${p.id}">${svgShape}</clipPath></defs>`;
-    imageTag = `<image href="${logoConfig.imageUrl}" width="40" height="40" preserveAspectRatio="xMidYMid slice" clip-path="url(#clip-${p.id})" />`;
-    svgShape = svgShape.replace(/fill="[^"]+"/, 'fill="transparent"');
-    iconHtml = ""; // Don't show lucide icon if there's a photo
+function personAvatarHtml(name?: string | null, image?: string | null) {
+  if (image) {
+    return `<div style="width:100%; height:100%; background-image:url('${escapeCssUrl(image)}'); background-size:cover; background-position:center;"></div>`;
   }
+  const initial = escapeHtml((name || "?").charAt(0).toUpperCase());
+  return `<div style="width:100%; height:100%; background:#1C1C1E; display:flex; align-items:center; justify-content:center; color:#CCFF00; font-weight:700; font-size:18px;">${initial}</div>`;
+}
 
+function markerChassisHtml(p: any): string {
+  if (p.type === "CLUB") {
+    // parseClubLogo(null) -> null, so an event whose club never set a logo still gets a
+    // proper squircle chassis with ClubBadge's own colour+icon fallback, instead of the
+    // solo teardrop this used to silently fall back to.
+    const logo = parseClubLogo(p.event?.club?.logoConfig) || {};
+    const badgeHtml = renderToStaticMarkup(<ClubBadge {...logo} size={PIN_SIZE} />);
+    return pinChassisHtml("squircle", badgeHtml);
+  }
+  return pinChassisHtml("circle", personAvatarHtml(p.creator?.name, p.creator?.image));
+}
+
+// Draft pin shown while placing a new run proposal (before it's saved) — the user's own
+// avatar in the same circle chassis, so what you see while dragging is "this will be me".
+function draftPinHtml(currentUser?: { name?: string | null; image?: string | null }) {
+  const haloSize = RING_BOX + 20;
+  const chassis = pinChassisHtml("circle", personAvatarHtml(currentUser?.name, currentUser?.image));
   return `
-    <div style="width: 40px; height: 40px; filter: drop-shadow(0px 6px 6px rgba(0,0,0,0.4)); display: flex; align-items: center; justify-content: center; position: relative;">
-      <svg width="40" height="40" viewBox="0 0 40 40" style="position: absolute; top: 0; left: 0; z-index: 1;">
-        ${defs}
-        ${imageTag}
-        ${svgShape}
-      </svg>
-      <div style="position: absolute; top: ${iconY}px; left: ${20 - iconSize / 2}px; width: ${iconSize}px; height: ${iconSize}px; z-index: 2; display: flex; align-items: center; justify-content: center;">
-        ${iconHtml}
-      </div>
+    <div style="position:relative; width:${haloSize}px; height:${CHASSIS_H}px; display:flex; align-items:flex-end; justify-content:center; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.45));">
+      <div style="position:absolute; bottom:${PIN_TAIL_H}px; left:50%; width:${haloSize}px; height:${haloSize}px; border-radius:50%; background:rgba(204,255,0,0.35); transform:translate(-50%, 50%); animation: draftPulse 1.6s ease-out infinite;"></div>
+      ${chassis}
+      <style>@keyframes draftPulse { 0% { transform: translate(-50%, 50%) scale(0.6); opacity: 0.8; } 100% { transform: translate(-50%, 50%) scale(1.4); opacity: 0; } }</style>
     </div>
   `;
 }
 
 const DEFAULT_CENTER: [number, number] = [55.7558, 37.6173]; // Moscow fallback, [lat, lng]
 
-export default function TinderMap({ proposals, onSelectProposal, onMapClick, forceCenter, triggerLocate, onLocationFound, draftPosition }: { proposals: any[], onSelectProposal: (p: any) => void, onMapClick?: (latlng: any) => void, forceCenter?: [number, number] | null, triggerLocate?: number, onLocationFound?: (latlng: [number, number]) => void, draftPosition?: [number, number] | null }) {
+export default function TinderMap({ proposals, onSelectProposal, onMapClick, forceCenter, triggerLocate, onLocationFound, draftPosition, currentUser }: { proposals: any[], onSelectProposal: (p: any) => void, onMapClick?: (latlng: any) => void, forceCenter?: [number, number] | null, triggerLocate?: number, onLocationFound?: (latlng: [number, number]) => void, draftPosition?: [number, number] | null, currentUser?: { name?: string | null; image?: string | null } }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
@@ -86,9 +88,16 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
   const hasFlown = useRef(false);
   const onSelectProposalRef = useRef(onSelectProposal);
   const onMapClickRef = useRef(onMapClick);
+  // Marker clicks are bound once at DOM-creation time; the 10s polling refresh only swaps
+  // innerHTML, so a listener that closed over the proposal object itself would fire with
+  // stale data forever after the first refresh. It resolves the live proposal by key instead.
+  const proposalsByIdRef = useRef<Map<string, any>>(new Map());
+  const activeKeyRef = useRef<string | null>(null);
+  const currentUserRef = useRef(currentUser);
 
   useEffect(() => { onSelectProposalRef.current = onSelectProposal; }, [onSelectProposal]);
   useEffect(() => { onMapClickRef.current = onMapClick; }, [onMapClick]);
+  useEffect(() => { currentUserRef.current = currentUser; }, [currentUser]);
 
   const handleSetInitialLocation = (latlng: [number, number]) => {
     if (onLocationFound) onLocationFound(latlng);
@@ -133,12 +142,17 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
   useEffect(() => {
     if (!map) return;
     const nextIds = new Set<string>();
+    const byId = new Map<string, any>();
+    for (const p of proposals) {
+      byId.set(p.type === "CLUB" ? `club-${p.id}` : p.id, p);
+    }
+    proposalsByIdRef.current = byId;
 
     for (const p of proposals) {
       const key = p.type === "CLUB" ? `club-${p.id}` : p.id;
       nextIds.add(key);
 
-      const html = p.type === "CLUB" && p.event?.club?.logoConfig ? clubPinHtml(p) : crewPinHtml();
+      const html = markerChassisHtml(p);
 
       let marker = markersRef.current.get(key);
       if (!marker) {
@@ -147,7 +161,19 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
         el.innerHTML = html;
         el.addEventListener("click", (e) => {
           e.stopPropagation();
-          onSelectProposalRef.current(p);
+          // No z-index API on maplibre-gl's Marker in this version — reordering the
+          // element among its siblings is the only way to bring an overlapping pin
+          // to the front on tap.
+          el.parentElement?.appendChild(el);
+          const prevKey = activeKeyRef.current;
+          if (prevKey && prevKey !== key) {
+            const prevPin = markersRef.current.get(prevKey)?.getElement().querySelector<HTMLElement>(".crew-pin");
+            if (prevPin) prevPin.style.transform = "scale(1)";
+          }
+          activeKeyRef.current = key;
+          const pin = el.querySelector<HTMLElement>(".crew-pin");
+          if (pin) pin.style.transform = "scale(1.08)";
+          onSelectProposalRef.current(proposalsByIdRef.current.get(key) ?? p);
         });
         marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
           .setLngLat([p.lng, p.lat])
@@ -156,6 +182,10 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
       } else {
         marker.setLngLat([p.lng, p.lat]);
         marker.getElement().innerHTML = html;
+        if (key === activeKeyRef.current) {
+          const pin = marker.getElement().querySelector<HTMLElement>(".crew-pin");
+          if (pin) pin.style.transform = "scale(1.08)";
+        }
       }
     }
 
@@ -177,7 +207,7 @@ export default function TinderMap({ proposals, onSelectProposal, onMapClick, for
     }
     if (!draftMarkerRef.current) {
       const el = document.createElement("div");
-      el.innerHTML = draftPinHtml();
+      el.innerHTML = draftPinHtml(currentUserRef.current || undefined);
       draftMarkerRef.current = new maplibregl.Marker({ element: el, anchor: "bottom" })
         .setLngLat([draftPosition[1], draftPosition[0]])
         .addTo(map);
