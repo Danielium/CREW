@@ -29,41 +29,32 @@ export default function BottomSheet({ open, onClose, title, locked = false, aria
   // Decoupled from `open`: stays true through the close animation, so a tap-outside
   // or Escape close slides the sheet away instead of the subtree vanishing mid-frame.
   const [shouldRender, setShouldRender] = useState(open);
-  const [isMounted, setIsMounted] = useState(false);
+  // Plays the CSS entrance exactly once per open. The entrance used to be a JS state
+  // flip scheduled inside two nested requestAnimationFrames; that made it hostage to
+  // frame scheduling, which on a loaded WebView either collapsed both frames into one
+  // (sheet appeared instantly, nothing to animate) or starved them entirely (callback
+  // never ran, so the panel stayed parked off-screen — the sheet "getting stuck").
+  // Keyframes start when the element is inserted, so neither failure mode exists.
+  const [entering, setEntering] = useState(open);
   const [dragOffset, setDragOffset] = useState(0);
   const dragStartY = useRef(0);
   const offsetRef = useRef(0);
   const isDragging = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
 
-  // Slide in on the frame after mount so the transform actually animates;
-  // on close, keep rendering for one transition's worth before unmounting.
+  // On close, keep rendering for one transition's worth before unmounting.
   useEffect(() => {
     if (open) {
       setShouldRender(true);
-      // A single rAF isn't reliable: React can commit the off-screen starting
-      // position and the "flip to visible" state within the same browser frame,
-      // so the transition has nothing to animate from — confirmed on real hardware
-      // and reproducible in desktop Chrome too. Nest two rAFs so the first one's
-      // callback runs only after the off-screen frame has actually painted.
-      // Some Android WebViews (Telegram's included) still occasionally collapse
-      // both rAFs into a single frame under load, making the sheet snap open with
-      // no visible slide — reported as "works most of the time, sometimes instant".
-      // Forcing a synchronous reflow between the two rAFs is a stronger guarantee
-      // than scheduling alone: it makes the browser actually commit the off-screen
-      // layout before the visible state is ever set.
-      let raf2 = 0;
-      const raf1 = requestAnimationFrame(() => {
-        if (panelRef.current) void panelRef.current.getBoundingClientRect();
-        raf2 = requestAnimationFrame(() => setIsMounted(true));
-      });
-      return () => {
-        cancelAnimationFrame(raf1);
-        cancelAnimationFrame(raf2);
-      };
+      setEntering(true);
+      // onAnimationEnd is the normal way out of the entering state, but a starved
+      // thread can delay that event past the animation itself — so the state is not
+      // left to depend on it alone. Clearing late is harmless: the class and the
+      // inline transform resolve to the same resting position.
+      const settled = setTimeout(() => setEntering(false), TRANSITION_MS);
+      return () => clearTimeout(settled);
     }
-    setIsMounted(false);
+    setEntering(false);
     setDragOffset(0);
     offsetRef.current = 0;
     const timeout = setTimeout(() => setShouldRender(false), TRANSITION_MS);
@@ -118,21 +109,44 @@ export default function BottomSheet({ open, onClose, title, locked = false, aria
 
   if (!shouldRender) return null;
 
-  const translateY = isMounted ? dragOffset : window.innerHeight;
+  // While the entrance keyframes run they own the transform (animations outrank inline
+  // styles in the cascade), and they land on exactly this resting value — so the two
+  // never fight. Dragging drops the class, handing the transform back to this style.
+  // Closing is a percentage, not window.innerHeight: it can't go stale on rotate.
+  const isDragging0 = dragOffset > 0;
+  const panelTransform = isDragging0 ? `translateY(${dragOffset}px)` : open ? "translateY(0)" : "translateY(100%)";
+  const playEntrance = entering && !isDragging0;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-end justify-center" role="dialog" aria-modal="true" aria-label={ariaLabel || title}>
+    <div
+      className="fixed inset-0 z-[200] flex items-end justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-label={ariaLabel || title}
+      // The sheet stays mounted for one transition after close so it can slide away.
+      // While it does, this full-screen layer must stop intercepting taps: a tap on a
+      // map pin during those 500ms used to land on the fading backdrop and re-fire
+      // onClose instead of opening the pin — the "tap does nothing, then the sheet
+      // acts weird" case.
+      style={{ pointerEvents: open ? "auto" : "none" }}
+    >
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300"
-        style={{ opacity: isMounted ? Math.max(0, 1 - dragOffset / 400) : 0 }}
+        className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${playEntrance ? "sheet-backdrop-in" : ""}`}
+        style={{ opacity: open ? Math.max(0, 1 - dragOffset / 400) : 0 }}
         onClick={() => !locked && onClose()}
       />
       <div
-        ref={panelRef}
         // duration-500 below must match TRANSITION_MS above — it's what the unmount timer waits out.
-        className={`relative w-full max-w-[480px] bg-card border-t border-border rounded-t-[32px] px-6 pt-2 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${dragOffset > 0 ? "transition-none" : "transition-transform duration-500 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"}`}
+        className={`relative w-full max-w-[480px] bg-card border-t border-border rounded-t-[32px] px-6 pt-2 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${
+          playEntrance
+            ? "sheet-in"
+            : isDragging0
+              ? "transition-none"
+              : "transition-transform duration-500 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
+        }`}
+        onAnimationEnd={() => setEntering(false)}
         style={{
-          transform: `translateY(${translateY}px)`,
+          transform: panelTransform,
           // 4rem floor, not 2rem: some Android WebViews report no real safe-area
           // value at all, and 2rem previously let the 3-button nav bar overlap
           // the sheet's own actions (see commit e2321ca).

@@ -100,10 +100,32 @@
 }
 .nudge-down { animation: nudgeDown 1.8s ease-in-out infinite; }
 
+/* Вход нижнего шита. Раньше он держался на двух вложенных requestAnimationFrame:
+   если кадры голодали (перерисовка карты, декодирование аватарки, слабый телефон),
+   колбэк не приходил и панель оставалась внизу — «вплывашка застряла»; а если два
+   кадра схлопывались в один, анимации нечего было проигрывать — «появилась мгновенно».
+   Ключевые кадры стартуют самим фактом вставки элемента и не зависят от планировщика JS,
+   поэтому оба состояния исчезают как класс. Длительность обязана совпадать с
+   BOTTOM_SHEET_TRANSITION_MS в BottomSheet.tsx — её ждёт таймер размонтирования. */
+@keyframes sheetIn {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.sheet-in { animation: sheetIn 500ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes sheetBackdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.sheet-backdrop-in { animation: sheetBackdropIn 300ms ease-out both; }
+
 @media (prefers-reduced-motion: reduce) {
   .split-pulse, .row-in, .breathe, .nudge-down { animation: none; }
   .row-in { opacity: 1; transform: none; }
   .nudge-down { opacity: 0.6; }
+  /* Шит всё равно должен доезжать до конечного положения, а не исчезать в нём рывком. */
+  .sheet-in { animation-duration: 1ms; }
+  .sheet-backdrop-in { animation-duration: 1ms; }
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */

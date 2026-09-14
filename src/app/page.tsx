@@ -103,6 +103,11 @@ function MapContent() {
   const [forceCenter, setForceCenter] = useState<[number, number] | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const lastFocusedId = useRef<string | null>(null);
+  // closeSheet wipes the sheet's content one transition later. That timer has to be
+  // cancellable: reopening before it fires used to let it wipe the *new* selection,
+  // leaving an empty sheet stuck open — and because isSheetOpen was still true, the
+  // next tap swapped content in with no slide at all.
+  const sheetWipeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showClubJoinModal, setShowClubJoinModal] = useState(false);
   const [isJoiningClub, setIsJoiningClub] = useState(false);
 
@@ -231,6 +236,8 @@ function MapContent() {
 
   const startCreatingProposal = (latlng: { lat: number; lng: number }) => {
     triggerHaptic('medium');
+    cancelSheetWipe();
+    setSelectedProposal(null);
     setCreatePosition([latlng.lat, latlng.lng]);
     setCreateAddress("");
     setCreateDate("");
@@ -275,11 +282,20 @@ function MapContent() {
     }
   };
 
+  const cancelSheetWipe = () => {
+    if (sheetWipeTimer.current) {
+      clearTimeout(sheetWipeTimer.current);
+      sheetWipeTimer.current = null;
+    }
+  };
+
   const closeSheet = () => {
     setIsSheetOpen(false);
     // Wait out BottomSheet's own close transition before wiping the content
     // underneath it, so nothing changes shape while still visibly sliding away.
-    setTimeout(() => {
+    cancelSheetWipe();
+    sheetWipeTimer.current = setTimeout(() => {
+      sheetWipeTimer.current = null;
       setSelectedProposal(null);
       setIsEditingProposal(false);
       setIsCreatingProposal(false);
@@ -368,7 +384,9 @@ function MapContent() {
 
   const handleSelectProposal = (p: any) => {
     triggerHaptic('medium');
+    cancelSheetWipe();
     setSelectedProposal(p);
+    setIsCreatingProposal(false);
     setIsSheetOpen(true);
   };
 
@@ -714,6 +732,11 @@ function MapContent() {
         ariaLabel={isCreatingProposal ? "Новый маячок" : "Пробежка"}
         title={!isCreatingProposal && !isEditingProposal && selectedProposal && selectedProposal.type !== "CLUB" ? "Совместная пробежка" : undefined}
       >
+        {/* Tapping a pin while the sheet is already up can't slide the whole panel down
+            and back — that would thrash while cycling through pins. Keying on the id
+            gives that switch its own short entrance instead, so every tap on a pin
+            produces visible motion rather than an instant, did-anything-happen swap. */}
+        <div key={selectedProposal?.id ?? (isCreatingProposal ? "new" : "empty")} className="animate-in fade-in slide-in-from-bottom-3 duration-300">
         {isCreatingProposal ? (
           <div className="flex flex-col gap-4">
             <h2 className="text-2xl font-bold uppercase tracking-normal font-display">Новый маячок</h2>
@@ -1004,6 +1027,7 @@ function MapContent() {
             )}
           </div>
         )}
+        </div>
       </BottomSheet>
 
       {/* Join Club Modal */}
