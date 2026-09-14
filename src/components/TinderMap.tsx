@@ -16,8 +16,12 @@ const PIN_RING = 3;
 const PIN_GAP = 2;
 const PIN_TAIL_H = 8;
 const PIN_TAIL_W = 14;
-const RING_BOX = PIN_SIZE + PIN_RING * 2;
+// Layers nest outward from the photo, each one wrapping the one before it — the ring box
+// has to be sized off the gap box, not off PIN_SIZE directly, or the white layer ends up
+// too big for its ring and spills a pixel past it on the bottom-right (the ring reads
+// visibly thicker on the top-left in compensation — an uneven pin, not a design choice).
 const GAP_BOX = PIN_SIZE + PIN_GAP * 2;
+const RING_BOX = GAP_BOX + PIN_RING * 2;
 const CHASSIS_H = RING_BOX + PIN_TAIL_H;
 
 function escapeHtml(s: string) {

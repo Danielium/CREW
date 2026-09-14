@@ -86,13 +86,16 @@ function MapContent() {
   const searchParams = useSearchParams();
   
   const [proposals, setProposals] = useState<any[]>(globalCache.mapProposals || []);
-  // Session-only, not a persisted setting — the point is decluttering the current view,
-  // not a preference someone needs to remember they set.
-  const [mapFilter, setMapFilter] = useState<"all" | "club" | "duo">("all");
+  // Two independent toggles, not a 3-way exclusive switch — "show everything" is just
+  // both left on, not a separate "Все" state to pick. Session-only, not persisted: the
+  // point is decluttering the current view, not a preference to remember.
+  const [showClubRuns, setShowClubRuns] = useState(true);
+  const [showSoloRuns, setShowSoloRuns] = useState(true);
   const visibleProposals = useMemo(() => {
-    if (mapFilter === "all") return proposals;
-    return proposals.filter((p) => (mapFilter === "club" ? p.type === "CLUB" : p.type !== "CLUB"));
-  }, [proposals, mapFilter]);
+    if (showClubRuns && showSoloRuns) return proposals;
+    if (!showClubRuns && !showSoloRuns) return [];
+    return proposals.filter((p) => (showClubRuns ? p.type === "CLUB" : p.type !== "CLUB"));
+  }, [proposals, showClubRuns, showSoloRuns]);
   const [selectedProposal, setSelectedProposal] = useState<any | null>(null);
   const [hasUnreadRequests, setHasUnreadRequests] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -655,38 +658,35 @@ function MapContent() {
         </div>
 
         {/* Solo runners now look like people and club runs look like clubs right on the
-            map — this filter is what keeps that readable once there are more than a
-            handful of pins on screen at once. */}
-        <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-full p-1 pointer-events-auto self-start relative">
-          <div className="flex relative">
-            <div
-              className="absolute top-0 bottom-0 w-1/3 bg-primary rounded-full transition-transform duration-300 ease-out z-0"
-              style={{
-                transform: `translateX(${mapFilter === "all" ? "0%" : mapFilter === "club" ? "100%" : "200%"})`,
+            map — these two switch independently (not a 3-way picker) so "show both" is
+            just leaving them both on, not a separate choice. */}
+        <div className="flex items-center gap-2 pointer-events-auto self-start">
+          {[
+            { active: showClubRuns, toggle: () => setShowClubRuns((v) => !v), label: "Клубы" },
+            { active: showSoloRuns, toggle: () => setShowSoloRuns((v) => !v), label: "Соло" },
+          ].map((f) => (
+            <button
+              key={f.label}
+              type="button"
+              onClick={() => {
+                f.toggle();
+                if (typeof window !== "undefined") {
+                  (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred("light");
+                }
               }}
-            />
-            {[
-              { id: "all" as const, label: "Все" },
-              { id: "club" as const, label: "Клубы" },
-              { id: "duo" as const, label: "Соло" },
-            ].map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => {
-                  setMapFilter(f.id);
-                  if (typeof window !== "undefined") {
-                    (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred("light");
-                  }
-                }}
-                className={`flex-1 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full transition-colors relative z-10 ${
-                  mapFilter === f.id ? "text-black" : "text-white/70"
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+              aria-pressed={f.active}
+              // Two solid lime pills read as neon noise sitting on the map, and a colour
+              // dot was still lime doing the same job in miniature — this is a view filter,
+              // not a call to action, so it doesn't need the brand accent at all. On/off is
+              // brightness alone: bright text and a visible edge when on, dim and near-
+              // invisible border when off.
+              className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider border bg-black/40 backdrop-blur-md transition-all duration-200 active:scale-95 ${
+                f.active ? "border-white/25 text-white" : "border-white/10 text-white/35"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -959,16 +959,9 @@ function MapContent() {
                     <Users size={20} className="text-primary" />
                     <span className="font-medium text-sm">Участники</span>
                   </div>
-                  {selectedProposal.maxParticipants === 0 ? (
-                    <div className="flex flex-col items-end">
-                      <span className="font-black leading-none">{selectedProposal._count?.requests || 0}</span>
-                      <span className="text-[10px] font-bold text-muted uppercase tracking-widest mt-1">Без лимита</span>
-                    </div>
-                  ) : (
-                    <span className="font-black">
-                      {selectedProposal._count?.requests || 0} / {selectedProposal.maxParticipants}
-                    </span>
-                  )}
+                  <span className="font-black">
+                    {selectedProposal._count?.requests || 0} / {selectedProposal.maxParticipants === 0 ? "без лимита" : selectedProposal.maxParticipants}
+                  </span>
                 </div>
 
                 <div className="mt-2">
