@@ -5,6 +5,7 @@ import { Loader2, Edit2, Trash2, Calendar, MapPin, Activity, Clock, User, KeyRou
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { globalCache } from "@/lib/cache";
+import { parseClubLogo } from "@/components/ClubBadge";
 
 export default function FeedEvents({ userData }: { userData: any }) {
   const router = useRouter();
@@ -125,10 +126,23 @@ export default function FeedEvents({ userData }: { userData: any }) {
               className="relative w-full h-[260px] cursor-pointer" 
               onClick={() => router.push(`/events/${ev.id}`)}
             >
-              <img src={ev.image || "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80&w=2940&auto=format&fit=crop"} alt={ev.title} className="absolute inset-0 w-full h-full object-cover" />
-              {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-r from-[#000000]/95 via-[#000000]/60 to-transparent"></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1c] via-[#1a1a1c]/20 to-black/40"></div>
+              {ev.image ? (
+                <>
+                  <img src={ev.image} alt={ev.title} className="absolute inset-0 w-full h-full object-cover" />
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#000000]/95 via-[#000000]/60 to-transparent"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1c] via-[#1a1a1c]/20 to-black/40"></div>
+                </>
+              ) : (
+                // No stock photo of a stranger jogging: an event without its own photo is
+                // honest about it, in the club's own colour instead of a generic scene.
+                <div
+                  className="absolute inset-0 flex items-center justify-center"
+                  style={{ background: `linear-gradient(160deg, ${(parseClubLogo(ev.club?.logoConfig)?.color1 || "#CCFF00")}1a, #1a1a1c 65%)` }}
+                >
+                  <Footprints size={72} style={{ color: parseClubLogo(ev.club?.logoConfig)?.color1 || "#CCFF00", opacity: 0.3 }} />
+                </div>
+              )}
               
               {/* Management tools in top right */}
               <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">

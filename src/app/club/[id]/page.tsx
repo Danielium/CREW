@@ -512,7 +512,17 @@ export default function ClubProfilePage() {
                 <Link href={`/events/${ev.id}`} key={ev.id}>
                   <div className="bg-[#1a1a1c] border border-border rounded-2xl overflow-hidden flex flex-col hover:border-primary transition-colors">
                     <div className="h-24 relative w-full">
-                      <img src={ev.image || "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80&w=1000&auto=format&fit=crop"} className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                      {ev.image ? (
+                        <img src={ev.image} className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                      ) : (
+                        // No stock photo of a stranger jogging — the club's own colour instead.
+                        <div
+                          className="absolute inset-0 flex items-center justify-center"
+                          style={{ background: `linear-gradient(160deg, ${(clubLogo?.color1 || "#CCFF00")}1a, #1a1a1c 65%)` }}
+                        >
+                          <Flag size={36} style={{ color: clubLogo?.color1 || "#CCFF00", opacity: 0.3 }} />
+                        </div>
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1c] to-transparent"></div>
                       <div className="absolute bottom-2 left-3 right-3 flex justify-between items-end">
                         <h4 className="font-bold uppercase tracking-normal text-lg leading-none z-10 text-white font-display">{ev.title}</h4>

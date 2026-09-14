@@ -26,7 +26,7 @@ export async function GET(req: Request) {
     const events = await prisma.event.findMany({
       where: { clubId: { in: clubIds } },
       include: {
-        club: { select: { id: true, name: true } },
+        club: { select: { id: true, name: true, logoConfig: true } },
         attendees: { select: { id: true, image: true, name: true } }
       },
       orderBy: { date: 'desc' }
