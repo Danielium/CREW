@@ -12,6 +12,7 @@ import ClubQRCard from "@/components/ClubQRCard";
 import ClubLogoPicker, { DEFAULT_SIMPLE_LOGO, type SimpleLogoConfig } from "@/components/ClubLogoPicker";
 import TagPicker from "@/components/TagPicker";
 import { globalCache } from "@/lib/cache";
+import { requestBotWriteAccess } from "@/lib/telegramWriteAccess";
 
 export default function ClubProfilePage() {
   const { id } = useParams();
@@ -129,6 +130,8 @@ export default function ClubProfilePage() {
       const res = await fetch(`/api/clubs/${id}/join`, { method: "POST" });
       const data = await res.json();
       if (res.ok) {
+        // Application answers and club event news arrive as bot messages.
+        requestBotWriteAccess();
         // Membership changed: the cached user, club list and event feed are all stale now.
         globalCache.clubs = null;
         globalCache.userData = null;

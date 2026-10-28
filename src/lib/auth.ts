@@ -6,6 +6,13 @@ import crypto from "crypto";
 import { verifyTelegramInitData, parseTelegramUser } from "@/lib/telegramInitData";
 import { linkTelegramAccount } from "@/lib/telegram";
 
+// Acquisition source for a new user: the Mini App start_param they arrived with
+// (signed as part of initData), or "direct" when the app was opened without one.
+function signupSourceFromInitData(initData: string): string {
+  const startParam = new URLSearchParams(initData).get("start_param");
+  return startParam ? startParam.slice(0, 64) : "direct";
+}
+
 export const authOptions: NextAuthOptions = {
   // No adapter — pure JWT mode, no DB sessions needed
   session: {
@@ -62,6 +69,7 @@ export const authOptions: NextAuthOptions = {
                   image: null, 
                   telegramPhotoUrl: incomingImage,
                   password: dummyPassword,
+                  signupSource: signupSourceFromInitData(initData),
                 }
               });
 

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { globalCache } from "@/lib/cache";
 import { SkeletonEventCard } from "@/components/Loading";
 import { parseClubLogo } from "@/components/ClubBadge";
+import { requestBotWriteAccess } from "@/lib/telegramWriteAccess";
 
 export default function FeedEvents({ userData }: { userData: any }) {
   const router = useRouter();
@@ -59,6 +60,7 @@ export default function FeedEvents({ userData }: { userData: any }) {
     try {
       const res = await fetch(`/api/events/${id}/join`, { method: "POST" });
       if (res.ok) {
+        requestBotWriteAccess();
         fetch('/api/events', { cache: 'no-store' })
           .then(r => r.json())
           .then(data => {

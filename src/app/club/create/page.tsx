@@ -9,6 +9,7 @@ import ClubLogoPicker, { DEFAULT_SIMPLE_LOGO, type SimpleLogoConfig } from "@/co
 import ClubBadge from "@/components/ClubBadge";
 import TagPicker from "@/components/TagPicker";
 import { globalCache } from "@/lib/cache";
+import { requestBotWriteAccess } from "@/lib/telegramWriteAccess";
 import { MAX_NAME, MAX_TAGS, JOIN_TYPE_LABELS } from "@/lib/club";
 
 const JOIN_TYPES = [
@@ -71,6 +72,8 @@ export default function CreateClubPage() {
       });
       const data = await res.json();
       if (data.club) {
+        // Membership applications arrive as bot messages.
+        requestBotWriteAccess();
         globalCache.clubs = null;
         globalCache.userData = null;
         // replace, not push: the club exists now, so back should not walk into

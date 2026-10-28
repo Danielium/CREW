@@ -13,6 +13,7 @@ import { DateTimeCard } from "@/components/DateTimeCard";
 import BottomSheet, { BOTTOM_SHEET_TRANSITION_MS } from "@/components/BottomSheet";
 import ClubBadge, { parseClubLogo } from "@/components/ClubBadge";
 import { globalCache } from "@/lib/cache";
+import { requestBotWriteAccess } from "@/lib/telegramWriteAccess";
 
 // Telegram's WebView can report a non-ru locale, which rendered "19.09.2026" as
 // "9/19/2026" inside an otherwise Russian UI — so the locale is pinned. The two
@@ -272,6 +273,8 @@ function MapContent() {
       if (res.ok) {
         closeSheet();
         fetchProposals();
+        // Join requests for this beacon arrive as bot messages.
+        requestBotWriteAccess();
       } else {
         const data = await res.json();
         alert(data.error || "Произошла ошибка при создании пробежки");
@@ -404,6 +407,8 @@ function MapContent() {
       });
       if (res.ok) {
         setJustJoinedMap(prev => ({ ...prev, [proposalId]: true }));
+        // The creator's answer arrives as a bot message.
+        requestBotWriteAccess();
         fetchProposals();
       } else {
         throw new Error("Failed to join");
@@ -419,6 +424,7 @@ function MapContent() {
     try {
       const res = await fetch(`/api/events/${selectedProposal.event.id}/join`, { method: "POST" });
       if (res.ok) {
+        requestBotWriteAccess();
         const { globalCache } = await import("@/lib/cache");
         fetch('/api/events').then(r => r.json()).then(d => {
           if (d.events) globalCache.events = d.events;
@@ -454,6 +460,7 @@ function MapContent() {
       });
       if (res.ok) {
         setShowClubJoinModal(false);
+        requestBotWriteAccess();
         // Mark as member locally (optimistic)
         setSelectedProposal({...selectedProposal, isMember: true});
         const eventRes = await fetch(`/api/events/${selectedProposal.event.id}/join`, { method: "POST" });

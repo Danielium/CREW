@@ -33,6 +33,7 @@ import { triggerHaptic } from "@/lib/haptics";
 import BottomSheet from "@/components/BottomSheet";
 import { ChallengesSkeleton, Spinner } from "@/components/Loading";
 import { SwipeButton } from "@/components/SwipeButton";
+import { requestBotWriteAccess } from "@/lib/telegramWriteAccess";
 
 type Tier = { at: number; reward: string };
 export type Goal = {
@@ -590,6 +591,8 @@ export default function ChallengesTab() {
         return;
       }
       setConfirmGoal(null);
+      // Progress and completion notices arrive as bot messages.
+      requestBotWriteAccess();
       await fetchChallenges();
     } catch (e) {
       console.error(e);
